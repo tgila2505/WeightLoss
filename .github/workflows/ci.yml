@@ -9,28 +9,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout
-        uses: actions/checkout@v4
+      # 1. Checkout
+      - uses: actions/checkout@v4
 
-      # 2. Setup Node.js
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # 2. Setup Node
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      # 3. Setup pnpm
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 10
+      # 3. Install pnpm (THIS FIXES YOUR ERROR)
+      - name: Install pnpm globally
+        run: npm install -g pnpm
 
-      # 4. Install dependencies (ROOT - VERY IMPORTANT)
+      # 4. Verify pnpm (debug safety)
+      - name: Verify pnpm
+        run: pnpm --version
+
+      # 5. Install dependencies (workspace root)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 5. Verify frontend builds (optional but good)
+      # 6. Build frontend (optional)
       - name: Build frontend
         run: |
           cd frontend
