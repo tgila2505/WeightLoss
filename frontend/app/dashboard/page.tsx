@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { DashboardView } from '../components/dashboard';
 import {
+  fetchTodayPlan,
   fetchHealthMetrics,
   fetchLabs,
   fetchProfile,
@@ -31,6 +32,7 @@ export default function DashboardPage() {
           fetchHealthMetrics(),
           fetchLabs()
         ]);
+        const nextPlan = await fetchTodayPlan();
 
         if (!isMounted) {
           return;
@@ -39,7 +41,7 @@ export default function DashboardPage() {
         setProfile(nextProfile);
         setMetrics(nextMetrics);
         setLabs(nextLabs);
-        setPlan(getLatestPlan());
+        setPlan(nextPlan ?? getLatestPlan());
       } catch (loadError) {
         if (!isMounted) {
           return;

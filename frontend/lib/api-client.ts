@@ -103,6 +103,36 @@ export type PlanSnapshot = {
   biomarker_adjustments: string[];
 };
 
+export type AdherenceRecordResponse = {
+  id: number;
+  user_id: number;
+  item_type: string;
+  item_name: string;
+  completed: boolean;
+  adherence_date: string;
+  score?: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type AdherenceRecordCreate = {
+  item_type: string;
+  item_name: string;
+  completed: boolean;
+  adherence_date: string;
+  score?: number | null;
+};
+
+type StoredPlanResponse = {
+  id: number;
+  user_id: number;
+  title: string;
+  status: string;
+  plan: PlanSnapshot;
+  created_at: string;
+  updated_at: string;
+};
+
 export type OrchestratorResponse = {
   content: string;
   status: string;
@@ -244,6 +274,30 @@ export async function submitOrchestratorRequest(input: {
   return (await response.json()) as OrchestratorResponse;
 }
 
+export async function persistLatestPlan(plan: PlanSnapshot): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before saving a plan.');
+  }
+
+  const response = await fetch(`${apiBaseUrl}/api/v1/plans`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      title: 'Latest plan',
+      status: 'active',
+      plan
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+}
+
 export function saveLatestPlan(plan: PlanSnapshot): void {
   if (typeof window === 'undefined') {
     return;
@@ -267,6 +321,35 @@ export function getLatestPlan(): PlanSnapshot | null {
   } catch {
     return null;
   }
+}
+
+export async function fetchTodayPlan(): Promise<PlanSnapshot | null> {
+  const response = await requestWithOptional404<StoredPlanResponse>(
+    `${apiBaseUrl}/api/v1/plans/today`
+  );
+  return response?.plan ?? null;
+}
+
+export async function createAdherenceRecord(
+  payload: AdherenceRecordCreate
+): Promise<AdherenceRecordResponse> {
+  return requestWithBody<AdherenceRecordResponse>(`${apiBaseUrl}/api/v1/adherence`, payload);
+}
+
+export async function fetchAdherenceRecords(params?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<AdherenceRecordResponse[]> {
+  const query = new URLSearchParams();
+  if (params?.startDate) {
+    query.set('start_date', params.startDate);
+  }
+  if (params?.endDate) {
+    query.set('end_date', params.endDate);
+  }
+
+  const suffix = query.size > 0 ? `?${query.toString()}` : '';
+  return request<AdherenceRecordResponse[]>(`${apiBaseUrl}/api/v1/adherence${suffix}`);
 }
 
 export type InteractionHistoryItem = {
@@ -365,6 +448,28 @@ async function request<T>(url: string): Promise<T> {
     headers: {
       Authorization: `Bearer ${token}`
     }
+  });
+
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+
+  return (await response.json()) as T;
+}
+
+async function requestWithBody<T>(url: string, body: unknown): Promise<T> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before updating this data.');
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {

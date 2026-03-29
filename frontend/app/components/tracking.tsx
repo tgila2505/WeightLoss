@@ -1,15 +1,19 @@
 'use client';
 
-import type { HealthMetricResponse, LabRecordResponse, PlanSnapshot } from '../../lib/api-client';
+import type {
+  AdherenceRecordResponse,
+  HealthMetricResponse,
+  LabRecordResponse
+} from '../../lib/api-client';
 
 export function TrackingView({
   metrics,
   labs,
-  plan
+  adherenceRecords
 }: Readonly<{
   metrics: HealthMetricResponse[];
   labs: LabRecordResponse[];
-  plan: PlanSnapshot | null;
+  adherenceRecords: AdherenceRecordResponse[];
 }>) {
   return (
     <main style={pageStyle}>
@@ -67,12 +71,15 @@ export function TrackingView({
 
         <section style={cardStyle}>
           <h2 style={{ marginTop: 0 }}>Habit tracking</h2>
-          {plan?.adherence_signals?.length ? (
+          {adherenceRecords.length ? (
             <div style={{ display: 'grid', gap: '10px' }}>
-              {plan.adherence_signals.map((signal) => (
-                <div key={signal.name} style={signalRowStyle}>
-                  <strong>{signal.name.replaceAll('_', ' ')}</strong>
-                  <span>{signal.completed ? 'Completed' : 'Pending'}</span>
+              {adherenceRecords.map((record) => (
+                <div key={record.id} style={signalRowStyle}>
+                  <strong>{record.item_name}</strong>
+                  <span>
+                    {formatDate(record.adherence_date)} -{' '}
+                    {record.completed ? 'Completed' : 'Pending'}
+                  </span>
                 </div>
               ))}
             </div>
@@ -87,6 +94,10 @@ export function TrackingView({
 
 function formatDateTime(value: string): string {
   return new Date(value).toLocaleDateString();
+}
+
+function formatDate(value: string): string {
+  return new Date(`${value}T00:00:00`).toLocaleDateString();
 }
 
 const pageStyle = {

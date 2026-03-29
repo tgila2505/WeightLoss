@@ -56,7 +56,16 @@ export function PlanView({
 
         <Checklist
           title="Action checklist"
-          items={[...plan.behavioral_actions, ...plan.recommendations]}
+          items={[
+            ...plan.behavioral_actions.map((item) => ({
+              name: item,
+              itemType: 'behavioral_action'
+            })),
+            ...plan.recommendations.map((item) => ({
+              name: item,
+              itemType: 'recommendation'
+            }))
+          ]}
         />
       </div>
     </main>

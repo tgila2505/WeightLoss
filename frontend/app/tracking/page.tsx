@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 
 import { TrackingView } from '../components/tracking';
 import {
+  fetchAdherenceRecords,
   fetchHealthMetrics,
   fetchLabs,
-  getLatestPlan,
+  type AdherenceRecordResponse,
   type HealthMetricResponse,
-  type LabRecordResponse,
-  type PlanSnapshot
+  type LabRecordResponse
 } from '../../lib/api-client';
 
 export default function TrackingPage() {
   const [metrics, setMetrics] = useState<HealthMetricResponse[]>([]);
   const [labs, setLabs] = useState<LabRecordResponse[]>([]);
-  const [plan, setPlan] = useState<PlanSnapshot | null>(null);
+  const [adherenceRecords, setAdherenceRecords] = useState<AdherenceRecordResponse[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -23,9 +23,10 @@ export default function TrackingPage() {
 
     async function load() {
       try {
-        const [nextMetrics, nextLabs] = await Promise.all([
+        const [nextMetrics, nextLabs, nextAdherenceRecords] = await Promise.all([
           fetchHealthMetrics(),
-          fetchLabs()
+          fetchLabs(),
+          fetchAdherenceRecords()
         ]);
         if (!isMounted) {
           return;
@@ -33,7 +34,7 @@ export default function TrackingPage() {
 
         setMetrics(nextMetrics);
         setLabs(nextLabs);
-        setPlan(getLatestPlan());
+        setAdherenceRecords(nextAdherenceRecords);
       } catch (loadError) {
         if (!isMounted) {
           return;
@@ -59,5 +60,11 @@ export default function TrackingPage() {
     );
   }
 
-  return <TrackingView metrics={metrics} labs={labs} plan={plan} />;
+  return (
+    <TrackingView
+      metrics={metrics}
+      labs={labs}
+      adherenceRecords={adherenceRecords}
+    />
+  );
 }

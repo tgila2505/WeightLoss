@@ -5,7 +5,8 @@ module.exports = {
     ".next/",
     "dist/",
     "build/",
-    "coverage/"
+    "coverage/",
+    "next-env.d.ts"
   ],
   env: {
     browser: true,

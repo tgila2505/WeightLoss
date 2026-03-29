@@ -26,3 +26,12 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+
+# Claude Code
+.claude/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# npm lockfile (project uses pnpm)
+package-lock.json

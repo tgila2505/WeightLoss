@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 
 import {
   appendInteractionHistory,
+  fetchTodayPlan,
   fetchHealthMetrics,
   fetchLabs,
   fetchProfile,
   getInteractionHistory,
   getLatestPlan,
+  persistLatestPlan,
   saveLatestPlan,
   submitOrchestratorRequest,
   type InteractionHistoryItem,
@@ -25,8 +27,29 @@ export function InteractionView() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setHistory(getInteractionHistory());
-    setLatestPlan(getLatestPlan());
+    let isMounted = true;
+
+    async function loadInitialState() {
+      setHistory(getInteractionHistory());
+
+      try {
+        const storedPlan = await fetchTodayPlan();
+        if (!isMounted) {
+          return;
+        }
+        setLatestPlan(storedPlan ?? getLatestPlan());
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setLatestPlan(getLatestPlan());
+      }
+    }
+
+    loadInitialState();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   async function handleSubmit(prompt: string) {
@@ -50,7 +73,7 @@ export function InteractionView() {
         adherenceSignals: latestPlan?.adherence_signals ?? []
       });
 
-      applyResponse(prompt, response);
+      await applyResponse(prompt, response);
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
@@ -62,9 +85,10 @@ export function InteractionView() {
     }
   }
 
-  function applyResponse(prompt: string, response: OrchestratorResponse) {
+  async function applyResponse(prompt: string, response: OrchestratorResponse) {
     const finalPlan = response.metadata.final_plan ?? null;
     if (finalPlan) {
+      await persistLatestPlan(finalPlan);
       saveLatestPlan(finalPlan);
       setLatestPlan(finalPlan);
     }
