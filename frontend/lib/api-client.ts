@@ -133,6 +133,41 @@ type StoredPlanResponse = {
   updated_at: string;
 };
 
+export type AdaptiveAdjustment = {
+  meal_adjustment: string;
+  activity_adjustment: string;
+  action_adjustment: string;
+};
+
+export type AdherenceSummaryResponse = {
+  adherence_score: number;
+  consistency_level: string;
+  completed_records: number;
+  total_records: number;
+  adjustments: AdaptiveAdjustment;
+  plan_refresh_needed: boolean;
+};
+
+export type ReminderResponse = {
+  id: number;
+  user_id: number;
+  reminder_type: string;
+  title: string;
+  scheduled_time: string;
+  cadence: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type ReminderCreate = {
+  reminder_type: string;
+  title: string;
+  scheduled_time: string;
+  cadence?: string;
+  is_active?: boolean;
+};
+
 export type OrchestratorResponse = {
   content: string;
   status: string;
@@ -217,6 +252,8 @@ export async function submitOrchestratorRequest(input: {
   metrics: HealthMetricResponse[];
   labs: LabRecordResponse[];
   adherenceSignals?: Array<{ name: string; completed: boolean; score?: number | null }>;
+  consistencyLevel?: string | null;
+  adaptiveAdjustment?: AdaptiveAdjustment | null;
 }): Promise<OrchestratorResponse> {
   const token = getAccessToken();
   if (!token) {
@@ -262,7 +299,9 @@ export async function submitOrchestratorRequest(input: {
           trend: lab.processed.trend,
           recorded_date: lab.recorded_date
         })),
-        adherence_signals: input.adherenceSignals ?? []
+        adherence_signals: input.adherenceSignals ?? [],
+        consistency_level: input.consistencyLevel ?? null,
+        adaptive_adjustment: input.adaptiveAdjustment ?? null
       }
     })
   });
@@ -334,6 +373,20 @@ export async function createAdherenceRecord(
   payload: AdherenceRecordCreate
 ): Promise<AdherenceRecordResponse> {
   return requestWithBody<AdherenceRecordResponse>(`${apiBaseUrl}/api/v1/adherence`, payload);
+}
+
+export async function fetchAdherenceSummary(): Promise<AdherenceSummaryResponse | null> {
+  return requestWithOptional404<AdherenceSummaryResponse>(
+    `${apiBaseUrl}/api/v1/adherence/summary`
+  );
+}
+
+export async function fetchReminders(): Promise<ReminderResponse[]> {
+  return request<ReminderResponse[]>(`${apiBaseUrl}/api/v1/reminders`);
+}
+
+export async function createReminder(payload: ReminderCreate): Promise<ReminderResponse> {
+  return requestWithBody<ReminderResponse>(`${apiBaseUrl}/api/v1/reminders`, payload);
 }
 
 export async function fetchAdherenceRecords(params?: {

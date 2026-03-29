@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import {
   appendInteractionHistory,
+  fetchAdherenceSummary,
   fetchTodayPlan,
   fetchHealthMetrics,
   fetchLabs,
@@ -13,6 +14,7 @@ import {
   persistLatestPlan,
   saveLatestPlan,
   submitOrchestratorRequest,
+  type AdaptiveAdjustment,
   type InteractionHistoryItem,
   type OrchestratorIntent,
   type OrchestratorResponse,
@@ -23,6 +25,9 @@ import { InputBox } from './input-box';
 export function InteractionView() {
   const [history, setHistory] = useState<InteractionHistoryItem[]>([]);
   const [latestPlan, setLatestPlan] = useState<PlanSnapshot | null>(null);
+  const [consistencyLevel, setConsistencyLevel] = useState<string | null>(null);
+  const [adaptiveAdjustment, setAdaptiveAdjustment] = useState<AdaptiveAdjustment | null>(null);
+  const [planRefreshNeeded, setPlanRefreshNeeded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,17 +37,26 @@ export function InteractionView() {
     async function loadInitialState() {
       setHistory(getInteractionHistory());
 
-      try {
-        const storedPlan = await fetchTodayPlan();
-        if (!isMounted) {
-          return;
-        }
-        setLatestPlan(storedPlan ?? getLatestPlan());
-      } catch {
-        if (!isMounted) {
-          return;
-        }
+      const [planResult, summaryResult] = await Promise.allSettled([
+        fetchTodayPlan(),
+        fetchAdherenceSummary()
+      ]);
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (planResult.status === 'fulfilled') {
+        setLatestPlan(planResult.value ?? getLatestPlan());
+      } else {
         setLatestPlan(getLatestPlan());
+      }
+
+      if (summaryResult.status === 'fulfilled' && summaryResult.value) {
+        const summary = summaryResult.value;
+        setConsistencyLevel(summary.consistency_level);
+        setAdaptiveAdjustment(summary.adjustments);
+        setPlanRefreshNeeded(summary.plan_refresh_needed);
       }
     }
 
@@ -55,6 +69,7 @@ export function InteractionView() {
   async function handleSubmit(prompt: string) {
     setIsSubmitting(true);
     setError('');
+    setPlanRefreshNeeded(false);
 
     try {
       const [profile, metrics, labs] = await Promise.all([
@@ -64,13 +79,17 @@ export function InteractionView() {
       ]);
 
       const intent = inferIntent(prompt);
+      const uniqueSignals = deduplicateSignals(latestPlan?.adherence_signals ?? []);
+
       const response = await submitOrchestratorRequest({
         prompt,
         intent,
         profile,
         metrics,
         labs,
-        adherenceSignals: latestPlan?.adherence_signals ?? []
+        adherenceSignals: uniqueSignals,
+        consistencyLevel,
+        adaptiveAdjustment
       });
 
       await applyResponse(prompt, response);
@@ -104,12 +123,24 @@ export function InteractionView() {
 
   return (
     <main style={pageStyle}>
+      {planRefreshNeeded ? (
+        <div style={refreshBannerStyle}>
+          <strong>Your adherence patterns have changed.</strong> Your consistency level is now{' '}
+          <em>{consistencyLevel}</em>. Submit a new request below to get an updated plan.
+        </div>
+      ) : null}
+
       <section style={cardStyle}>
         <p style={eyebrowStyle}>Interaction</p>
         <h1 style={{ margin: '4px 0 8px' }}>Ask for an updated plan</h1>
         <p style={mutedStyle}>
           Submit a question or request to the orchestrator. The latest plan is kept for this session.
         </p>
+        {consistencyLevel ? (
+          <p style={consistencyBadgeStyle}>
+            Adherence level: <strong>{consistencyLevel}</strong>
+          </p>
+        ) : null}
         <div style={{ marginTop: '20px' }}>
           <InputBox onSubmit={handleSubmit} isSubmitting={isSubmitting} />
         </div>
@@ -133,6 +164,12 @@ export function InteractionView() {
       </section>
     </main>
   );
+}
+
+function deduplicateSignals(
+  signals: Array<{ name: string; completed: boolean; score?: number | null }>
+): Array<{ name: string; completed: boolean; score?: number | null }> {
+  return Array.from(new Map(signals.map((s) => [s.name, s])).values());
 }
 
 function inferIntent(prompt: string): OrchestratorIntent {
@@ -179,4 +216,20 @@ const entryStyle = {
   borderRadius: '14px',
   backgroundColor: '#f8fafc',
   padding: '14px'
+} as const;
+
+const refreshBannerStyle = {
+  marginBottom: '16px',
+  padding: '14px 18px',
+  borderRadius: '12px',
+  backgroundColor: '#fef9c3',
+  border: '1px solid #fde047',
+  color: '#713f12',
+  fontSize: '14px'
+} as const;
+
+const consistencyBadgeStyle = {
+  margin: '12px 0 0',
+  fontSize: '13px',
+  color: '#475569'
 } as const;

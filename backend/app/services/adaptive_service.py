@@ -52,6 +52,9 @@ class AdaptiveService:
         user: User,
         summary: AdherenceSummaryResponse,
     ) -> User:
+        previous_level = user.consistency_level
+        if previous_level is not None and previous_level != summary.consistency_level:
+            user.plan_refresh_needed = True
         user.adherence_score = summary.adherence_score
         user.consistency_level = summary.consistency_level
         session.add(user)

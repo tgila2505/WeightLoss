@@ -36,3 +36,4 @@ class AdherenceSummaryResponse(BaseModel):
     completed_records: int
     total_records: int
     adjustments: AdaptiveAdjustment
+    plan_refresh_needed: bool = False

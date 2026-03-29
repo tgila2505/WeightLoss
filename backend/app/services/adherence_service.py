@@ -49,4 +49,7 @@ class AdherenceService:
 
     def build_summary(self, session: Session, user: User):
         records = self.list_records(session, user)
-        return self._adaptive_service.build_summary(records)
+        summary = self._adaptive_service.build_summary(records)
+        return summary.model_copy(
+            update={"plan_refresh_needed": bool(user.plan_refresh_needed)}
+        )

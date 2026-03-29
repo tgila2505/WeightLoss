@@ -17,6 +17,9 @@ class PlanService:
             summary=json.dumps(payload.plan.model_dump()),
         )
         session.add(record)
+        # Clear the refresh flag now that the user has an up-to-date plan.
+        user.plan_refresh_needed = False
+        session.add(user)
         session.commit()
         session.refresh(record)
         return self._to_response(record)

@@ -133,6 +133,8 @@ class Orchestrator:
                 "health_metrics": [asdict(metric) for metric in context.health_metrics],
                 "lab_records": [asdict(record) for record in context.lab_records],
                 "adherence_signals": [asdict(signal) for signal in context.adherence_signals],
+                "consistency_level": context.consistency_level,
+                "adaptive_adjustment": context.adaptive_adjustment,
                 "past_recommendations": retrieved_context,
             },
             metadata={

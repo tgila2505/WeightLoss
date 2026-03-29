@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Numeric, String, func
+from sqlalchemy import Boolean, DateTime, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -15,6 +15,7 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     adherence_score: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     consistency_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    plan_refresh_needed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

@@ -54,6 +54,8 @@ class OrchestrationContext:
     health_metrics: list[HealthMetricContext] = field(default_factory=list)
     lab_records: list[LabRecordContext] = field(default_factory=list)
     adherence_signals: list[AdherenceSignalContext] = field(default_factory=list)
+    consistency_level: str | None = None
+    adaptive_adjustment: dict[str, str] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
