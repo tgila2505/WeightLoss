@@ -1,0 +1,409 @@
+import { getAccessToken } from './auth';
+
+export type OnboardingPayload = {
+  name: string;
+  age: string;
+  gender: string;
+  height_cm: string;
+  weight_kg: string;
+  goal_target_weight_kg: string;
+  goal_timeline_weeks: string;
+  health_conditions: string;
+  activity_level: string;
+  sleep_hours: string;
+  diet_pattern: string;
+};
+
+type ProfileRequest = {
+  name: string;
+  age: number;
+  gender?: string;
+  height_cm?: number;
+  weight_kg?: number;
+  goal_target_weight_kg?: number;
+  goal_timeline_weeks?: number;
+  health_conditions?: string;
+  activity_level?: string;
+  sleep_hours?: number;
+  diet_pattern?: string;
+};
+
+export type ProfileResponse = {
+  id: number;
+  user_id: number;
+  name: string;
+  age: number;
+  gender?: string | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  goal_target_weight_kg?: number | null;
+  goal_timeline_weeks?: number | null;
+  health_conditions?: string | null;
+  activity_level?: string | null;
+  sleep_hours?: number | null;
+  diet_pattern?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HealthMetricResponse = {
+  id: number;
+  user_id: number;
+  weight_kg: number;
+  bmi?: number | null;
+  steps?: number | null;
+  sleep_hours?: number | null;
+  height_cm?: number | null;
+  recorded_at: string;
+  created_at: string;
+  updated_at: string;
+  processed: {
+    weight_unit: string;
+    height_unit?: string | null;
+    sleep_unit?: string | null;
+    derived_bmi?: number | null;
+    weight_trend: string;
+    bmi_trend: string;
+  };
+};
+
+export type LabRecordResponse = {
+  id: number;
+  user_id: number;
+  test_name: string;
+  value: number;
+  unit?: string | null;
+  reference_range?: string | null;
+  recorded_date: string;
+  created_at: string;
+  updated_at: string;
+  processed: {
+    normalized_value: number;
+    normalized_unit?: string | null;
+    trend: string;
+  };
+  evaluation: {
+    normalized_test_name?: string | null;
+    status: string;
+    is_abnormal: boolean;
+    rule_applied: boolean;
+  };
+};
+
+export type PlanSnapshot = {
+  intent: string;
+  meals: Array<{ meal: string; name: string }>;
+  activity: Array<{ title: string; frequency: string }>;
+  behavioral_actions: string[];
+  lab_insights: Array<{ test_name: string; status: string; summary: string }>;
+  risks: Array<{ code: string; description: string; status: string }>;
+  recommendations: string[];
+  adherence_signals: Array<{ name: string; completed: boolean; score?: number | null }>;
+  constraints_applied: string[];
+  biomarker_adjustments: string[];
+};
+
+export type OrchestratorResponse = {
+  content: string;
+  status: string;
+  data: Record<string, unknown>;
+  metadata: {
+    final_plan?: PlanSnapshot;
+    retrieved_recommendations?: Array<{
+      id: string;
+      score: number;
+      text: string;
+      metadata: Record<string, unknown>;
+    }>;
+    [key: string]: unknown;
+  };
+  error?: string | null;
+};
+
+export type OrchestratorIntent = 'dashboard' | 'meal_plan' | 'tracking' | 'question';
+
+const apiBaseUrl =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+const aiServicesBaseUrl =
+  process.env.NEXT_PUBLIC_AI_SERVICES_BASE_URL ?? 'http://localhost:8001';
+const sessionPlanKey = 'latest_plan_snapshot';
+const sessionInteractionKey = 'interaction_history';
+
+export async function upsertProfile(payload: OnboardingPayload): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before completing onboarding.');
+  }
+
+  const body = serializeProfile(payload);
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  };
+
+  const createResponse = await fetch(`${apiBaseUrl}/api/v1/profile`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  });
+
+  if (createResponse.ok) {
+    return;
+  }
+
+  if (createResponse.status === 409) {
+    const updateResponse = await fetch(`${apiBaseUrl}/api/v1/profile`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    if (updateResponse.ok) {
+      return;
+    }
+
+    throw new Error(await readError(updateResponse));
+  }
+
+  throw new Error(await readError(createResponse));
+}
+
+export async function fetchProfile(): Promise<ProfileResponse | null> {
+  return requestWithOptional404<ProfileResponse>(`${apiBaseUrl}/api/v1/profile`);
+}
+
+export async function fetchHealthMetrics(): Promise<HealthMetricResponse[]> {
+  return request<HealthMetricResponse[]>(`${apiBaseUrl}/api/v1/health-metrics`);
+}
+
+export async function fetchLabs(): Promise<LabRecordResponse[]> {
+  return request<LabRecordResponse[]>(`${apiBaseUrl}/api/v1/labs`);
+}
+
+export async function submitOrchestratorRequest(input: {
+  prompt: string;
+  intent: OrchestratorIntent;
+  profile: ProfileResponse | null;
+  metrics: HealthMetricResponse[];
+  labs: LabRecordResponse[];
+  adherenceSignals?: Array<{ name: string; completed: boolean; score?: number | null }>;
+}): Promise<OrchestratorResponse> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before using the assistant.');
+  }
+
+  const response = await fetch(`${aiServicesBaseUrl}/orchestrator`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      context: {
+        prompt: input.prompt,
+        intent: input.intent,
+        user_profile: input.profile
+          ? {
+              user_id: input.profile.user_id,
+              age: input.profile.age,
+              gender: input.profile.gender,
+              height_cm: input.profile.height_cm,
+              weight_kg: input.profile.weight_kg,
+              conditions: splitCommaSeparated(input.profile.health_conditions),
+              dietary_restrictions: splitCommaSeparated(input.profile.diet_pattern),
+              dietary_preferences: splitCommaSeparated(input.profile.activity_level)
+            }
+          : null,
+        health_metrics: input.metrics.map((metric) => ({
+          weight_kg: metric.weight_kg,
+          bmi: metric.bmi,
+          steps: metric.steps,
+          sleep_hours: metric.sleep_hours,
+          weight_trend: metric.processed.weight_trend,
+          bmi_trend: metric.processed.bmi_trend,
+          recorded_at: metric.recorded_at
+        })),
+        lab_records: input.labs.map((lab) => ({
+          test_name: lab.test_name,
+          value: lab.value,
+          unit: lab.unit,
+          status: lab.evaluation.status,
+          trend: lab.processed.trend,
+          recorded_date: lab.recorded_date
+        })),
+        adherence_signals: input.adherenceSignals ?? []
+      }
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+
+  return (await response.json()) as OrchestratorResponse;
+}
+
+export function saveLatestPlan(plan: PlanSnapshot): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.setItem(sessionPlanKey, JSON.stringify(plan));
+}
+
+export function getLatestPlan(): PlanSnapshot | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(sessionPlanKey);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as PlanSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+export type InteractionHistoryItem = {
+  prompt: string;
+  reply: string;
+  created_at: string;
+};
+
+export function getInteractionHistory(): InteractionHistoryItem[] {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  const raw = window.sessionStorage.getItem(sessionInteractionKey);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(raw) as InteractionHistoryItem[];
+  } catch {
+    return [];
+  }
+}
+
+export function appendInteractionHistory(item: InteractionHistoryItem): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const history = getInteractionHistory();
+  history.unshift(item);
+  window.sessionStorage.setItem(
+    sessionInteractionKey,
+    JSON.stringify(history.slice(0, 10))
+  );
+}
+
+function serializeProfile(payload: OnboardingPayload): ProfileRequest {
+  return {
+    name: payload.name.trim(),
+    age: Number(payload.age),
+    gender: optionalString(payload.gender),
+    height_cm: optionalNumber(payload.height_cm),
+    weight_kg: optionalNumber(payload.weight_kg),
+    goal_target_weight_kg: optionalNumber(payload.goal_target_weight_kg),
+    goal_timeline_weeks: optionalInteger(payload.goal_timeline_weeks),
+    health_conditions: optionalString(payload.health_conditions),
+    activity_level: optionalString(payload.activity_level),
+    sleep_hours: optionalNumber(payload.sleep_hours),
+    diet_pattern: optionalString(payload.diet_pattern)
+  };
+}
+
+function optionalString(value: string): string | undefined {
+  const normalized = value.trim();
+  return normalized === '' ? undefined : normalized;
+}
+
+function optionalNumber(value: string): number | undefined {
+  if (value.trim() === '') {
+    return undefined;
+  }
+
+  return Number(value);
+}
+
+function optionalInteger(value: string): number | undefined {
+  if (value.trim() === '') {
+    return undefined;
+  }
+
+  return parseInt(value, 10);
+}
+
+async function readError(response: Response): Promise<string> {
+  try {
+    const data = (await response.json()) as {
+      detail?: string;
+      error?: { message?: string };
+    };
+
+    return data.detail ?? data.error?.message ?? 'Request failed.';
+  } catch {
+    return 'Request failed.';
+  }
+}
+
+async function request<T>(url: string): Promise<T> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before viewing this data.');
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+
+  return (await response.json()) as T;
+}
+
+async function requestWithOptional404<T>(url: string): Promise<T | null> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before viewing this data.');
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+
+  return (await response.json()) as T;
+}
+
+function splitCommaSeparated(value?: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}

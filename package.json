@@ -1,0 +1,26 @@
+{
+  "name": "weightloss-monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.18.0",
+  "scripts": {
+    "lint": "pnpm run lint:js && pnpm run lint:python",
+    "lint:js": "pnpm --filter @weightloss/frontend lint && pnpm --filter @weightloss/shared lint",
+    "lint:python": "ruff check backend ai-services",
+    "test": "pnpm run test:js && pnpm run test:python",
+    "test:js": "pnpm --filter @weightloss/frontend test && pnpm --filter @weightloss/shared test",
+    "test:python": "python -m unittest discover -s backend/tests -p \"test*.py\"",
+    "format": "pnpm run format:js && pnpm run format:python",
+    "format:check": "pnpm run format:check:js && pnpm run format:check:python",
+    "format:js": "pnpm --filter @weightloss/frontend format && pnpm --filter @weightloss/shared format",
+    "format:check:js": "pnpm --filter @weightloss/frontend format:check && pnpm --filter @weightloss/shared format:check",
+    "format:python": "ruff format backend ai-services",
+    "format:check:python": "ruff format --check backend ai-services"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "eslint": "^8.57.1",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  }
+}

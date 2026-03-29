@@ -1,0 +1,18 @@
+from fastapi import APIRouter
+
+from app.api.v1.endpoints.adherence import router as adherence_router
+from app.api.v1.endpoints.auth import router as auth_router
+from app.api.v1.endpoints.health import router as health_router
+from app.api.v1.endpoints.health_metrics import router as health_metrics_router
+from app.api.v1.endpoints.lab import router as lab_router
+from app.api.v1.endpoints.profile import router as profile_router
+from app.api.v1.endpoints.reminders import router as reminders_router
+
+router = APIRouter()
+router.include_router(adherence_router, tags=["adherence"])
+router.include_router(auth_router, tags=["auth"])
+router.include_router(health_router, tags=["health"])
+router.include_router(health_metrics_router, tags=["health-metrics"])
+router.include_router(lab_router, tags=["labs"])
+router.include_router(profile_router, tags=["profile"])
+router.include_router(reminders_router, tags=["reminders"])

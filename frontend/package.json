@@ -1,0 +1,23 @@
+{
+  "name": "@weightloss/frontend",
+  "private": true,
+  "dependencies": {
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0",
+    "test": "node -e \"console.log('No frontend tests configured yet.')\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
