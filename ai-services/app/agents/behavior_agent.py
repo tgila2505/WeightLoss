@@ -52,7 +52,7 @@ class BehaviorAgent(AgentInterface):
                 data={
                     "activity": activity,
                     "behavioral_actions": data.get("behavioral_actions", []),
-                    "adherence_signals": data.get("adherence_signals", self._default_signals(adherence_signals)),
+                    "adherence_signals": [self._normalize_signal(s) for s in data.get("adherence_signals", self._default_signals(adherence_signals)) if s.get("name") or s.get("signal") or s.get("type")],
                 },
                 metadata={"agent_name": "behavior", "llm_generated": True},
             )
@@ -105,6 +105,12 @@ Respond with ONLY valid JSON, no other text:
         title = item.get("title") or item.get("name") or item.get("activity") or ""
         frequency = item.get("frequency") or item.get("duration") or item.get("schedule") or ""
         return {"title": title, "frequency": frequency}
+
+    def _normalize_signal(self, item: dict[str, Any]) -> dict[str, Any]:
+        name = item.get("name") or item.get("signal") or item.get("type") or ""
+        completed = bool(item.get("completed", False))
+        score = item.get("score")
+        return {"name": name, "completed": completed, "score": int(score) if isinstance(score, float) else score}
 
     def _parse_json(self, raw: str) -> dict[str, Any]:
         match = re.search(r'\{.*\}', raw, re.DOTALL)

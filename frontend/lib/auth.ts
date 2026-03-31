@@ -12,6 +12,8 @@ export function getAccessToken(): string | null {
 
 export function setAccessToken(token: string): void {
   window.localStorage.setItem(TOKEN_KEY, token);
+  // Clear any session data from a previous user
+  window.sessionStorage.clear();
 }
 
 export function clearAccessToken(): void {
