@@ -2,6 +2,7 @@
 
 import type { PlanSnapshot } from '../../lib/api-client';
 import { Checklist } from './checklist';
+import { NavBar } from './nav-bar';
 
 export function PlanView({
   plan
@@ -27,6 +28,7 @@ export function PlanView({
           <h1 style={{ margin: '4px 0 8px' }}>Daily breakdown</h1>
           <p style={mutedStyle}>Meals, activity, and actions from the latest generated plan.</p>
         </div>
+        <NavBar current="Plan" />
       </header>
 
       <div style={gridStyle}>

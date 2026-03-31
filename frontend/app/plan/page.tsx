@@ -12,17 +12,18 @@ export default function PlanPage() {
     let isMounted = true;
 
     async function loadPlan() {
+      // Session plan (from current interaction) takes priority
+      const sessionPlan = getLatestPlan();
+      if (sessionPlan) {
+        if (isMounted) setPlan(sessionPlan);
+        return;
+      }
+      // Fall back to backend-persisted plan
       try {
-        const nextPlan = await fetchTodayPlan();
-        if (!isMounted) {
-          return;
-        }
-        setPlan(nextPlan ?? getLatestPlan());
+        const backendPlan = await fetchTodayPlan();
+        if (isMounted) setPlan(backendPlan);
       } catch {
-        if (!isMounted) {
-          return;
-        }
-        setPlan(getLatestPlan());
+        if (isMounted) setPlan(null);
       }
     }
 

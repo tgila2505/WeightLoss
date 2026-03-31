@@ -125,6 +125,7 @@ function DashboardHeader({ name }: Readonly<{ name?: string | null }>) {
         <Link href="/interaction">Interaction</Link>
         <Link href="/reminders">Reminders</Link>
       </nav>
+
     </header>
   );
 }

@@ -1,4 +1,5 @@
 import { getAccessToken } from './auth';
+import { getGroqKey, getMistralKey } from './ai-keys';
 
 export type OnboardingPayload = {
   name: string;
@@ -301,7 +302,9 @@ export async function submitOrchestratorRequest(input: {
         })),
         adherence_signals: input.adherenceSignals ?? [],
         consistency_level: input.consistencyLevel ?? null,
-        adaptive_adjustment: input.adaptiveAdjustment ?? null
+        adaptive_adjustment: input.adaptiveAdjustment ?? null,
+        groq_api_key: getGroqKey() ?? null,
+        mistral_api_key: getMistralKey() ?? null
       }
     })
   });
@@ -481,9 +484,13 @@ function optionalInteger(value: string): number | undefined {
 async function readError(response: Response): Promise<string> {
   try {
     const data = (await response.json()) as {
-      detail?: string;
+      detail?: string | Array<{ msg?: string; message?: string }>;
       error?: { message?: string };
     };
+
+    if (Array.isArray(data.detail)) {
+      return data.detail.map((d) => d.msg ?? d.message ?? 'Unknown error').join(', ');
+    }
 
     return data.detail ?? data.error?.message ?? 'Request failed.';
   } catch {

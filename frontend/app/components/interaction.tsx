@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import {
@@ -21,6 +22,8 @@ import {
   type PlanSnapshot
 } from '../../lib/api-client';
 import { InputBox } from './input-box';
+import { NavBar } from './nav-bar';
+import { hasAiKeys } from '../../lib/ai-keys';
 
 export function InteractionView() {
   const [history, setHistory] = useState<InteractionHistoryItem[]>([]);
@@ -30,6 +33,11 @@ export function InteractionView() {
   const [planRefreshNeeded, setPlanRefreshNeeded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [aiKeysConfigured, setAiKeysConfigured] = useState(false);
+
+  useEffect(() => {
+    setAiKeysConfigured(hasAiKeys());
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -107,9 +115,11 @@ export function InteractionView() {
   async function applyResponse(prompt: string, response: OrchestratorResponse) {
     const finalPlan = response.metadata.final_plan ?? null;
     if (finalPlan) {
-      await persistLatestPlan(finalPlan);
       saveLatestPlan(finalPlan);
       setLatestPlan(finalPlan);
+      persistLatestPlan(finalPlan).catch(() => {
+        // backend persistence failure is non-fatal; plan is still shown in session
+      });
     }
 
     const item = {
@@ -127,6 +137,19 @@ export function InteractionView() {
         <div style={refreshBannerStyle}>
           <strong>Your adherence patterns have changed.</strong> Your consistency level is now{' '}
           <em>{consistencyLevel}</em>. Submit a new request below to get an updated plan.
+        </div>
+      ) : null}
+
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <p style={eyebrowStyle}>Interaction</p>
+        <NavBar current="Interaction" />
+      </header>
+
+      {!aiKeysConfigured ? (
+        <div style={noKeysBannerStyle}>
+          <strong>AI not configured.</strong> You are using built-in rules which ignore your
+          prompt. To get personalised responses, add your API keys on the{' '}
+          <Link href="/settings" style={{ color: '#92400e' }}>AI settings page</Link>.
         </div>
       ) : null}
 
@@ -216,6 +239,16 @@ const entryStyle = {
   borderRadius: '14px',
   backgroundColor: '#f8fafc',
   padding: '14px'
+} as const;
+
+const noKeysBannerStyle = {
+  marginBottom: '16px',
+  padding: '14px 18px',
+  borderRadius: '12px',
+  backgroundColor: '#fef3c7',
+  border: '1px solid #fcd34d',
+  color: '#92400e',
+  fontSize: '14px'
 } as const;
 
 const refreshBannerStyle = {

@@ -5,6 +5,7 @@ import type {
   HealthMetricResponse,
   LabRecordResponse
 } from '../../lib/api-client';
+import { NavBar } from './nav-bar';
 
 export function TrackingView({
   metrics,
@@ -17,10 +18,13 @@ export function TrackingView({
 }>) {
   return (
     <main style={pageStyle}>
-      <header style={headerStyle}>
-        <p style={eyebrowStyle}>Tracking</p>
-        <h1 style={{ margin: '4px 0 8px' }}>Progress and history</h1>
-        <p style={mutedStyle}>Review weight trends, biomarker history, and adherence signals.</p>
+      <header style={{ ...headerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <p style={eyebrowStyle}>Tracking</p>
+          <h1 style={{ margin: '4px 0 8px' }}>Progress and history</h1>
+          <p style={mutedStyle}>Review weight trends, biomarker history, and adherence signals.</p>
+        </div>
+        <NavBar current="Tracking" />
       </header>
 
       <div style={gridStyle}>

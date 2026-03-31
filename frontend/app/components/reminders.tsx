@@ -7,6 +7,7 @@ import {
   fetchReminders,
   type ReminderResponse
 } from '../../lib/api-client';
+import { NavBar } from './nav-bar';
 
 const REMINDER_TYPES = ['medication', 'meal', 'exercise', 'water', 'sleep', 'other'];
 const CADENCES = ['daily', 'weekdays', 'weekends', 'weekly'];
@@ -69,12 +70,15 @@ export function RemindersView() {
 
   return (
     <main style={pageStyle}>
-      <header style={headerStyle}>
-        <p style={eyebrowStyle}>Reminders</p>
-        <h1 style={{ margin: '4px 0 8px' }}>Scheduled reminders</h1>
-        <p style={mutedStyle}>
-          Set daily reminders for medications, meals, exercise, and other habits.
-        </p>
+      <header style={{ ...headerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <p style={eyebrowStyle}>Reminders</p>
+          <h1 style={{ margin: '4px 0 8px' }}>Scheduled reminders</h1>
+          <p style={mutedStyle}>
+            Set daily reminders for medications, meals, exercise, and other habits.
+          </p>
+        </div>
+        <NavBar current="Reminders" />
       </header>
 
       <div style={gridStyle}>

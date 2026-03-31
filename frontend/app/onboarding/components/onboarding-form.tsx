@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 
@@ -7,6 +8,7 @@ import {
   type OnboardingPayload,
   upsertProfile
 } from '../../../lib/api-client';
+import { setAiKeys } from '../../../lib/ai-keys';
 
 type FormState = OnboardingPayload;
 
@@ -39,12 +41,22 @@ const steps = [
     id: 'lifestyle',
     title: 'Lifestyle habits',
     description: 'Daily patterns that shape your plan.'
+  },
+  {
+    id: 'ai_setup',
+    title: 'AI setup',
+    description: 'Connect AI providers to get personalised meal and behavior plans.'
   }
 ] as const;
 
 export function OnboardingForm() {
+  const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<FormState>(initialState);
+  const [groqKey, setGroqKey] = useState('');
+  const [mistralKey, setMistralKey] = useState('');
+  const [showGroqKey, setShowGroqKey] = useState(false);
+  const [showMistralKey, setShowMistralKey] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,16 +72,18 @@ export function OnboardingForm() {
         form.weight_kg !== ''
       );
     }
-
     if (stepIndex === 1) {
       return form.goal_target_weight_kg !== '' && form.goal_timeline_weeks !== '';
     }
-
-    return (
-      form.activity_level.trim() !== '' &&
-      form.sleep_hours !== '' &&
-      form.diet_pattern.trim() !== ''
-    );
+    if (stepIndex === 2) {
+      return (
+        form.activity_level.trim() !== '' &&
+        form.sleep_hours !== '' &&
+        form.diet_pattern.trim() !== ''
+      );
+    }
+    // Step 4 (AI setup) can always continue — keys are optional
+    return true;
   }, [form, stepIndex]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -83,7 +97,11 @@ export function OnboardingForm() {
 
     try {
       await upsertProfile(form);
-      setSuccess('Onboarding saved successfully.');
+      if (groqKey.trim() && mistralKey.trim()) {
+        setAiKeys(groqKey.trim(), mistralKey.trim());
+      }
+      setSuccess('Onboarding saved. Redirecting...');
+      setTimeout(() => router.push('/dashboard'), 800);
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
@@ -112,13 +130,8 @@ export function OnboardingForm() {
       <h1 style={{ marginBottom: '8px' }}>{currentStep.title}</h1>
       <p style={{ marginTop: 0, color: '#4b5563' }}>{currentStep.description}</p>
 
-      <div
-        style={{
-          display: 'grid',
-          gap: '16px',
-          marginTop: '24px'
-        }}
-      >
+      <div style={{ display: 'grid', gap: '16px', marginTop: '24px' }}>
+
         {stepIndex === 0 ? (
           <>
             <Field label="Full name" required>
@@ -242,10 +255,86 @@ export function OnboardingForm() {
                   value={form.diet_pattern}
                   onChange={(event) => updateField('diet_pattern', event.target.value)}
                   style={inputStyle}
-                  placeholder="Example: balanced, vegetarian"
+                  placeholder="e.g. balanced, vegetarian, desi"
                 />
               </Field>
             </TwoColumnRow>
+          </>
+        ) : null}
+
+        {stepIndex === 3 ? (
+          <>
+            <div style={infoBoxStyle}>
+              <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Why add API keys?</p>
+              <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
+                Without keys the app uses built-in rules. With keys, a real LLM generates
+                fully personalised plans based on your exact request — like a desi meal plan,
+                a Ramadan schedule, or post-workout meals.
+              </p>
+            </div>
+
+            <div style={providerBlockStyle}>
+              <p style={{ margin: '0 0 4px', fontWeight: 600 }}>
+                Groq <span style={badgeStyle}>Primary</span>
+              </p>
+              <p style={{ margin: '0 0 10px', color: '#4b5563', fontSize: '13px' }}>
+                1. Go to <strong>console.groq.com</strong> → sign up for free
+                <br />
+                2. Click <strong>API Keys</strong> → <strong>Create API Key</strong>
+                <br />
+                3. Copy and paste below
+              </p>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showGroqKey ? 'text' : 'password'}
+                  value={groqKey}
+                  onChange={(e) => setGroqKey(e.target.value)}
+                  placeholder="gsk_..."
+                  style={{ ...inputStyle, paddingRight: '80px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGroqKey((v) => !v)}
+                  style={showHideStyle}
+                >
+                  {showGroqKey ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+
+            <div style={providerBlockStyle}>
+              <p style={{ margin: '0 0 4px', fontWeight: 600 }}>
+                Mistral <span style={{ ...badgeStyle, backgroundColor: '#f3f4f6', color: '#374151' }}>Fallback</span>
+              </p>
+              <p style={{ margin: '0 0 10px', color: '#4b5563', fontSize: '13px' }}>
+                1. Go to <strong>console.mistral.ai</strong> → sign up for free
+                <br />
+                2. Click <strong>API Keys</strong> → <strong>Create new key</strong>
+                <br />
+                3. Copy and paste below
+              </p>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showMistralKey ? 'text' : 'password'}
+                  value={mistralKey}
+                  onChange={(e) => setMistralKey(e.target.value)}
+                  placeholder="..."
+                  style={{ ...inputStyle, paddingRight: '80px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMistralKey((v) => !v)}
+                  style={showHideStyle}
+                >
+                  {showMistralKey ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>
+              Keys are stored locally in your browser and never sent to our servers.
+              You can skip this and add them later from settings.
+            </p>
           </>
         ) : null}
       </div>
@@ -284,14 +373,26 @@ export function OnboardingForm() {
             Continue
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canContinue || isSubmitting}
-            style={primaryButtonStyle}
-          >
-            {isSubmitting ? 'Saving...' : 'Save onboarding'}
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {(!groqKey.trim() || !mistralKey.trim()) ? (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                style={secondaryButtonStyle}
+              >
+                {isSubmitting ? 'Saving...' : 'Skip and finish'}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              style={primaryButtonStyle}
+            >
+              {isSubmitting ? 'Saving...' : groqKey.trim() && mistralKey.trim() ? 'Save and finish' : 'Finish'}
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -355,4 +456,42 @@ const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
   backgroundColor: '#e5e7eb',
   color: '#111827'
+};
+
+const infoBoxStyle: CSSProperties = {
+  backgroundColor: '#eff6ff',
+  border: '1px solid #bfdbfe',
+  borderRadius: '12px',
+  padding: '16px'
+};
+
+const providerBlockStyle: CSSProperties = {
+  backgroundColor: '#f9fafb',
+  border: '1px solid #e5e7eb',
+  borderRadius: '12px',
+  padding: '16px'
+};
+
+const badgeStyle: CSSProperties = {
+  display: 'inline-block',
+  marginLeft: '6px',
+  padding: '2px 8px',
+  borderRadius: '20px',
+  fontSize: '11px',
+  fontWeight: 600,
+  backgroundColor: '#dbeafe',
+  color: '#1d4ed8'
+};
+
+const showHideStyle: CSSProperties = {
+  position: 'absolute',
+  right: '12px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  border: 'none',
+  background: 'none',
+  color: '#2563eb',
+  fontWeight: 600,
+  cursor: 'pointer',
+  fontSize: '13px'
 };
