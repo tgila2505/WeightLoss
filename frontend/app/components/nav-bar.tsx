@@ -1,17 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   CalendarDays,
   TrendingUp,
   MessageCircle,
   Bell,
-  Settings
+  Settings,
+  LogOut
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { clearAccessToken } from '../../lib/auth';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -24,6 +26,12 @@ const links = [
 
 export function NavBar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    clearAccessToken();
+    router.push('/');
+  }
 
   return (
     <>
@@ -55,6 +63,16 @@ export function NavBar() {
             );
           })}
         </div>
+        {/* Logout at bottom of sidebar */}
+        <div className="px-3 py-4 border-t border-slate-100">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full"
+          >
+            <LogOut className="h-4 w-4 flex-shrink-0" />
+            Log out
+          </button>
+        </div>
       </nav>
 
       {/* Mobile bottom nav */}
@@ -76,6 +94,14 @@ export function NavBar() {
               </Link>
             );
           })}
+          {/* Logout in mobile nav */}
+          <button
+            onClick={handleLogout}
+            className="flex flex-col items-center gap-0.5 px-1 py-1 text-[10px] font-medium text-slate-400 hover:text-red-500 transition-colors min-w-0"
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <span>Log out</span>
+          </button>
         </div>
       </nav>
     </>
