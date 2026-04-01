@@ -12,7 +12,7 @@ export function PageShell({
   fullWidth?: boolean;
 }>) {
   return (
-    <div className={cn('min-h-screen bg-slate-50 pb-20 md:pb-0 md:pl-64', className)}>
+    <div style={{ paddingLeft: '256px' }} className={cn('min-h-screen bg-slate-50', className)}>
       <div className={cn('mx-auto px-4 py-8', fullWidth ? 'max-w-full' : 'max-w-5xl')}>
         {children}
       </div>
