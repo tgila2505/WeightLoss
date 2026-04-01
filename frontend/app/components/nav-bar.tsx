@@ -28,12 +28,12 @@ export function NavBar() {
   return (
     <>
       {/* Desktop left sidebar */}
-      <nav className="fixed left-0 top-0 h-full w-64 flex-col bg-slate-900 z-50 hidden md:flex">
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-700">
-          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
+      <nav className="fixed left-0 top-0 h-full w-64 flex-col bg-white border-r border-slate-200 z-50 hidden md:flex">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-sm font-bold">W</span>
           </div>
-          <span className="font-semibold text-white text-sm">WeightLoss</span>
+          <span className="font-semibold text-slate-900 text-sm">WeightLoss</span>
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
           {links.map(({ href, label, icon: Icon }) => {
@@ -45,8 +45,8 @@ export function NavBar() {
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   active
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 )}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
