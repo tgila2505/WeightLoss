@@ -2,8 +2,19 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { CSSProperties } from 'react';
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 
 import { login, register } from '../../lib/auth';
 
@@ -29,7 +40,6 @@ export default function RegisterPage() {
     }
 
     setIsSubmitting(true);
-
     try {
       await register(email, password);
       await login(email, password);
@@ -41,122 +51,94 @@ export default function RegisterPage() {
     }
   }
 
-  return (
-    <main style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={{ marginTop: 0, marginBottom: '8px' }}>Create account</h1>
-        <p style={{ marginTop: 0, color: '#4b5563' }}>
-          Start your weight loss journey.
-        </p>
+  const confirmMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
 
-        <div style={{ display: 'grid', gap: '16px', marginTop: '24px' }}>
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>Email</span>
-            <input
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center pb-4">
+          <div className="mx-auto mb-4 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+            <span className="text-white text-xl font-bold">W</span>
+          </div>
+          <CardTitle className="text-2xl font-bold">Create account</CardTitle>
+          <CardDescription>Start your weight loss journey today</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
               placeholder="you@example.com"
               autoComplete="email"
+              autoFocus
             />
-          </label>
+          </div>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>Password</span>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
               placeholder="At least 8 characters"
               autoComplete="new-password"
             />
-          </label>
+          </div>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>Confirm password</span>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm password</Label>
+            <Input
+              id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              style={inputStyle}
               placeholder="Repeat your password"
               autoComplete="new-password"
+              aria-invalid={confirmMismatch}
+              aria-describedby={confirmMismatch ? 'confirm-error' : undefined}
+              className={confirmMismatch ? 'border-red-500' : ''}
             />
-          </label>
-        </div>
+            {confirmMismatch ? (
+              <p id="confirm-error" className="text-xs text-red-600">
+                Passwords do not match
+              </p>
+            ) : null}
+          </div>
 
-        {error ? (
-          <p style={{ marginTop: '16px', color: '#b91c1c' }}>{error}</p>
-        ) : null}
+          {error ? (
+            <p className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          ) : null}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting || !email || !password || !confirmPassword}
-          style={{
-            ...primaryButtonStyle,
-            marginTop: '24px',
-            width: '100%',
-            opacity: isSubmitting || !email || !password || !confirmPassword ? 0.6 : 1
-          }}
-        >
-          {isSubmitting ? 'Creating account...' : 'Create account'}
-        </button>
+          <Button
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={isSubmitting || !email || !password || !confirmPassword}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account…
+              </>
+            ) : (
+              'Create account'
+            )}
+          </Button>
 
-        <p style={{ marginTop: '20px', textAlign: 'center', color: '#4b5563' }}>
-          Already have an account?{' '}
-          <Link href="/login" style={{ color: '#2563eb' }}>
-            Log in
-          </Link>
-        </p>
-      </div>
+          <p className="text-center text-sm text-slate-500">
+            Already have an account?{' '}
+            <Link href="/login" className="text-blue-600 hover:underline font-medium">
+              Log in
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }
-
-const pageStyle: CSSProperties = {
-  minHeight: '100vh',
-  display: 'grid',
-  placeItems: 'center',
-  padding: '24px'
-};
-
-const cardStyle: CSSProperties = {
-  width: '100%',
-  maxWidth: '480px',
-  backgroundColor: '#ffffff',
-  borderRadius: '18px',
-  padding: '32px',
-  boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)'
-};
-
-const labelStyle: CSSProperties = {
-  display: 'grid',
-  gap: '8px'
-};
-
-const labelTextStyle: CSSProperties = {
-  fontWeight: 600
-};
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: '10px',
-  border: '1px solid #d1d5db',
-  fontSize: '16px',
-  boxSizing: 'border-box'
-};
-
-const primaryButtonStyle: CSSProperties = {
-  padding: '12px 18px',
-  borderRadius: '10px',
-  border: 'none',
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontWeight: 600,
-  fontSize: '16px',
-  cursor: 'pointer'
-};
