@@ -1,9 +1,16 @@
 'use client';
 
-import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
-import { NavBar } from '../components/nav-bar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+
+import { PageShell } from '../components/page-shell';
 import { getGroqKey, getMistralKey, setAiKeys, clearAiKeys } from '../../lib/ai-keys';
 
 export default function SettingsPage() {
@@ -39,104 +46,126 @@ export default function SettingsPage() {
   const bothSet = Boolean(groqKey.trim() && mistralKey.trim());
 
   return (
-    <main style={pageStyle}>
-      <header style={headerStyle}>
-        <div>
-          <p style={eyebrowStyle}>Settings</p>
-          <h1 style={{ margin: '4px 0 8px' }}>AI provider setup</h1>
-          <p style={mutedStyle}>
-            Configure Groq (primary) and Mistral (fallback) to enable personalised AI responses.
-          </p>
-        </div>
-        <NavBar current="Settings" />
-      </header>
-
-      <div style={cardStyle}>
-        <div style={statusRowStyle}>
-          <span style={{ fontWeight: 600 }}>Status</span>
-          <span style={bothSet ? activeTagStyle : inactiveTagStyle}>
-            {bothSet ? 'AI active' : 'Using built-in rules'}
-          </span>
-        </div>
-
-        <div style={{ display: 'grid', gap: '24px', marginTop: '24px' }}>
-          <div style={providerBlockStyle}>
-            <p style={{ margin: '0 0 4px', fontWeight: 600 }}>
-              Groq <span style={badgeStyle}>Primary</span>
-            </p>
-            <p style={{ margin: '0 0 10px', color: '#4b5563', fontSize: '13px' }}>
-              Get a free key at <strong>console.groq.com</strong> → API Keys → Create API Key
-            </p>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showGroqKey ? 'text' : 'password'}
-                value={groqKey}
-                onChange={(e) => setGroqKey(e.target.value)}
-                placeholder="gsk_..."
-                style={{ ...inputStyle, paddingRight: '80px' }}
-              />
-              <button type="button" onClick={() => setShowGroqKey((v) => !v)} style={showHideStyle}>
-                {showGroqKey ? 'Hide' : 'Show'}
-              </button>
-            </div>
-          </div>
-
-          <div style={providerBlockStyle}>
-            <p style={{ margin: '0 0 4px', fontWeight: 600 }}>
-              Mistral <span style={{ ...badgeStyle, backgroundColor: '#f3f4f6', color: '#374151' }}>Fallback</span>
-            </p>
-            <p style={{ margin: '0 0 10px', color: '#4b5563', fontSize: '13px' }}>
-              Get a free key at <strong>console.mistral.ai</strong> → API Keys → Create new key
-            </p>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showMistralKey ? 'text' : 'password'}
-                value={mistralKey}
-                onChange={(e) => setMistralKey(e.target.value)}
-                placeholder="..."
-                style={{ ...inputStyle, paddingRight: '80px' }}
-              />
-              <button type="button" onClick={() => setShowMistralKey((v) => !v)} style={showHideStyle}>
-                {showMistralKey ? 'Hide' : 'Show'}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {saved ? (
-          <p style={{ marginTop: '16px', color: '#15803d', fontWeight: 600 }}>Saved.</p>
-        ) : null}
-
-        <div style={{ marginTop: '24px', display: 'flex', gap: '12px' }}>
-          <button type="button" onClick={handleSave} style={primaryButtonStyle}>
-            Save keys
-          </button>
-          {bothSet ? (
-            <button type="button" onClick={handleClear} style={secondaryButtonStyle}>
-              Remove keys
-            </button>
-          ) : null}
-        </div>
-
-        <p style={{ marginTop: '16px', fontSize: '13px', color: '#6b7280' }}>
-          Keys are stored only in your browser (localStorage) and never sent to our servers.
+    <PageShell>
+      {/* Header */}
+      <div className="mb-8">
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+          Settings
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">AI provider setup</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Configure Groq (primary) and Mistral (fallback) to enable personalised AI responses.
         </p>
       </div>
-    </main>
+
+      <div className="max-w-xl">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">API keys</CardTitle>
+              <Badge
+                variant="secondary"
+                className={`text-xs ${
+                  bothSet
+                    ? 'bg-emerald-100 text-emerald-700 border-0'
+                    : 'bg-amber-100 text-amber-700 border-0'
+                }`}
+              >
+                {bothSet ? 'AI active' : 'Using built-in rules'}
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Groq */}
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-900">Groq</p>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 border-0">
+                  Primary
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500">
+                Get a free key at <strong>console.groq.com</strong> → API Keys → Create API Key
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="groq-key" className="sr-only">Groq API key</Label>
+                <div className="relative">
+                  <Input
+                    id="groq-key"
+                    type={showGroqKey ? 'text' : 'password'}
+                    value={groqKey}
+                    onChange={(e) => setGroqKey(e.target.value)}
+                    placeholder="gsk_..."
+                    className="pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGroqKey((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label={showGroqKey ? 'Hide Groq key' : 'Show Groq key'}
+                  >
+                    {showGroqKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mistral */}
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-900">Mistral</p>
+                <Badge variant="secondary" className="text-xs">
+                  Fallback
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500">
+                Get a free key at <strong>console.mistral.ai</strong> → API Keys → Create new key
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="mistral-key" className="sr-only">Mistral API key</Label>
+                <div className="relative">
+                  <Input
+                    id="mistral-key"
+                    type={showMistralKey ? 'text' : 'password'}
+                    value={mistralKey}
+                    onChange={(e) => setMistralKey(e.target.value)}
+                    placeholder="Mistral API key…"
+                    className="pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowMistralKey((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label={showMistralKey ? 'Hide Mistral key' : 'Show Mistral key'}
+                  >
+                    {showMistralKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {saved ? (
+              <p className="text-sm font-semibold text-emerald-600">Saved.</p>
+            ) : null}
+
+            <Separator />
+
+            <div className="flex items-center gap-3">
+              <Button onClick={handleSave}>Save keys</Button>
+              {bothSet ? (
+                <Button variant="outline" onClick={handleClear}>
+                  Remove keys
+                </Button>
+              ) : null}
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Keys are stored only in your browser (localStorage) and never sent to our servers.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </PageShell>
   );
 }
-
-const pageStyle: CSSProperties = { minHeight: '100vh', padding: '32px 16px', maxWidth: '720px', margin: '0 auto' };
-const headerStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' };
-const eyebrowStyle: CSSProperties = { margin: 0, color: '#2563eb', fontWeight: 600, fontSize: '14px' };
-const mutedStyle: CSSProperties = { margin: 0, color: '#64748b' };
-const cardStyle: CSSProperties = { backgroundColor: '#ffffff', borderRadius: '18px', padding: '24px', boxShadow: '0 14px 40px rgba(15,23,42,0.08)' };
-const statusRowStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-const activeTagStyle: CSSProperties = { padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, backgroundColor: '#dcfce7', color: '#15803d' };
-const inactiveTagStyle: CSSProperties = { ...activeTagStyle, backgroundColor: '#fef3c7', color: '#92400e' };
-const providerBlockStyle: CSSProperties = { backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px' };
-const inputStyle: CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #d1d5db', fontSize: '16px', boxSizing: 'border-box' };
-const showHideStyle: CSSProperties = { position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', color: '#2563eb', fontWeight: 600, cursor: 'pointer', fontSize: '13px' };
-const primaryButtonStyle: CSSProperties = { padding: '12px 18px', borderRadius: '10px', border: 'none', backgroundColor: '#2563eb', color: '#ffffff', fontWeight: 600, cursor: 'pointer' };
-const secondaryButtonStyle: CSSProperties = { ...primaryButtonStyle, backgroundColor: '#e5e7eb', color: '#111827' };
-const badgeStyle: CSSProperties = { display: 'inline-block', marginLeft: '6px', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, backgroundColor: '#dbeafe', color: '#1d4ed8' };
