@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import './globals.css';
+import { NavBarWrapper } from './components/nav-bar-wrapper';
+
 export const metadata: Metadata = {
   title: 'WeightLoss',
-  description: 'WeightLoss onboarding'
+  description: 'WeightLoss — your personalised health companion'
 };
 
 export default function RootLayout({
@@ -11,15 +14,8 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body
-        style={{
-          margin: 0,
-          fontFamily:
-            'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          backgroundColor: '#f5f7fb',
-          color: '#111827'
-        }}
-      >
+      <body className="bg-slate-50 text-slate-900 antialiased">
+        <NavBarWrapper />
         {children}
       </body>
     </html>

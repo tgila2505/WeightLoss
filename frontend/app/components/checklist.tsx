@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   createAdherenceRecord,
   fetchAdherenceRecords,
@@ -98,46 +101,47 @@ export function Checklist({
   }
 
   return (
-    <section style={cardStyle}>
-      <h3 style={{ marginTop: 0 }}>{title}</h3>
-      {items.length === 0 ? (
-        <p style={mutedStyle}>No checklist items yet.</p>
-      ) : (
-        <div style={{ display: 'grid', gap: '10px' }}>
-          {items.map((item) => (
-            <label
-              key={`${item.itemType}:${item.name}`}
-              style={{
-                display: 'flex',
-                gap: '10px',
-                alignItems: 'flex-start',
-                padding: '10px 12px',
-                borderRadius: '10px',
-                backgroundColor: completed[buildItemKey(item.name, item.itemType)]
-                  ? '#ecfdf5'
-                  : '#f8fafc'
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={completed[buildItemKey(item.name, item.itemType)] ?? false}
-                onChange={() => handleToggle(item.name, item.itemType)}
-              />
-              <span
-                style={{
-                  textDecoration: completed[buildItemKey(item.name, item.itemType)]
-                    ? 'line-through'
-                    : 'none'
-                }}
-              >
-                {item.name}
-              </span>
-            </label>
-          ))}
-        </div>
-      )}
-      {error ? <p style={errorStyle}>{error}</p> : null}
-    </section>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-sm text-slate-500">No checklist items yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item) => {
+              const key = buildItemKey(item.name, item.itemType);
+              const isDone = completed[key] ?? false;
+              return (
+                <label
+                  key={`${item.itemType}:${item.name}`}
+                  className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                    isDone ? 'bg-emerald-50' : 'bg-slate-50'
+                  }`}
+                >
+                  <Checkbox
+                    checked={isDone}
+                    onCheckedChange={() => handleToggle(item.name, item.itemType)}
+                    className="mt-0.5"
+                  />
+                  <span
+                    className={`text-sm leading-snug ${
+                      isDone ? 'line-through text-slate-400' : 'text-slate-700'
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+        {error ? (
+          <p className="mt-3 text-sm text-red-600">{error}</p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -162,21 +166,3 @@ function buildCompletionState(
 function buildItemKey(name: string, itemType: string): string {
   return `${itemType}:${name}`;
 }
-
-const cardStyle = {
-  backgroundColor: '#ffffff',
-  borderRadius: '16px',
-  padding: '20px',
-  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)'
-} as const;
-
-const mutedStyle = {
-  margin: 0,
-  color: '#64748b'
-} as const;
-
-const errorStyle = {
-  marginTop: '12px',
-  marginBottom: 0,
-  color: '#b91c1c'
-} as const;

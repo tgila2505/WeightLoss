@@ -66,10 +66,10 @@ export default function DashboardPage() {
 
 function ErrorState({ message }: Readonly<{ message: string }>) {
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px' }}>
-      <div style={{ maxWidth: '520px', backgroundColor: '#ffffff', padding: '24px', borderRadius: '16px' }}>
-        <h1 style={{ marginTop: 0 }}>Dashboard unavailable</h1>
-        <p>{message}</p>
+    <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <h1 className="text-lg font-semibold text-slate-900 mb-2">Dashboard unavailable</h1>
+        <p className="text-sm text-slate-500">{message}</p>
       </div>
     </main>
   );

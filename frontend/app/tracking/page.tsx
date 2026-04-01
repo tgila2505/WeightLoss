@@ -51,10 +51,10 @@ export default function TrackingPage() {
 
   if (error) {
     return (
-      <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px' }}>
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px' }}>
-          <h1 style={{ marginTop: 0 }}>Tracking unavailable</h1>
-          <p>{error}</p>
+      <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="w-full max-w-md bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <h1 className="text-lg font-semibold text-slate-900 mb-2">Tracking unavailable</h1>
+          <p className="text-sm text-slate-500">{error}</p>
         </div>
       </main>
     );

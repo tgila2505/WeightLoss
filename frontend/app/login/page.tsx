@@ -2,8 +2,19 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { CSSProperties } from 'react';
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 
 import { login } from '../../lib/auth';
 
@@ -17,7 +28,6 @@ export default function LoginPage() {
   async function handleSubmit() {
     setError('');
     setIsSubmitting(true);
-
     try {
       await login(email, password);
       router.push('/dashboard');
@@ -35,111 +45,76 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={{ marginTop: 0, marginBottom: '8px' }}>Log in</h1>
-        <p style={{ marginTop: 0, color: '#4b5563' }}>
-          Welcome back.
-        </p>
-
-        <div style={{ display: 'grid', gap: '16px', marginTop: '24px' }}>
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>Email</span>
-            <input
+    <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="text-center pb-4">
+          <div className="mx-auto mb-4 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+            <span className="text-white text-xl font-bold">W</span>
+          </div>
+          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardDescription>Sign in to your WeightLoss account</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleKeyDown}
-              style={inputStyle}
               placeholder="you@example.com"
               autoComplete="email"
+              autoFocus
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'login-error' : undefined}
             />
-          </label>
+          </div>
 
-          <label style={labelStyle}>
-            <span style={labelTextStyle}>Password</span>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyDown}
-              style={inputStyle}
               placeholder="Your password"
               autoComplete="current-password"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? 'login-error' : undefined}
             />
-          </label>
-        </div>
+          </div>
 
-        {error ? (
-          <p style={{ marginTop: '16px', color: '#b91c1c' }}>{error}</p>
-        ) : null}
+          {error ? (
+            <p id="login-error" className="text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          ) : null}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting || !email || !password}
-          style={{
-            ...primaryButtonStyle,
-            marginTop: '24px',
-            width: '100%',
-            opacity: isSubmitting || !email || !password ? 0.6 : 1
-          }}
-        >
-          {isSubmitting ? 'Logging in...' : 'Log in'}
-        </button>
+          <Button
+            className="w-full"
+            onClick={handleSubmit}
+            disabled={isSubmitting || !email || !password}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              'Sign in'
+            )}
+          </Button>
 
-        <p style={{ marginTop: '20px', textAlign: 'center', color: '#4b5563' }}>
-          Don&apos;t have an account?{' '}
-          <Link href="/register" style={{ color: '#2563eb' }}>
-            Create one
-          </Link>
-        </p>
-      </div>
+          <p className="text-center text-sm text-slate-500">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="text-blue-600 hover:underline font-medium">
+              Create one
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </main>
   );
 }
-
-const pageStyle: CSSProperties = {
-  minHeight: '100vh',
-  display: 'grid',
-  placeItems: 'center',
-  padding: '24px'
-};
-
-const cardStyle: CSSProperties = {
-  width: '100%',
-  maxWidth: '480px',
-  backgroundColor: '#ffffff',
-  borderRadius: '18px',
-  padding: '32px',
-  boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)'
-};
-
-const labelStyle: CSSProperties = {
-  display: 'grid',
-  gap: '8px'
-};
-
-const labelTextStyle: CSSProperties = {
-  fontWeight: 600
-};
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: '10px',
-  border: '1px solid #d1d5db',
-  fontSize: '16px',
-  boxSizing: 'border-box'
-};
-
-const primaryButtonStyle: CSSProperties = {
-  padding: '12px 18px',
-  borderRadius: '10px',
-  border: 'none',
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontWeight: 600,
-  fontSize: '16px',
-  cursor: 'pointer'
-};

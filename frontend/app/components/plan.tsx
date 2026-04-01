@@ -1,8 +1,12 @@
 'use client';
 
+import Link from 'next/link';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import type { PlanSnapshot } from '../../lib/api-client';
 import { Checklist } from './checklist';
-import { NavBar } from './nav-bar';
+import { PageShell } from './page-shell';
 
 export function PlanView({
   plan
@@ -11,51 +15,87 @@ export function PlanView({
 }>) {
   if (!plan) {
     return (
-      <main style={pageStyle}>
-        <section style={cardStyle}>
-          <h1 style={{ marginTop: 0 }}>Plan breakdown</h1>
-          <p style={mutedStyle}>Generate a plan from the interaction page to see your meals and activities.</p>
-        </section>
-      </main>
+      <PageShell>
+        <div className="mb-8">
+          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+            Plan
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Daily breakdown</h1>
+        </div>
+        <div className="text-center py-12 space-y-3">
+          <p className="text-sm text-slate-500">
+            Generate a plan from the interaction page to see your meals and activities.
+          </p>
+          <Link
+            href="/interaction"
+            className="inline-flex items-center text-sm text-blue-600 hover:underline font-medium"
+          >
+            Go to interaction →
+          </Link>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <main style={pageStyle}>
-      <header style={headerStyle}>
-        <div>
-          <p style={eyebrowStyle}>Plan</p>
-          <h1 style={{ margin: '4px 0 8px' }}>Daily breakdown</h1>
-          <p style={mutedStyle}>Meals, activity, and actions from the latest generated plan.</p>
-        </div>
-        <NavBar current="Plan" />
-      </header>
+    <PageShell>
+      {/* Header */}
+      <div className="mb-8">
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+          Plan
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">Daily breakdown</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Meals, activity, and actions from the latest generated plan.
+        </p>
+      </div>
 
-      <div style={gridStyle}>
-        <section style={cardStyle}>
-          <h2 style={{ marginTop: 0 }}>Meals</h2>
-          <div style={{ display: 'grid', gap: '12px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Meals */}
+        <Card>
+          <CardHeader className="pb-3">
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+              Nutrition
+            </p>
+            <CardTitle className="text-base mt-0.5">Meals</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {plan.meals.map((meal) => (
-              <div key={`${meal.meal}-${meal.name}`} style={panelStyle}>
-                <strong style={{ textTransform: 'capitalize' }}>{meal.meal}</strong>
-                <p style={{ margin: '6px 0 0' }}>{meal.name}</p>
+              <div
+                key={`${meal.meal}-${meal.name}`}
+                className="rounded-lg bg-slate-50 border border-slate-100 p-3"
+              >
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide capitalize">
+                  {meal.meal}
+                </p>
+                <p className="text-sm text-slate-800 mt-1">{meal.name}</p>
               </div>
             ))}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section style={cardStyle}>
-          <h2 style={{ marginTop: 0 }}>Activity</h2>
-          <div style={{ display: 'grid', gap: '12px' }}>
+        {/* Activity */}
+        <Card>
+          <CardHeader className="pb-3">
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+              Movement
+            </p>
+            <CardTitle className="text-base mt-0.5">Activity</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {plan.activity.map((item) => (
-              <div key={`${item.title}-${item.frequency}`} style={panelStyle}>
-                <strong>{item.title}</strong>
-                <p style={{ margin: '6px 0 0' }}>{item.frequency}</p>
+              <div
+                key={`${item.title}-${item.frequency}`}
+                className="rounded-lg bg-slate-50 border border-slate-100 p-3"
+              >
+                <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{item.frequency}</p>
               </div>
             ))}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
+        {/* Checklist */}
         <Checklist
           title="Action checklist"
           items={[
@@ -70,48 +110,6 @@ export function PlanView({
           ]}
         />
       </div>
-    </main>
+    </PageShell>
   );
 }
-
-const pageStyle = {
-  minHeight: '100vh',
-  padding: '32px 16px',
-  maxWidth: '1120px',
-  margin: '0 auto'
-} as const;
-
-const headerStyle = {
-  marginBottom: '24px'
-} as const;
-
-const gridStyle = {
-  display: 'grid',
-  gap: '20px',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))'
-} as const;
-
-const cardStyle = {
-  backgroundColor: '#ffffff',
-  borderRadius: '18px',
-  padding: '24px',
-  boxShadow: '0 14px 40px rgba(15, 23, 42, 0.08)'
-} as const;
-
-const panelStyle = {
-  borderRadius: '14px',
-  backgroundColor: '#f8fafc',
-  padding: '14px'
-} as const;
-
-const eyebrowStyle = {
-  margin: 0,
-  color: '#2563eb',
-  fontWeight: 600,
-  fontSize: '14px'
-} as const;
-
-const mutedStyle = {
-  margin: 0,
-  color: '#64748b'
-} as const;

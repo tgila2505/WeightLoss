@@ -1,8 +1,29 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import type { CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 
 import {
   type OnboardingPayload,
@@ -29,12 +50,12 @@ const initialState: FormState = {
 const steps = [
   {
     id: 'profile',
-    title: 'Profile',
+    title: 'Your profile',
     description: 'Basic details to create your starting profile.'
   },
   {
     id: 'goals',
-    title: 'Goals and conditions',
+    title: 'Goals & conditions',
     description: 'Your target and any important health context.'
   },
   {
@@ -45,7 +66,7 @@ const steps = [
   {
     id: 'ai_setup',
     title: 'AI setup',
-    description: 'Connect AI providers to get personalised meal and behavior plans.'
+    description: 'Connect AI providers for personalised plans.'
   }
 ] as const;
 
@@ -82,7 +103,6 @@ export function OnboardingForm() {
         form.diet_pattern.trim() !== ''
       );
     }
-    // Step 4 (AI setup) can always continue — keys are optional
     return true;
   }, [form, stepIndex]);
 
@@ -94,13 +114,12 @@ export function OnboardingForm() {
     setError('');
     setSuccess('');
     setIsSubmitting(true);
-
     try {
       await upsertProfile(form);
       if (groqKey.trim() && mistralKey.trim()) {
         setAiKeys(groqKey.trim(), mistralKey.trim());
       }
-      setSuccess('Onboarding saved. Redirecting...');
+      setSuccess('Onboarding saved. Redirecting…');
       setTimeout(() => router.push('/dashboard'), 800);
     } catch (submissionError) {
       setError(
@@ -114,384 +133,348 @@ export function OnboardingForm() {
   }
 
   return (
-    <div
-      style={{
-        width: '100%',
-        maxWidth: '720px',
-        backgroundColor: '#ffffff',
-        borderRadius: '18px',
-        padding: '32px',
-        boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)'
-      }}
-    >
-      <p style={{ margin: 0, color: '#2563eb', fontWeight: 600 }}>
-        Step {stepIndex + 1} of {steps.length}
-      </p>
-      <h1 style={{ marginBottom: '8px' }}>{currentStep.title}</h1>
-      <p style={{ marginTop: 0, color: '#4b5563' }}>{currentStep.description}</p>
+    <Card className="w-full max-w-lg shadow-lg">
+      <CardHeader className="pb-4">
+        <div className="space-y-2 mb-4">
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">
+            Step {stepIndex + 1} of {steps.length} — {currentStep.title}
+          </p>
+          <Progress value={((stepIndex + 1) / steps.length) * 100} className="h-1.5" />
+        </div>
+        <CardTitle className="text-xl">{currentStep.title}</CardTitle>
+        <CardDescription>{currentStep.description}</CardDescription>
+      </CardHeader>
 
-      <div style={{ display: 'grid', gap: '16px', marginTop: '24px' }}>
-
+      <CardContent className="space-y-5">
         {stepIndex === 0 ? (
           <>
-            <Field label="Full name" required>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Full name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
                 value={form.name}
-                onChange={(event) => updateField('name', event.target.value)}
-                style={inputStyle}
+                onChange={(e) => updateField('name', e.target.value)}
+                placeholder="Your full name"
+                autoFocus
               />
-            </Field>
-            <TwoColumnRow>
-              <Field label="Age" required>
-                <input
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="age">
+                  Age <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="age"
                   type="number"
                   min="1"
                   value={form.age}
-                  onChange={(event) => updateField('age', event.target.value)}
-                  style={inputStyle}
+                  onChange={(e) => updateField('age', e.target.value)}
+                  placeholder="e.g. 32"
                 />
-              </Field>
-              <Field label="Gender">
-                <input
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select
                   value={form.gender}
-                  onChange={(event) => updateField('gender', event.target.value)}
-                  style={inputStyle}
-                />
-              </Field>
-            </TwoColumnRow>
-            <TwoColumnRow>
-              <Field label="Height (cm)" required>
-                <input
+                  onValueChange={(v) => updateField('gender', v)}
+                >
+                  <SelectTrigger id="gender">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="non_binary">Non-binary</SelectItem>
+                    <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="height_cm">
+                  Height (cm) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="height_cm"
                   type="number"
                   min="1"
                   step="0.1"
                   value={form.height_cm}
-                  onChange={(event) => updateField('height_cm', event.target.value)}
-                  style={inputStyle}
+                  onChange={(e) => updateField('height_cm', e.target.value)}
+                  placeholder="e.g. 170"
                 />
-              </Field>
-              <Field label="Current weight (kg)" required>
-                <input
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weight_kg">
+                  Current weight (kg) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="weight_kg"
                   type="number"
                   min="1"
                   step="0.1"
                   value={form.weight_kg}
-                  onChange={(event) => updateField('weight_kg', event.target.value)}
-                  style={inputStyle}
+                  onChange={(e) => updateField('weight_kg', e.target.value)}
+                  placeholder="e.g. 80"
                 />
-              </Field>
-            </TwoColumnRow>
+              </div>
+            </div>
           </>
         ) : null}
 
         {stepIndex === 1 ? (
           <>
-            <TwoColumnRow>
-              <Field label="Target weight (kg)" required>
-                <input
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="goal_target_weight_kg">
+                  Target weight (kg) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="goal_target_weight_kg"
                   type="number"
                   min="1"
                   step="0.1"
                   value={form.goal_target_weight_kg}
-                  onChange={(event) =>
-                    updateField('goal_target_weight_kg', event.target.value)
-                  }
-                  style={inputStyle}
+                  onChange={(e) => updateField('goal_target_weight_kg', e.target.value)}
+                  placeholder="e.g. 70"
                 />
-              </Field>
-              <Field label="Timeline (weeks)" required>
-                <input
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="goal_timeline_weeks">
+                  Timeline (weeks) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="goal_timeline_weeks"
                   type="number"
                   min="1"
                   value={form.goal_timeline_weeks}
-                  onChange={(event) =>
-                    updateField('goal_timeline_weeks', event.target.value)
-                  }
-                  style={inputStyle}
+                  onChange={(e) => updateField('goal_timeline_weeks', e.target.value)}
+                  placeholder="e.g. 12"
                 />
-              </Field>
-            </TwoColumnRow>
-            <Field label="Health conditions">
-              <textarea
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="health_conditions">Health conditions</Label>
+              <Textarea
+                id="health_conditions"
                 value={form.health_conditions}
-                onChange={(event) =>
-                  updateField('health_conditions', event.target.value)
-                }
-                style={{ ...inputStyle, minHeight: '96px', resize: 'vertical' }}
-                placeholder="Optional: include any current conditions or concerns."
+                onChange={(e) => updateField('health_conditions', e.target.value)}
+                placeholder="Optional: include any current conditions or concerns (e.g. diabetes, hypertension)."
+                className="min-h-[96px] resize-y"
               />
-            </Field>
+              <p className="text-xs text-slate-500">
+                This helps personalise your plan. Leave blank if not applicable.
+              </p>
+            </div>
           </>
         ) : null}
 
         {stepIndex === 2 ? (
           <>
-            <Field label="Activity level" required>
-              <select
+            <div className="space-y-2">
+              <Label htmlFor="activity_level">
+                Activity level <span className="text-red-500">*</span>
+              </Label>
+              <Select
                 value={form.activity_level}
-                onChange={(event) => updateField('activity_level', event.target.value)}
-                style={inputStyle}
+                onValueChange={(v) => updateField('activity_level', v)}
               >
-                <option value="">Select activity level</option>
-                <option value="low">Low</option>
-                <option value="moderate">Moderate</option>
-                <option value="high">High</option>
-              </select>
-            </Field>
-            <TwoColumnRow>
-              <Field label="Average sleep (hours)" required>
-                <input
+                <SelectTrigger id="activity_level">
+                  <SelectValue placeholder="Select activity level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low — mostly sedentary</SelectItem>
+                  <SelectItem value="moderate">Moderate — light exercise 2–3×/week</SelectItem>
+                  <SelectItem value="high">High — intense exercise 4+×/week</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="sleep_hours">
+                  Average sleep (hours) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="sleep_hours"
                   type="number"
                   min="1"
                   max="24"
                   step="0.5"
                   value={form.sleep_hours}
-                  onChange={(event) => updateField('sleep_hours', event.target.value)}
-                  style={inputStyle}
+                  onChange={(e) => updateField('sleep_hours', e.target.value)}
+                  placeholder="e.g. 7"
                 />
-              </Field>
-              <Field label="Diet pattern" required>
-                <input
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="diet_pattern">
+                  Diet pattern <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="diet_pattern"
                   value={form.diet_pattern}
-                  onChange={(event) => updateField('diet_pattern', event.target.value)}
-                  style={inputStyle}
+                  onChange={(e) => updateField('diet_pattern', e.target.value)}
                   placeholder="e.g. balanced, vegetarian, desi"
                 />
-              </Field>
-            </TwoColumnRow>
+              </div>
+            </div>
           </>
         ) : null}
 
         {stepIndex === 3 ? (
           <>
-            <div style={infoBoxStyle}>
-              <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Why add API keys?</p>
-              <p style={{ margin: 0, color: '#4b5563', fontSize: '14px' }}>
+            <div className="rounded-xl bg-blue-50 border border-blue-200 p-4 space-y-1.5">
+              <p className="text-sm font-semibold text-blue-900">Why add API keys?</p>
+              <p className="text-sm text-blue-700">
                 Without keys the app uses built-in rules. With keys, a real LLM generates
-                fully personalised plans based on your exact request — like a desi meal plan,
-                a Ramadan schedule, or post-workout meals.
+                fully personalised plans — like a desi meal plan, a Ramadan schedule, or
+                post-workout meals.
+              </p>
+              <p className="text-xs text-blue-600 font-medium">
+                These keys are optional. You can skip this and add them later from Settings.
               </p>
             </div>
 
-            <div style={providerBlockStyle}>
-              <p style={{ margin: '0 0 4px', fontWeight: 600 }}>
-                Groq <span style={badgeStyle}>Primary</span>
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-900">Groq</p>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 border-0">
+                  Primary
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500">
+                Go to <strong>console.groq.com</strong> → sign up free → API Keys → Create API Key
               </p>
-              <p style={{ margin: '0 0 10px', color: '#4b5563', fontSize: '13px' }}>
-                1. Go to <strong>console.groq.com</strong> → sign up for free
-                <br />
-                2. Click <strong>API Keys</strong> → <strong>Create API Key</strong>
-                <br />
-                3. Copy and paste below
-              </p>
-              <div style={{ position: 'relative' }}>
-                <input
+              <div className="relative">
+                <Input
                   type={showGroqKey ? 'text' : 'password'}
                   value={groqKey}
                   onChange={(e) => setGroqKey(e.target.value)}
                   placeholder="gsk_..."
-                  style={{ ...inputStyle, paddingRight: '80px' }}
+                  className="pr-16"
                 />
                 <button
                   type="button"
                   onClick={() => setShowGroqKey((v) => !v)}
-                  style={showHideStyle}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label={showGroqKey ? 'Hide Groq key' : 'Show Groq key'}
                 >
-                  {showGroqKey ? 'Hide' : 'Show'}
+                  {showGroqKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
 
-            <div style={providerBlockStyle}>
-              <p style={{ margin: '0 0 4px', fontWeight: 600 }}>
-                Mistral <span style={{ ...badgeStyle, backgroundColor: '#f3f4f6', color: '#374151' }}>Fallback</span>
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-slate-900">Mistral</p>
+                <Badge variant="secondary" className="text-xs">
+                  Fallback
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500">
+                Go to <strong>console.mistral.ai</strong> → sign up free → API Keys → Create new key
               </p>
-              <p style={{ margin: '0 0 10px', color: '#4b5563', fontSize: '13px' }}>
-                1. Go to <strong>console.mistral.ai</strong> → sign up for free
-                <br />
-                2. Click <strong>API Keys</strong> → <strong>Create new key</strong>
-                <br />
-                3. Copy and paste below
-              </p>
-              <div style={{ position: 'relative' }}>
-                <input
+              <div className="relative">
+                <Input
                   type={showMistralKey ? 'text' : 'password'}
                   value={mistralKey}
                   onChange={(e) => setMistralKey(e.target.value)}
-                  placeholder="..."
-                  style={{ ...inputStyle, paddingRight: '80px' }}
+                  placeholder="Mistral API key…"
+                  className="pr-16"
                 />
                 <button
                   type="button"
                   onClick={() => setShowMistralKey((v) => !v)}
-                  style={showHideStyle}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label={showMistralKey ? 'Hide Mistral key' : 'Show Mistral key'}
                 >
-                  {showMistralKey ? 'Hide' : 'Show'}
+                  {showMistralKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
 
-            <p style={{ margin: 0, fontSize: '13px', color: '#6b7280' }}>
-              Keys are stored locally in your browser and never sent to our servers.
-              You can skip this and add them later from settings.
+            <p className="text-xs text-slate-400">
+              Keys are stored only in your browser and never sent to our servers.
             </p>
           </>
         ) : null}
-      </div>
 
-      {error ? (
-        <p style={{ marginTop: '20px', color: '#b91c1c' }}>{error}</p>
-      ) : null}
-      {success ? (
-        <p style={{ marginTop: '20px', color: '#15803d' }}>{success}</p>
-      ) : null}
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">{error}</p>
+        ) : null}
+        {success ? (
+          <p className="text-sm text-emerald-600">{success}</p>
+        ) : null}
 
-      <div
-        style={{
-          marginTop: '28px',
-          display: 'flex',
-          gap: '12px',
-          justifyContent: 'space-between'
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setStepIndex((current) => Math.max(current - 1, 0))}
-          disabled={stepIndex === 0 || isSubmitting}
-          style={secondaryButtonStyle}
-        >
-          Back
-        </button>
-
-        {stepIndex < steps.length - 1 ? (
-          <button
-            type="button"
-            onClick={() => setStepIndex((current) => current + 1)}
-            disabled={!canContinue || isSubmitting}
-            style={primaryButtonStyle}
+        <div className="flex items-center justify-between gap-3 pt-2">
+          <Button
+            variant="ghost"
+            onClick={() => setStepIndex((s) => Math.max(s - 1, 0))}
+            disabled={stepIndex === 0 || isSubmitting}
           >
-            Continue
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {(!groqKey.trim() || !mistralKey.trim()) ? (
-              <button
-                type="button"
+            Back
+          </Button>
+
+          {stepIndex < steps.length - 1 ? (
+            <Button
+              onClick={() => setStepIndex((s) => s + 1)}
+              disabled={!canContinue || isSubmitting}
+              className="sm:min-w-[140px]"
+            >
+              Continue
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              {!groqKey.trim() || !mistralKey.trim() ? (
+                <Button
+                  variant="outline"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    'Skip and finish'
+                  )}
+                </Button>
+              ) : null}
+              <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                style={secondaryButtonStyle}
+                className="sm:min-w-[140px]"
               >
-                {isSubmitting ? 'Saving...' : 'Skip and finish'}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              style={primaryButtonStyle}
-            >
-              {isSubmitting ? 'Saving...' : groqKey.trim() && mistralKey.trim() ? 'Save and finish' : 'Finish'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : groqKey.trim() && mistralKey.trim() ? (
+                  'Save and finish'
+                ) : (
+                  'Finish'
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
-
-function Field({
-  label,
-  required = false,
-  children
-}: Readonly<{
-  label: string;
-  required?: boolean;
-  children: ReactNode;
-}>) {
-  return (
-    <label style={{ display: 'grid', gap: '8px' }}>
-      <span style={{ fontWeight: 600 }}>
-        {label}
-        {required ? ' *' : ''}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-function TwoColumnRow({ children }: Readonly<{ children: ReactNode }>) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gap: '16px',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))'
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: '10px',
-  border: '1px solid #d1d5db',
-  fontSize: '16px',
-  boxSizing: 'border-box'
-};
-
-const primaryButtonStyle: CSSProperties = {
-  padding: '12px 18px',
-  borderRadius: '10px',
-  border: 'none',
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontWeight: 600,
-  cursor: 'pointer'
-};
-
-const secondaryButtonStyle: CSSProperties = {
-  ...primaryButtonStyle,
-  backgroundColor: '#e5e7eb',
-  color: '#111827'
-};
-
-const infoBoxStyle: CSSProperties = {
-  backgroundColor: '#eff6ff',
-  border: '1px solid #bfdbfe',
-  borderRadius: '12px',
-  padding: '16px'
-};
-
-const providerBlockStyle: CSSProperties = {
-  backgroundColor: '#f9fafb',
-  border: '1px solid #e5e7eb',
-  borderRadius: '12px',
-  padding: '16px'
-};
-
-const badgeStyle: CSSProperties = {
-  display: 'inline-block',
-  marginLeft: '6px',
-  padding: '2px 8px',
-  borderRadius: '20px',
-  fontSize: '11px',
-  fontWeight: 600,
-  backgroundColor: '#dbeafe',
-  color: '#1d4ed8'
-};
-
-const showHideStyle: CSSProperties = {
-  position: 'absolute',
-  right: '12px',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  border: 'none',
-  background: 'none',
-  color: '#2563eb',
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: '13px'
-};
