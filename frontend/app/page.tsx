@@ -1,64 +1,38 @@
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+
+import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   return (
-    <main style={pageStyle}>
-      <div style={cardStyle}>
-        <h1 style={{ marginTop: 0, marginBottom: '8px' }}>Welcome</h1>
-        <p style={{ marginTop: 0, color: '#4b5563' }}>
-          Your personal weight loss assistant. Track progress, get meal plans, and stay on target.
-        </p>
-
-        <div style={{ display: 'grid', gap: '12px', marginTop: '28px' }}>
-          <Link href="/register" style={primaryLinkStyle}>
-            Create account
-          </Link>
-          <Link href="/login" style={secondaryLinkStyle}>
-            Log in
-          </Link>
+    <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="w-full max-w-sm text-center space-y-6">
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg">
+            <span className="text-white text-2xl font-bold">W</span>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">WeightLoss</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Your personal weight loss assistant
+            </p>
+          </div>
         </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 space-y-3">
+          <Button asChild className="w-full">
+            <Link href="/register">Create account</Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/login">Log in</Link>
+          </Button>
+        </div>
+
+        <p className="text-xs text-slate-400">
+          Track progress, get AI meal plans, and stay on target.
+        </p>
       </div>
     </main>
   );
 }
-
-const pageStyle: CSSProperties = {
-  minHeight: '100vh',
-  display: 'grid',
-  placeItems: 'center',
-  padding: '24px'
-};
-
-const cardStyle: CSSProperties = {
-  width: '100%',
-  maxWidth: '480px',
-  backgroundColor: '#ffffff',
-  borderRadius: '18px',
-  padding: '32px',
-  boxShadow: '0 18px 45px rgba(15, 23, 42, 0.08)'
-};
-
-const primaryLinkStyle: CSSProperties = {
-  display: 'block',
-  padding: '12px 18px',
-  borderRadius: '10px',
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontWeight: 600,
-  fontSize: '16px',
-  textAlign: 'center',
-  textDecoration: 'none'
-};
-
-const secondaryLinkStyle: CSSProperties = {
-  display: 'block',
-  padding: '12px 18px',
-  borderRadius: '10px',
-  backgroundColor: '#e5e7eb',
-  color: '#111827',
-  fontWeight: 600,
-  fontSize: '16px',
-  textAlign: 'center',
-  textDecoration: 'none'
-};
