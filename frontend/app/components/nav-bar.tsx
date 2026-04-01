@@ -28,7 +28,7 @@ export function NavBar() {
   return (
     <>
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 lg:hidden">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 md:hidden">
         <div className="flex justify-around items-center h-16 px-1">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
@@ -51,7 +51,7 @@ export function NavBar() {
 
       {/* Desktop left sidebar */}
       <nav
-        className="hidden lg:flex fixed left-0 top-0 h-full w-64 flex-col z-50"
+        className="hidden md:flex fixed left-0 top-0 h-full w-64 flex-col z-50"
         style={{ backgroundColor: '#0f172a' }}
       >
         <div className="flex items-center gap-3 px-6 py-5" style={{ borderBottom: '1px solid #334155' }}>
