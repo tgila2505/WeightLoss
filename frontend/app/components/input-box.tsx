@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { Loader2, Send } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 export function InputBox({
   onSubmit,
@@ -22,43 +26,28 @@ export function InputBox({
   }
 
   return (
-    <form onSubmit={handleSubmit} style={formStyle}>
-      <textarea
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Textarea
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder="Ask for a refreshed plan, a meal tweak, or a quick summary."
-        style={textareaStyle}
+        className="min-h-[120px] resize-y"
       />
-      <button type="submit" disabled={isSubmitting || value.trim() === ''} style={buttonStyle}>
-        {isSubmitting ? 'Sending...' : 'Send'}
-      </button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={isSubmitting || value.trim() === ''}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            <>
+              <Send className="mr-2 h-4 w-4" />
+              Send
+            </>
+          )}
+        </Button>
+      </div>
     </form>
   );
 }
-
-const formStyle = {
-  display: 'grid',
-  gap: '12px'
-} as const;
-
-const textareaStyle = {
-  width: '100%',
-  minHeight: '120px',
-  padding: '14px',
-  borderRadius: '14px',
-  border: '1px solid #cbd5e1',
-  boxSizing: 'border-box' as const,
-  font: 'inherit',
-  resize: 'vertical' as const
-} as const;
-
-const buttonStyle = {
-  justifySelf: 'flex-end',
-  border: 'none',
-  borderRadius: '10px',
-  padding: '12px 18px',
-  backgroundColor: '#2563eb',
-  color: '#ffffff',
-  fontWeight: 600,
-  cursor: 'pointer'
-} as const;

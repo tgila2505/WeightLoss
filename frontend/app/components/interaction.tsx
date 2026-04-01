@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import {
   appendInteractionHistory,
   fetchAdherenceSummary,
@@ -21,9 +23,8 @@ import {
   type OrchestratorResponse,
   type PlanSnapshot
 } from '../../lib/api-client';
-import { InputBox } from './input-box';
-import { NavBar } from './nav-bar';
 import { hasAiKeys } from '../../lib/ai-keys';
+import { InputBox } from './input-box';
 
 export function InteractionView() {
   const [history, setHistory] = useState<InteractionHistoryItem[]>([]);
@@ -132,59 +133,79 @@ export function InteractionView() {
   }
 
   return (
-    <main style={pageStyle}>
-      {planRefreshNeeded ? (
-        <div style={refreshBannerStyle}>
-          <strong>Your adherence patterns have changed.</strong> Your consistency level is now{' '}
-          <em>{consistencyLevel}</em>. Submit a new request below to get an updated plan.
-        </div>
-      ) : null}
-
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        <p style={eyebrowStyle}>Interaction</p>
-        <NavBar current="Interaction" />
-      </header>
-
-      {!aiKeysConfigured ? (
-        <div style={noKeysBannerStyle}>
-          <strong>AI not configured.</strong> You are using built-in rules which ignore your
-          prompt. To get personalised responses, add your API keys on the{' '}
-          <Link href="/settings" style={{ color: '#92400e' }}>AI settings page</Link>.
-        </div>
-      ) : null}
-
-      <section style={cardStyle}>
-        <p style={eyebrowStyle}>Interaction</p>
-        <h1 style={{ margin: '4px 0 8px' }}>Ask for an updated plan</h1>
-        <p style={mutedStyle}>
-          Submit a question or request to the orchestrator. The latest plan is kept for this session.
-        </p>
-        {consistencyLevel ? (
-          <p style={consistencyBadgeStyle}>
-            Adherence level: <strong>{consistencyLevel}</strong>
-          </p>
-        ) : null}
-        <div style={{ marginTop: '20px' }}>
-          <InputBox onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-        </div>
-        {error ? <p style={{ color: '#b91c1c', marginTop: '14px' }}>{error}</p> : null}
-      </section>
-
-      <section style={{ ...cardStyle, marginTop: '20px' }}>
-        <h2 style={{ marginTop: 0 }}>Session responses</h2>
-        {history.length > 0 ? (
-          <div style={{ display: 'grid', gap: '12px' }}>
-            {history.map((item) => (
-              <article key={`${item.created_at}-${item.prompt}`} style={entryStyle}>
-                <p style={{ margin: '0 0 6px', color: '#1d4ed8', fontWeight: 600 }}>{item.prompt}</p>
-                <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{item.reply}</p>
-              </article>
-            ))}
+    <main className="min-h-screen bg-slate-50 pb-20 lg:pb-0 lg:pl-64">
+      <div className="mx-auto px-4 py-8 max-w-3xl">
+        {/* Refresh banner */}
+        {planRefreshNeeded ? (
+          <div className="mb-4 rounded-xl bg-yellow-50 border border-yellow-200 px-4 py-3 text-sm text-yellow-800">
+            <strong>Your adherence patterns have changed.</strong> Your consistency level is now{' '}
+            <em>{consistencyLevel}</em>. Submit a new request below to get an updated plan.
           </div>
-        ) : (
-          <p style={mutedStyle}>No interaction history in this session yet.</p>
-        )}
-      </section>
+        ) : null}
+
+        {/* No keys banner */}
+        {!aiKeysConfigured ? (
+          <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            <strong>AI not configured.</strong> You are using built-in rules which ignore your
+            prompt. To get personalised responses, add your API keys on the{' '}
+            <Link href="/settings" className="underline font-medium">
+              AI settings page
+            </Link>.
+          </div>
+        ) : null}
+
+        {/* Header */}
+        <div className="mb-6">
+          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+            Interaction
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Ask for an updated plan</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Submit a question or request to the orchestrator. The latest plan is kept for this session.
+          </p>
+          {consistencyLevel ? (
+            <p className="text-xs text-slate-500 mt-2">
+              Adherence level: <strong className="text-slate-700">{consistencyLevel}</strong>
+            </p>
+          ) : null}
+        </div>
+
+        {/* Input card */}
+        <Card className="mb-6">
+          <CardContent className="pt-5">
+            <InputBox onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+            {error ? (
+              <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        {/* History card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Session responses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {history.length > 0 ? (
+              <div className="space-y-4">
+                {history.map((item) => (
+                  <article
+                    key={`${item.created_at}-${item.prompt}`}
+                    className="rounded-xl bg-slate-50 border border-slate-100 p-4"
+                  >
+                    <p className="text-sm font-semibold text-blue-700 mb-2">{item.prompt}</p>
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {item.reply}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No interaction history in this session yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
@@ -208,61 +229,3 @@ function inferIntent(prompt: string): OrchestratorIntent {
   }
   return 'question';
 }
-
-const pageStyle = {
-  minHeight: '100vh',
-  padding: '32px 16px',
-  maxWidth: '960px',
-  margin: '0 auto'
-} as const;
-
-const cardStyle = {
-  backgroundColor: '#ffffff',
-  borderRadius: '18px',
-  padding: '24px',
-  boxShadow: '0 14px 40px rgba(15, 23, 42, 0.08)'
-} as const;
-
-const eyebrowStyle = {
-  margin: 0,
-  color: '#2563eb',
-  fontWeight: 600,
-  fontSize: '14px'
-} as const;
-
-const mutedStyle = {
-  margin: 0,
-  color: '#64748b'
-} as const;
-
-const entryStyle = {
-  borderRadius: '14px',
-  backgroundColor: '#f8fafc',
-  padding: '14px'
-} as const;
-
-const noKeysBannerStyle = {
-  marginBottom: '16px',
-  padding: '14px 18px',
-  borderRadius: '12px',
-  backgroundColor: '#fef3c7',
-  border: '1px solid #fcd34d',
-  color: '#92400e',
-  fontSize: '14px'
-} as const;
-
-const refreshBannerStyle = {
-  marginBottom: '16px',
-  padding: '14px 18px',
-  borderRadius: '12px',
-  backgroundColor: '#fef9c3',
-  border: '1px solid #fde047',
-  color: '#713f12',
-  fontSize: '14px'
-} as const;
-
-const consistencyBadgeStyle = {
-  margin: '12px 0 0',
-  fontSize: '13px',
-  color: '#475569'
-} as const;
