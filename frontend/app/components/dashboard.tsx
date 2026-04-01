@@ -48,9 +48,9 @@ export function DashboardView({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-        {/* Left column */}
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        {/* Right column — Metrics & Alerts */}
+        <div className="lg:order-2 space-y-4">
           {/* Metrics card */}
           <Card>
             <CardHeader className="pb-3">
@@ -112,8 +112,8 @@ export function DashboardView({
           </Card>
         </div>
 
-        {/* Right column — Plan */}
-        <Card>
+        {/* Left column — Plan */}
+        <Card className="lg:order-1">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -135,7 +135,10 @@ export function DashboardView({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <PlanBlock
                   title="Meals"
-                  items={plan.meals.map((meal) => `${meal.meal}: ${meal.name}`)}
+                  items={plan.meals.map((meal) => {
+                    const shortName = meal.name.split(':')[0].trim();
+                    return `${meal.meal}: ${shortName}`;
+                  })}
                 />
                 <PlanBlock
                   title="Activity"
@@ -204,7 +207,7 @@ function PlanBlock({
       </h3>
       <ul className="space-y-1.5">
         {items.map((item) => (
-          <li key={item} className="text-sm text-slate-700 leading-snug">
+          <li key={item} className="text-sm text-slate-700 leading-snug line-clamp-2">
             {item}
           </li>
         ))}

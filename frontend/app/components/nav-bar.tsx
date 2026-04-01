@@ -50,7 +50,7 @@ export function NavBar() {
       </nav>
 
       {/* Desktop left sidebar */}
-      <nav className="hidden lg:flex fixed left-0 top-0 h-full w-64 flex-col bg-white border-r border-slate-200 z-50">
+      <nav className="hidden lg:flex fixed left-0 top-0 h-full w-64 flex-col bg-white border-r-2 border-slate-200 z-50 shadow-sm">
         <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-sm font-bold">W</span>
