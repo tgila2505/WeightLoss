@@ -8,7 +8,7 @@
     "lint:python": "ruff check backend ai-services",
     "test": "pnpm run test:js && pnpm run test:python",
     "test:js": "pnpm --filter @weightloss/frontend test && pnpm --filter @weightloss/shared test",
-    "test:python": "python -m unittest discover -s backend/tests -p \"test*.py\"",
+    "test:python": "python -m unittest discover -s backend/tests -p \"test*.py\" -v",
     "format": "pnpm run format:js && pnpm run format:python",
     "format:check": "pnpm run format:check:js && pnpm run format:check:python",
     "format:js": "pnpm --filter @weightloss/frontend format && pnpm --filter @weightloss/shared format",

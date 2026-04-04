@@ -13,7 +13,7 @@ import {
   type LabRecordResponse,
   type PlanSnapshot,
   type ProfileResponse
-} from '../../lib/api-client';
+} from '@/lib/api-client';
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);

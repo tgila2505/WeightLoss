@@ -22,8 +22,8 @@ import {
   type OrchestratorIntent,
   type OrchestratorResponse,
   type PlanSnapshot
-} from '../../lib/api-client';
-import { hasAiKeys } from '../../lib/ai-keys';
+} from '@/lib/api-client';
+import { hasAiKeys } from '@/lib/ai-keys';
 import { InputBox } from './input-box';
 
 export function InteractionView() {

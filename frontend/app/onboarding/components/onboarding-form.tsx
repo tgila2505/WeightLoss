@@ -28,8 +28,8 @@ import {
 import {
   type OnboardingPayload,
   upsertProfile
-} from '../../../lib/api-client';
-import { setAiKeys } from '../../../lib/ai-keys';
+} from '@/lib/api-client';
+import { setAiKeys } from '@/lib/ai-keys';
 
 type FormState = OnboardingPayload;
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { PlanView } from '../components/plan';
-import { fetchTodayPlan, getLatestPlan, type PlanSnapshot } from '../../lib/api-client';
+import { fetchTodayPlan, getLatestPlan, type PlanSnapshot } from '@/lib/api-client';
 
 export default function PlanPage() {
   const [plan, setPlan] = useState<PlanSnapshot | null>(null);
