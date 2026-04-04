@@ -1,0 +1,119 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+INPUT
+
+Task:
+Implement a foundational design system for the frontend, including a standardized color system, typography scale, and a set of reusable UI components.
+
+Expected Outcome:
+
+Design System:
+
+A centralized color system (primary, secondary, neutral, semantic colors like success/error/warning)
+A consistent typography scale (font sizes, weights, line heights)
+All design tokens defined in a single, reusable location
+
+UI Components:
+
+A minimal set of reusable components (e.g., Button, Input, Card, Container, Typography)
+Components follow consistent styling using the design system
+Components are flexible but not over-abstracted
+
+Frontend Integration:
+
+Existing UI updated to use the new design system where necessary (only minimal refactor)
+Styling approach consistent across the app (e.g., Tailwind, CSS modules, or existing method)
+No visual regressions or breaking changes
+
+System-wide:
+
+Easy to extend design system in future
+Minimal developer friction when using components
+Clean and maintainable structure
+
+Architecture Constraints:
+
+Frontend: React
+Use existing styling approach (prefer Tailwind if already present; otherwise do not introduce new frameworks)
+Do NOT introduce full design system libraries (e.g., Material UI, Chakra, etc.)
+Avoid complex theming engines unless already present
+Keep everything lightweight and developer-friendly
+
+(Optional) Existing Implementation:
+
+UI exists but likely inconsistent in colors, typography, and spacing
+No centralized design tokens
+Components may be duplicated or inconsistently styled
+
+EXECUTION RULES
+
+Only implement what is explicitly required
+Do NOT add unrelated features (e.g., animations library, theming engine, dark mode unless specified)
+Avoid unnecessary tools, frameworks, or abstractions
+Keep implementation minimal but correct
+Prefer convention over configuration
+Ensure fast developer onboarding (low setup complexity)
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+Define design tokens (colors, typography) in a centralized config
+Align tokens with existing styling system
+Create base reusable components
+Ensure components consume design tokens consistently
+Refactor minimal existing UI usage if required
+Validate consistency and usability
+Ensure scalability without overengineering
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── file-or-folder
+├── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file ===
+<code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+Does this fully satisfy the Task and Expected Outcome?
+Is the implementation minimal and not overengineered?
+Are all components runnable with minimal setup?
+Are dependencies justified and minimal?
+Is separation of concerns maintained?
+Are there any missing configs or broken links between modules?
+
+If issues exist → fix them before returning.
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+Only high-impact design decisions
+Keep concise
+
+Assumptions:
+
+Only if critical and unavoidable
+
+Confidence:
+HIGH | MEDIUM | LOW

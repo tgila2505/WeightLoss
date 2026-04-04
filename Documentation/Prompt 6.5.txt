@@ -1,0 +1,186 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Implement centralized state management and local persistence for the mind map graph (nodes + edges).
+
+You MUST execute the following steps **in strict sequence**, as later steps depend on earlier ones.
+
+---
+
+Step 6.5.1.1 — useNodesState + useEdgesState:
+
+* Use React state hooks to manage:
+
+  * nodes
+  * edges
+* Prefer simple hook-based state (or equivalent pattern)
+* Ensure updates trigger re-render
+
+---
+
+Step 6.5.1.2 — Centralized State Updates:
+
+* Create a single update layer for:
+
+  * adding nodes
+  * deleting nodes
+  * updating nodes
+  * updating edges
+* Avoid scattered state mutations across components
+* Keep API simple (functions or dispatcher)
+
+---
+
+Step 6.5.2.1 — Save to localStorage:
+
+* Persist nodes + edges to localStorage
+* Trigger save on:
+
+  * state change
+* Keep format simple (JSON)
+
+---
+
+Step 6.5.2.2 — Load from localStorage:
+
+* On app load:
+
+  * check localStorage
+  * hydrate state if data exists
+* Fallback to default graph if empty
+
+---
+
+Step 6.5.2.3 — Versioning (Optional):
+
+* Add simple version field to stored data
+* If version mismatch:
+
+  * ignore stored data OR reset
+* Keep logic minimal
+
+---
+
+Expected Outcome:
+
+* Nodes and edges are centrally managed
+* State updates are consistent and predictable
+* Graph persists across page reloads
+* localStorage is used for persistence
+* App restores previous state on load
+* Versioning prevents incompatible data issues (optional)
+* No external state libraries used
+
+---
+
+Architecture Constraints:
+
+* Must use React (Next.js frontend)
+* Must use TypeScript
+* Do NOT introduce global state libraries (Redux, Zustand, etc.)
+* Do NOT use external persistence libraries
+* Keep everything within component/hooks/util layer
+* Maintain separation:
+
+  * state management
+  * persistence logic
+* Ensure deterministic behavior
+
+---
+
+(Optional) Existing Implementation:
+
+* Graph UI exists
+* Nodes and edges stored in local component state
+* No persistence layer yet
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., sync with backend, undo/redo, collaboration)
+* Avoid unnecessary abstractions
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Implement nodes + edges state hooks
+2. Create centralized update functions
+3. Add persistence to localStorage
+4. Load state on initialization
+5. Add optional versioning
+6. Validate state consistency
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── hooks/
+│       │   │   └── useGraphState.ts
+│       │   ├── utils/
+│       │   │   └── storage.ts
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Are nodes and edges managed centrally?
+* Are updates consistent across components?
+* Is localStorage saving correctly on state change?
+* Is state restored on page load?
+* Does versioning (if implemented) prevent conflicts?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Graph data size is small enough for localStorage
+
+Confidence:
+HIGH

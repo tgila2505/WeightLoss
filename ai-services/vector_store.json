@@ -1,0 +1,123 @@
+{
+  "recommendations": {
+    "1": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "10": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "11": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "12": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "13": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "14": {
+      "metadata": {
+        "intent": "question",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "15": {
+      "metadata": {
+        "intent": "question",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "16": {
+      "metadata": {
+        "intent": "question",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "17": {
+      "metadata": {
+        "intent": "question",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "2": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "3": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "4": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "5": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "6": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "7": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "8": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    },
+    "9": {
+      "metadata": {
+        "intent": "meal_plan",
+        "user_id": 1
+      },
+      "text": "Meal plan generated\n\nBehavior plan generated"
+    }
+  }
+}

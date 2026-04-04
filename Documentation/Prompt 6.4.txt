@@ -1,0 +1,168 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Implement completion propagation logic in the mind map so that parent nodes reflect the completion state of their children.
+
+You MUST execute the following steps **in strict sequence**, as each step depends on the previous one.
+
+---
+
+Step 6.4.1.1 — Check All Children Status:
+
+* For a given node:
+
+  * Identify all direct child nodes
+  * Check their completion status
+* Determine if:
+
+  * all children are completed
+  * partially completed
+  * none completed
+* Keep logic minimal (boolean checks)
+
+---
+
+Step 6.4.1.2 — Update Parent Node:
+
+* Based on children status:
+
+  * mark parent node as:
+
+    * completed (all children done)
+    * partial (some done)
+    * incomplete (none done)
+* Store status in node metadata
+* Ensure update is reflected in UI state
+
+---
+
+Step 6.4.1.3 — Recursive Upward Propagation:
+
+* After updating a parent node:
+
+  * propagate the update to its parent
+* Continue recursively until root node
+* Ensure:
+
+  * no infinite loops
+  * termination at root
+* Keep recursion simple and deterministic
+
+---
+
+Expected Outcome:
+
+* Parent nodes reflect accurate completion state of children
+* Updates propagate upward through entire tree
+* UI reflects updated states correctly
+* No redundant or infinite updates
+* No external dependencies introduced
+* Logic is minimal and easy to maintain
+
+---
+
+Architecture Constraints:
+
+* Must use existing graph structure (nodes + edges)
+* Completion state stored in node metadata
+* Must be implemented in frontend (React + TypeScript)
+* Do NOT introduce state management libraries
+* Do NOT introduce graph libraries
+* Keep logic separate from UI rendering where possible
+* Ensure updates are predictable and synchronous
+
+---
+
+(Optional) Existing Implementation:
+
+* Nodes support completion state
+* Child/parent relationships exist via edges
+* UI updates when node state changes
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., animations, async updates, backend sync)
+* Avoid unnecessary abstractions
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Implement child status evaluation
+2. Update parent node status
+3. Add recursive propagation logic
+4. Ensure termination at root
+5. Validate UI updates
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── utils/
+│       │   │   └── completion.ts
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Are child completion states evaluated correctly?
+* Does parent node update reflect children status?
+* Does propagation correctly move up the tree?
+* Does recursion terminate at root?
+* Are UI updates consistent with state?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Node relationships can be derived from edges
+
+Confidence:
+HIGH

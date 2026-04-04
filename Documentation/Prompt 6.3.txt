@@ -1,0 +1,219 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Implement interactive data capture for mind map nodes, including modal-based input, validation, completion state, and persistence.
+
+You MUST execute the following steps **in strict sequence**, as later steps depend on earlier behavior.
+
+---
+
+Step 6.3.1.1 — Detect Level 2+ Node Click:
+
+* Detect clicks on nodes
+* Identify node depth (level)
+* Only trigger interaction for level ≥ 2 nodes
+* Keep logic simple (depth stored or derived)
+
+---
+
+Step 6.3.1.2 — Open Modal on Click:
+
+* Open modal when eligible node is clicked
+* Pass node context into modal
+* Keep modal minimal (no UI frameworks required)
+
+---
+
+Step 6.3.2.1 — Define Question Schema:
+
+* Define schema for questions associated with nodes:
+
+  * id
+  * label/question
+  * type (text, number, select, etc.)
+  * required (boolean)
+* Keep schema static or locally defined
+
+---
+
+Step 6.3.2.2 — Render Dynamic Form:
+
+* Render form fields dynamically based on schema
+* Support basic input types:
+
+  * text
+  * number
+  * select (optional)
+* Use controlled inputs
+
+---
+
+Step 6.3.2.3 — Validate Inputs:
+
+* Validate required fields
+* Ensure basic type correctness
+* Display simple validation messages
+* Do NOT use external form libraries
+
+---
+
+Step 6.3.3.1 — Mark Node as Completed:
+
+* On successful submission:
+
+  * mark node as completed in state
+* Store completion flag in node metadata
+
+---
+
+Step 6.3.3.2 — Update Node Color:
+
+* Visually indicate completion
+* Change node appearance (e.g., color or badge)
+* Keep styling minimal
+
+---
+
+Step 6.3.3.3 — Persist Answers:
+
+* Save answers to backend via API
+* Associate answers with:
+
+  * user
+  * node id
+* Use existing API client
+* Ensure persistence works across reloads
+
+---
+
+Expected Outcome:
+
+* Clicking eligible nodes opens modal
+* Dynamic form renders based on schema
+* Inputs are validated correctly
+* Node is marked as completed after submission
+* Node visual state updates accordingly
+* Answers are persisted to backend
+* Completion state survives page reload
+* No external UI or form libraries used
+
+---
+
+Architecture Constraints:
+
+* Must use Next.js + React (TypeScript)
+* Use local component state for UI
+* Use existing backend API for persistence
+* Do NOT introduce form libraries (Formik, React Hook Form)
+* Do NOT introduce UI frameworks
+* Keep modal simple (basic component)
+* Maintain separation:
+
+  * UI components
+  * schema definition
+  * API interaction
+
+---
+
+(Optional) Existing Implementation:
+
+* Mind map UI exists (nodes, selection, editing)
+* Backend persistence APIs exist (profile/adherence or similar)
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., autosave, multi-step forms, analytics)
+* Avoid unnecessary abstractions
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Detect node click and level
+2. Implement modal
+3. Define question schema
+4. Render dynamic form
+5. Add validation
+6. Handle submission
+7. Mark node completed
+8. Update UI state
+9. Persist answers via API
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── components/
+│       │   │   ├── node-modal.tsx
+│       │   │   ├── dynamic-form.tsx
+│       │   │   └── ...
+│       │   ├── schema/
+│       │   │   └── questions.ts
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Are node clicks correctly detected by level?
+* Does modal open only for valid nodes?
+* Does dynamic form render correctly?
+* Are inputs validated properly?
+* Is node marked completed after submission?
+* Does node visual state update?
+* Are answers persisted to backend?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Backend endpoint for saving answers exists or can accept generic payload
+
+Confidence:
+HIGH

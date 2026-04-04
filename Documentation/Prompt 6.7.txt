@@ -1,0 +1,161 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Optimize performance of the mind map for efficient rendering and updates, especially for larger graphs.
+
+You MUST execute the following steps **in strict sequence**, as later optimizations depend on earlier ones.
+
+---
+
+Step 6.7.1.1 — Memoize Node Components:
+
+* Wrap NodeCard (or equivalent node component) with React.memo
+* Prevent unnecessary re-renders
+* Ensure props comparison is shallow and safe
+* Avoid over-optimization (only memoize where needed)
+
+---
+
+Step 6.7.1.2 — Optimize Graph Updates:
+
+* Ensure state updates only affect changed nodes/edges
+* Avoid full graph re-renders on small updates
+* Use functional updates or immutable patterns
+* Keep updates localized and predictable
+
+---
+
+Step 6.7.2.1 — Deep Tree Performance:
+
+* Handle larger/deeper node structures efficiently
+* Avoid recursive rendering bottlenecks
+* Ensure:
+
+  * expansion only renders visible nodes
+  * collapsed branches are not rendered
+* Keep logic simple (no virtualization libraries)
+
+---
+
+Expected Outcome:
+
+* Node components re-render only when necessary
+* Graph updates are efficient and localized
+* Deep trees perform smoothly
+* No noticeable lag with moderate graph size
+* No external performance libraries used
+* Implementation remains readable and maintainable
+
+---
+
+Architecture Constraints:
+
+* Must use React (Next.js frontend)
+* Must use TypeScript
+* Do NOT introduce virtualization libraries
+* Do NOT introduce global state libraries
+* Do NOT introduce complex memoization strategies
+* Keep optimizations minimal and targeted
+* Maintain separation:
+
+  * UI components
+  * state logic
+  * rendering logic
+
+---
+
+(Optional) Existing Implementation:
+
+* Mind map UI fully functional
+* Rendering may re-render entire graph on updates
+* No memoization currently applied
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., virtualization, batching systems, caching layers)
+* Avoid premature optimization
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Memoize node component
+2. Refactor state updates to be localized
+3. Prevent unnecessary re-renders
+4. Optimize rendering for deep trees
+5. Validate performance improvements
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── components/
+│       │   │   ├── node-card.tsx
+│       │   │   ├── graph-view.tsx
+│       │   │   └── ...
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Are node components memoized correctly?
+* Are unnecessary re-renders avoided?
+* Are graph updates localized and efficient?
+* Does deep tree rendering remain performant?
+* Are collapsed nodes excluded from rendering?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Graph size is moderate (no need for virtualization)
+
+Confidence:
+HIGH
