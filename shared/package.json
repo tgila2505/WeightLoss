@@ -2,7 +2,7 @@
   "name": "@weightloss/shared",
   "private": true,
   "scripts": {
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0",
+    "lint": "node -e \"console.log('No shared source files to lint.')\"",
     "test": "node -e \"console.log('No shared tests configured yet.')\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

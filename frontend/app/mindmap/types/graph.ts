@@ -18,7 +18,7 @@ export interface MindMapNode extends Omit<BasePositionedNode, "metadata"> {
   metadata: MindMapNodeMetadata
 }
 
-export interface MindMapEdge extends BaseEdge {}
+export type MindMapEdge = BaseEdge
 
 export interface MindMapGraph {
   nodes: MindMapNode[]
