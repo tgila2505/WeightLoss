@@ -1,0 +1,74 @@
+{
+  "id": "profile-root",
+  "label": "Personal Profile",
+  "type": "profile",
+  "metadata": {
+    "version": 1
+  },
+  "children": [
+    {
+      "id": "identity",
+      "label": "Identity",
+      "type": "category",
+      "children": [
+        {
+          "id": "identity-name",
+          "label": "Name",
+          "type": "attribute",
+          "metadata": {
+            "value": "Alex Johnson"
+          }
+        },
+        {
+          "id": "identity-location",
+          "label": "Location",
+          "type": "attribute",
+          "metadata": {
+            "value": "Toronto"
+          }
+        }
+      ]
+    },
+    {
+      "id": "goals",
+      "label": "Goals",
+      "type": "category",
+      "children": [
+        {
+          "id": "goals-health",
+          "label": "Improve Health",
+          "type": "goal"
+        },
+        {
+          "id": "goals-energy",
+          "label": "Increase Energy",
+          "type": "goal"
+        }
+      ]
+    },
+    {
+      "id": "habits",
+      "label": "Habits",
+      "type": "category",
+      "children": [
+        {
+          "id": "habits-exercise",
+          "label": "Exercise",
+          "type": "habit",
+          "children": [
+            {
+              "id": "habits-exercise-walking",
+              "label": "Daily Walking",
+              "type": "activity"
+            }
+          ]
+        },
+        {
+          "id": "habits-sleep",
+          "label": "Sleep Routine",
+          "type": "habit"
+        }
+      ]
+    }
+  ]
+}

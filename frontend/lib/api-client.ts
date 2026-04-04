@@ -124,6 +124,16 @@ type AdherenceRecordCreate = {
   score?: number | null;
 };
 
+export type MindMapAnswerValue = string | number;
+
+export type MindMapAnswerRecord = {
+  userId: number;
+  nodeId: string;
+  completed: boolean;
+  answers: Record<string, MindMapAnswerValue>;
+  savedAt: string;
+};
+
 type StoredPlanResponse = {
   id: number;
   user_id: number;
@@ -408,6 +418,60 @@ export async function fetchAdherenceRecords(params?: {
   return request<AdherenceRecordResponse[]>(`${apiBaseUrl}/api/v1/adherence${suffix}`);
 }
 
+const mindMapItemType = 'mindmap_node';
+
+export async function saveMindMapAnswers(input: {
+  nodeId: string;
+  answers: Record<string, MindMapAnswerValue>;
+  completed?: boolean;
+}): Promise<MindMapAnswerRecord> {
+  const now = new Date().toISOString();
+  const payload = {
+    n: input.nodeId,
+    a: input.answers,
+    s: now
+  };
+
+  const record = await createAdherenceRecord({
+    item_type: mindMapItemType,
+    item_name: JSON.stringify(payload),
+    completed: input.completed ?? true,
+    adherence_date: now.slice(0, 10),
+    score: 100
+  });
+
+  return {
+    userId: record.user_id,
+    nodeId: input.nodeId,
+    completed: record.completed,
+    answers: input.answers,
+    savedAt: now
+  };
+}
+
+export async function fetchMindMapAnswers(): Promise<MindMapAnswerRecord[]> {
+  const records = await fetchAdherenceRecords();
+  const latestByNodeId = new Map<string, MindMapAnswerRecord>();
+
+  for (const record of records) {
+    if (record.item_type !== mindMapItemType) {
+      continue;
+    }
+
+    const parsed = parseMindMapItem(record);
+    if (!parsed) {
+      continue;
+    }
+
+    const current = latestByNodeId.get(parsed.nodeId);
+    if (!current || new Date(parsed.savedAt).getTime() > new Date(current.savedAt).getTime()) {
+      latestByNodeId.set(parsed.nodeId, parsed);
+    }
+  }
+
+  return Array.from(latestByNodeId.values());
+}
+
 export type InteractionHistoryItem = {
   prompt: string;
   reply: string;
@@ -571,4 +635,42 @@ function splitCommaSeparated(value?: string | null): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function parseMindMapItem(
+  record: AdherenceRecordResponse
+): MindMapAnswerRecord | null {
+  try {
+    const parsed = JSON.parse(record.item_name) as {
+      n?: unknown;
+      a?: unknown;
+      s?: unknown;
+    };
+
+    if (typeof parsed.n !== 'string' || !isPlainObject(parsed.a)) {
+      return null;
+    }
+
+    const answers: Record<string, MindMapAnswerValue> = {};
+
+    for (const [key, value] of Object.entries(parsed.a)) {
+      if (typeof value === 'string' || typeof value === 'number') {
+        answers[key] = value;
+      }
+    }
+
+    return {
+      userId: record.user_id,
+      nodeId: parsed.n,
+      completed: record.completed,
+      answers,
+      savedAt: typeof parsed.s === 'string' ? parsed.s : record.updated_at
+    };
+  } catch {
+    return null;
+  }
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
