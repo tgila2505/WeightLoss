@@ -1,0 +1,186 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Improve the usability and interaction quality of the mind map through layout refinement, smooth interactions, and user feedback.
+
+You MUST execute the following steps **in strict sequence**, as later steps depend on earlier behavior.
+
+---
+
+Step 6.6.1.1 — Clean Mind Map Layout:
+
+* Improve visual spacing of nodes
+* Ensure nodes do not overlap
+* Maintain readable hierarchy (parent → child)
+* Keep layout deterministic (reuse existing layout logic if possible)
+
+---
+
+Step 6.6.1.2 — Smooth Animations:
+
+* Add minimal animations for:
+
+  * node expand/collapse
+  * node position updates
+* Use simple CSS transitions or lightweight React animation
+* Avoid animation libraries
+
+---
+
+Step 6.6.1.3 — Focus Management:
+
+* When a node is selected:
+
+  * visually highlight it
+  * optionally center or bring into view
+* Ensure keyboard/mouse focus is clear
+* Keep behavior predictable
+
+---
+
+Step 6.6.2.1 — Completion Feedback:
+
+* Provide feedback when a node is completed:
+
+  * visual indicator (color change, icon, or badge)
+  * optional small confirmation (e.g., text or subtle UI change)
+* Keep feedback minimal and non-intrusive
+
+---
+
+Step 6.6.2.2 — Empty State Handling:
+
+* Handle cases where:
+
+  * no nodes exist
+  * graph is empty
+* Display simple message or placeholder UI
+* Ensure app does not break on empty data
+
+---
+
+Expected Outcome:
+
+* Mind map layout is clean and readable
+* Node interactions feel smooth and responsive
+* Selected node is clearly visible and focused
+* Completion actions provide clear feedback
+* Empty states are handled gracefully
+* No heavy UI or animation frameworks used
+* Implementation remains lightweight and maintainable
+
+---
+
+Architecture Constraints:
+
+* Must use React (Next.js frontend)
+* Must use TypeScript
+* Do NOT introduce animation libraries (Framer Motion, etc.)
+* Do NOT introduce UI frameworks
+* Keep all logic within existing components/utilities
+* Maintain separation:
+
+  * layout logic
+  * UI rendering
+  * interaction handling
+
+---
+
+(Optional) Existing Implementation:
+
+* Mind map UI exists with nodes and interactions
+* Basic layout and interaction already implemented
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., zoom/pan, advanced animations, sound effects)
+* Avoid unnecessary abstractions
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Refine layout spacing
+2. Add basic animation transitions
+3. Implement focus/selection behavior
+4. Add completion feedback UI
+5. Implement empty state handling
+6. Validate UX flow
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── components/
+│       │   │   ├── graph-view.tsx
+│       │   │   ├── node-card.tsx
+│       │   │   └── ...
+│       │   ├── styles/
+│       │   │   └── mindmap.css
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Is layout clean and readable?
+* Do nodes avoid overlap?
+* Are animations smooth and minimal?
+* Is selected node clearly focused?
+* Is completion feedback visible and intuitive?
+* Are empty states handled safely?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Existing layout logic can be extended
+
+Confidence:
+HIGH

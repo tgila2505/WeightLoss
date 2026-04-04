@@ -1,0 +1,118 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+INPUT
+
+Task:
+Implement performance optimizations across backend and frontend systems, including database query optimization, caching, async task improvements, frontend code splitting, lazy loading, and API call optimization.
+
+Expected Outcome:
+
+Backend:
+
+Optimized database queries with reduced latency and efficient indexing usage
+Elimination of N+1 query issues where applicable
+Introduction of a minimal caching layer for frequently accessed data
+Improved async task handling for non-blocking operations
+
+Frontend:
+
+Code splitting applied to reduce initial bundle size
+Lazy loading implemented for non-critical components/pages
+Optimized API calls (deduplication, batching where applicable, reduced unnecessary re-renders)
+
+System-wide:
+
+Noticeable improvement in response time and load performance
+No breaking changes to existing functionality
+Minimal and maintainable implementation
+
+Architecture Constraints:
+
+Backend: FastAPI (Python), existing database setup (no DB migration unless necessary for indexes)
+Frontend: React (existing structure must be preserved)
+Use lightweight and native or already-compatible tools (e.g., in-memory cache or Redis ONLY if minimal setup)
+Do NOT introduce heavy infrastructure (queues, distributed systems, etc.)
+Maintain current API contracts
+Ensure backward compatibility
+
+(Optional) Existing Implementation:
+
+Backend APIs and DB queries already implemented (likely unoptimized)
+No caching layer currently exists
+Async usage may be partial or inconsistent
+Frontend currently loads most components upfront
+API calls may be redundant or unoptimized
+
+EXECUTION RULES
+
+Only implement what is explicitly required
+Do NOT add unrelated features (e.g., auth changes, CI/CD, infra setup)
+Avoid unnecessary tools, frameworks, or abstractions
+Keep implementation minimal but correct
+Prefer convention over configuration
+Ensure fast developer onboarding (low setup complexity)
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+Identify performance bottlenecks (DB, API, frontend bundle)
+Optimize DB queries and add indexing if required
+Introduce minimal caching abstraction layer
+Improve async handling for I/O-bound operations
+Apply frontend code splitting and lazy loading
+Optimize API interaction patterns
+Ensure no regression in functionality
+Validate performance improvements
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── file-or-folder
+├── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file ===
+<code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+Does this fully satisfy the Task and Expected Outcome?
+Is the implementation minimal and not overengineered?
+Are all components runnable with minimal setup?
+Are dependencies justified and minimal?
+Is separation of concerns maintained?
+Are there any missing configs or broken links between modules?
+
+If issues exist → fix them before returning.
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+Only high-impact design decisions
+Keep concise
+
+Assumptions:
+
+Only if critical and unavoidable
+
+Confidence:
+HIGH | MEDIUM | LOW

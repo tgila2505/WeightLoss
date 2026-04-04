@@ -1,0 +1,212 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Implement the interactive UI layer for the Personal Profile Mind Map using the existing graph foundation.
+
+You MUST execute the following steps **in strict sequence**, as later steps depend on earlier ones.
+
+---
+
+Step 6.2.1.1 — Create Node Card Component:
+
+* Build a reusable NodeCard component
+* Display:
+
+  * label
+  * basic metadata (optional)
+* Keep UI minimal (no styling frameworks required)
+
+---
+
+Step 6.2.1.2 — Add Editable Input:
+
+* Allow inline editing of node label
+* Use controlled input
+* Update local state only (no backend persistence)
+
+---
+
+Step 6.2.1.3 — Add Visual Status Indicator:
+
+* Display simple visual marker (e.g., color or badge)
+* Based on node type or metadata
+* Keep logic minimal
+
+---
+
+Step 6.2.2.1 — Implement Node Selection State:
+
+* Track selected node in component state
+* Highlight selected node visually
+* Only one node selected at a time
+
+---
+
+Step 6.2.2.2 — Expand Child Nodes on Click:
+
+* Clicking a node reveals its children
+* Use existing graph structure
+* Maintain expanded state
+
+---
+
+Step 6.2.2.3 — Collapse Behavior (Optional):
+
+* Allow collapsing expanded nodes
+* Keep logic simple (toggle state)
+
+---
+
+Step 6.2.3.1 — Add Child Node:
+
+* Add new child node to selected node
+* Update graph state (nodes + edges)
+* Assign unique ID
+
+---
+
+Step 6.2.3.2 — Delete Node:
+
+* Remove selected node
+* Remove associated edges
+* Keep logic minimal (no cascading complexity beyond direct relationships)
+
+---
+
+Step 6.2.3.3 — Drag & Reposition:
+
+* Allow nodes to be repositioned via drag
+* Update node position (x, y)
+* Use simple mouse event handling (no drag libraries)
+
+---
+
+Expected Outcome:
+
+* NodeCard component displays node data
+* Node labels can be edited inline
+* Node selection is tracked and visible
+* Nodes expand/collapse to show children
+* Users can add and delete nodes
+* Nodes can be repositioned via drag
+* Graph updates reflect all changes
+* No backend persistence required
+* No external UI or graph libraries used
+
+---
+
+Architecture Constraints:
+
+* Must use React (Next.js frontend)
+* Must use TypeScript
+* Use existing graph data structures (nodes + edges)
+* Do NOT introduce UI frameworks (e.g., Material UI)
+* Do NOT use drag-and-drop libraries
+* Keep state local (useState/useReducer only)
+* Maintain separation:
+
+  * components (UI)
+  * graph logic (existing)
+* Keep implementation minimal and readable
+
+---
+
+(Optional) Existing Implementation:
+
+* Graph engine exists (nodes, edges, layout)
+* No UI layer yet
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., animations, zoom, pan, persistence)
+* Avoid unnecessary abstractions
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Create NodeCard component
+2. Add editable input
+3. Add status indicator
+4. Implement selection state
+5. Add expand/collapse logic
+6. Implement add/delete node
+7. Add drag/reposition behavior
+8. Validate graph updates
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── page.tsx
+│       │   ├── components/
+│       │   │   ├── node-card.tsx
+│       │   │   ├── graph-view.tsx
+│       │   │   └── ...
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Does NodeCard render correctly?
+* Can node labels be edited inline?
+* Is node selection working and visible?
+* Do nodes expand/collapse correctly?
+* Can child nodes be added and deleted?
+* Does drag reposition update node coordinates?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Graph data is already available in component state
+
+Confidence:
+HIGH

@@ -1,0 +1,179 @@
+You are a senior software engineer.
+
+Your task is to implement a production-ready feature with clean structure, minimal complexity, and strict adherence to requirements.
+
+You MUST think through the full system before writing code.
+
+Do NOT overengineer. Do NOT introduce features not explicitly required.
+
+---
+
+INPUT
+
+Task:
+Refine the mind map data model and introduce extensibility hooks for future enhancements.
+
+You MUST execute the following steps **in strict sequence**, as later steps depend on earlier structure.
+
+---
+
+Step 6.8.1.1 — Normalize Data Model:
+
+* Refactor node and edge structures to ensure:
+
+  * consistent shape
+  * no redundant fields
+* Standardize:
+
+  * node metadata structure
+  * completion state representation
+  * position (x, y)
+* Ensure all nodes follow same schema
+* Keep model minimal and generic
+
+---
+
+Step 6.8.2.1 — Add Metadata Hooks:
+
+* Add extensibility mechanism to nodes:
+
+  * allow attaching additional metadata dynamically
+* Implement helper functions:
+
+  * getNodeMetadata(node)
+  * updateNodeMetadata(node, updates)
+* Ensure no direct mutation outside controlled updates
+* Keep hooks simple (no plugin system)
+
+---
+
+Step 6.8.2.2 — Add Event Hooks:
+
+* Add simple event hooks for:
+
+  * node click
+  * node update
+  * node completion
+* Implement as callback functions or event dispatcher
+* Ensure hooks:
+
+  * are optional
+  * do not break core logic if unused
+* Keep implementation lightweight
+
+---
+
+Expected Outcome:
+
+* Data model is normalized and consistent
+* Nodes and edges follow standardized structure
+* Metadata can be extended safely
+* Event hooks allow external behavior injection
+* Core system remains stable without hooks
+* No unnecessary abstraction layers introduced
+
+---
+
+Architecture Constraints:
+
+* Must use existing graph structures (nodes + edges)
+* Must be implemented in frontend (TypeScript)
+* Do NOT introduce plugin frameworks or event buses
+* Do NOT introduce global state libraries
+* Keep logic local and predictable
+* Maintain separation:
+
+  * data model
+  * metadata helpers
+  * event hooks
+
+---
+
+(Optional) Existing Implementation:
+
+* Nodes and edges already exist
+* Metadata may be inconsistently structured
+* No extensibility hooks currently present
+
+---
+
+EXECUTION RULES
+
+* Execute steps strictly in order
+* Only implement what is explicitly required
+* Do NOT add unrelated features (e.g., plugin systems, middleware layers)
+* Avoid unnecessary abstractions
+* Keep implementation minimal but correct
+* Prefer clarity over flexibility
+
+---
+
+IMPLEMENTATION STRATEGY (internal reasoning, do NOT output)
+
+1. Normalize node/edge schema
+2. Refactor metadata structure
+3. Add metadata helper functions
+4. Add event hook mechanism
+5. Ensure backward compatibility
+6. Validate consistency
+
+---
+
+OUTPUT FORMAT
+
+You MUST return output in a structured, file-based format.
+
+First, output the file tree:
+
+/root
+├── frontend/
+│   └── app/
+│       ├── mindmap/
+│       │   ├── types/
+│       │   │   └── graph.ts
+│       │   ├── utils/
+│       │   │   ├── metadata.ts
+│       │   │   ├── events.ts
+│       │   │   └── ...
+│       │   └── ...
+
+Then provide file contents:
+
+=== FILE: path/to/file === <code>
+
+Repeat for ALL necessary files.
+
+Do NOT skip important files.
+Do NOT inline explanations inside code.
+
+---
+
+QUALITY CHECK (MANDATORY — perform before final answer)
+
+* Is data model consistent and normalized?
+* Are metadata structures standardized?
+* Can metadata be safely extended?
+* Are event hooks implemented and optional?
+* Do hooks not interfere with core logic?
+* Is implementation minimal and not overengineered?
+
+If issues exist → fix them before returning.
+
+---
+
+OUTPUT
+
+Implementation:
+<complete file tree + code>
+
+Key Decisions:
+
+* Only high-impact design decisions
+* Keep concise
+
+Assumptions:
+
+* Existing graph logic can adapt to normalized schema
+
+Confidence:
+HIGH
