@@ -124,7 +124,7 @@ type AdherenceRecordCreate = {
   score?: number | null;
 };
 
-export type MindMapAnswerValue = string | number;
+export type MindMapAnswerValue = string | number | string[];
 
 export type MindMapAnswerRecord = {
   userId: number;

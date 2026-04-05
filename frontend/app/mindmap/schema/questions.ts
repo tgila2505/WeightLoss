@@ -1,4 +1,13 @@
-export type QuestionType = "text" | "number" | "select"
+export type QuestionType =
+  | "text"
+  | "number"
+  | "select"
+  | "checkbox-group"
+  | "radio"
+  | "yes-no"
+  | "likert-5"
+  | "rating-10"
+  | "multi-text"
 
 export interface NodeQuestion {
   id: string
@@ -6,6 +15,7 @@ export interface NodeQuestion {
   type: QuestionType
   required: boolean
   options?: string[]
+  placeholder?: string
 }
 
 const defaultQuestions: NodeQuestion[] = [
