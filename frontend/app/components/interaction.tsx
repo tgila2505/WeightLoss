@@ -23,8 +23,9 @@ import {
   type OrchestratorResponse,
   type PlanSnapshot
 } from '@/lib/api-client';
-import { hasAiKeys } from '@/lib/ai-keys';
+import { getGroqKey, getMistralKey, hasAiKeys } from '@/lib/ai-keys';
 import { InputBox } from './input-box';
+import type { MealEntry } from '@/app/api/meal-plan/route';
 
 export function InteractionView() {
   const [history, setHistory] = useState<InteractionHistoryItem[]>([]);
@@ -88,10 +89,11 @@ export function InteractionView() {
       ]);
 
       const intent = inferIntent(prompt);
+      const enhancedPrompt = intent === 'meal_plan' ? buildMealPlanPrompt(prompt) : prompt;
       const uniqueSignals = deduplicateSignals(latestPlan?.adherence_signals ?? []);
 
       const response = await submitOrchestratorRequest({
-        prompt,
+        prompt: enhancedPrompt,
         intent,
         profile,
         metrics,
@@ -101,7 +103,7 @@ export function InteractionView() {
         adaptiveAdjustment
       });
 
-      await applyResponse(prompt, response);
+      await applyResponse(prompt, response, intent, profile);
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
@@ -113,8 +115,36 @@ export function InteractionView() {
     }
   }
 
-  async function applyResponse(prompt: string, response: OrchestratorResponse) {
-    const finalPlan = response.metadata.final_plan ?? null;
+  async function applyResponse(
+    prompt: string,
+    response: OrchestratorResponse,
+    intent: OrchestratorIntent,
+    profile: Awaited<ReturnType<typeof fetchProfile>>,
+  ) {
+    let finalPlan = response.metadata.final_plan ?? null;
+
+    // For meal plan requests, override meals with a proper 7-day AI-generated plan
+    if (intent === 'meal_plan') {
+      const sevenDayMeals = await fetchSevenDayMeals(prompt, profile);
+      if (sevenDayMeals.length > 0) {
+        finalPlan = {
+          ...(finalPlan ?? {
+            intent: 'meal_plan',
+            meals: [],
+            activity: [],
+            behavioral_actions: [],
+            lab_insights: [],
+            risks: [],
+            recommendations: [],
+            adherence_signals: [],
+            constraints_applied: [],
+            biomarker_adjustments: [],
+          }),
+          meals: sevenDayMeals,
+        } as PlanSnapshot;
+      }
+    }
+
     if (finalPlan) {
       saveLatestPlan(finalPlan);
       setLatestPlan(finalPlan);
@@ -130,6 +160,46 @@ export function InteractionView() {
     };
     appendInteractionHistory(item);
     setHistory(getInteractionHistory());
+  }
+
+  async function fetchSevenDayMeals(
+    userPrompt: string,
+    profile: Awaited<ReturnType<typeof fetchProfile>>,
+  ): Promise<MealEntry[]> {
+    const groqKey = getGroqKey();
+    const mistralKey = getMistralKey();
+
+    if (!groqKey && !mistralKey) return [];
+
+    const profileSummary = profile
+      ? [
+          profile.name ? `Name: ${profile.name}` : '',
+          profile.age ? `Age: ${profile.age}` : '',
+          profile.gender ? `Gender: ${profile.gender}` : '',
+          profile.weight_kg ? `Weight: ${profile.weight_kg} kg` : '',
+          profile.goal_target_weight_kg ? `Goal weight: ${profile.goal_target_weight_kg} kg` : '',
+          profile.health_conditions ? `Health conditions: ${profile.health_conditions}` : '',
+          profile.diet_pattern ? `Diet pattern/preferences: ${profile.diet_pattern}` : '',
+          profile.activity_level ? `Activity level: ${profile.activity_level}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : 'No profile available';
+
+    try {
+      const res = await fetch('/api/meal-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userPrompt, profileSummary, groqKey, mistralKey }),
+      });
+
+      if (!res.ok) return [];
+
+      const data = await res.json() as { meals?: MealEntry[] };
+      return data.meals ?? [];
+    } catch {
+      return [];
+    }
   }
 
   return (
@@ -218,7 +288,12 @@ function deduplicateSignals(
 
 function inferIntent(prompt: string): OrchestratorIntent {
   const normalized = prompt.toLowerCase();
-  if (normalized.includes('meal') || normalized.includes('plan')) {
+  if (
+    normalized.includes('meal') ||
+    normalized.includes('diet') ||
+    normalized.includes('food') ||
+    normalized.includes('plan')
+  ) {
     return 'meal_plan';
   }
   if (normalized.includes('trend') || normalized.includes('track')) {
@@ -228,4 +303,22 @@ function inferIntent(prompt: string): OrchestratorIntent {
     return 'dashboard';
   }
   return 'question';
+}
+
+/**
+ * Appends 7-day meal plan instructions to any meal-plan prompt.
+ * The orchestrator receives the user's original request PLUS structured
+ * instructions so the AI returns a full week of meals in the meals array.
+ */
+function buildMealPlanPrompt(userPrompt: string): string {
+  return (
+    userPrompt +
+    '\n\n' +
+    'IMPORTANT — structure the response as a complete 7-day meal plan:\n' +
+    '• Include 5 meals per day: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner.\n' +
+    '• Return all 35 meal entries in the meals array (7 days × 5 meals).\n' +
+    '• Start each new day with Breakfast so the days can be correctly separated.\n' +
+    '• Vary the meals across all 7 days — no repeated dishes.\n' +
+    '• Personalise every meal to the user\'s dietary preferences, health conditions, cultural background, and weight-loss goals.'
+  );
 }

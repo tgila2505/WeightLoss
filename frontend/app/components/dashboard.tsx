@@ -126,24 +126,30 @@ export function DashboardView({
                 href="/plan"
                 className="text-xs text-blue-600 hover:underline font-medium flex-shrink-0 mt-0.5"
               >
-                Full breakdown →
+                Today's breakdown →
               </Link>
             </div>
           </CardHeader>
           <CardContent>
             {plan ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <PlanBlock
-                  title="Meals"
-                  items={plan.meals.map((meal) => {
-                    const shortName = meal.name.split(':')[0].trim();
-                    return `${meal.meal}: ${shortName}`;
-                  })}
-                />
-                <PlanBlock
-                  title="Activity"
-                  items={plan.activity.map((item) => `${item.title}: ${item.frequency}`)}
-                />
+                <Link href="/plan/meals" className="block group">
+                  <PlanBlock
+                    title="Meals"
+                    items={plan.meals.map((meal) => {
+                      const shortName = meal.name.split(':')[0].trim();
+                      return `${meal.meal}: ${shortName}`;
+                    })}
+                    clickable
+                  />
+                </Link>
+                <Link href="/plan/activity" className="block group">
+                  <PlanBlock
+                    title="Activity"
+                    items={plan.activity.map((item) => `${item.title}: ${item.frequency}`)}
+                    clickable
+                  />
+                </Link>
                 <PlanBlock
                   title="Key actions"
                   items={plan.behavioral_actions.slice(0, 3)}
@@ -195,16 +201,29 @@ function MetricRow({
 
 function PlanBlock({
   title,
-  items
+  items,
+  clickable = false,
 }: Readonly<{
   title: string;
   items: string[];
+  clickable?: boolean;
 }>) {
   return (
-    <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 space-y-2">
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-        {title}
-      </h3>
+    <div className={`rounded-xl bg-slate-50 border p-3 space-y-2 transition-colors ${
+      clickable
+        ? 'border-slate-100 group-hover:border-blue-200 group-hover:bg-blue-50 cursor-pointer'
+        : 'border-slate-100'
+    }`}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          {title}
+        </h3>
+        {clickable && (
+          <span className="text-[10px] text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+            View all →
+          </span>
+        )}
+      </div>
       <ul className="space-y-1.5">
         {items.map((item) => (
           <li key={item} className="text-sm text-slate-700 leading-snug line-clamp-2">

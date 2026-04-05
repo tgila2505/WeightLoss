@@ -20,7 +20,7 @@ export function PlanView({
           <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
             Plan
           </p>
-          <h1 className="text-2xl font-bold text-slate-900">Daily breakdown</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Today's breakdown</h1>
         </div>
         <div className="text-center py-12 space-y-3">
           <p className="text-sm text-slate-500">
@@ -37,6 +37,9 @@ export function PlanView({
     );
   }
 
+  // Take only today's meals (first "day" worth — until meal type resets)
+  const todayMeals = getTodayMeals(plan.meals);
+
   return (
     <PageShell>
       {/* Header */}
@@ -44,23 +47,33 @@ export function PlanView({
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
           Plan
         </p>
-        <h1 className="text-2xl font-bold text-slate-900">Daily breakdown</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Today's breakdown</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Meals, activity, and actions from the latest generated plan.
+          Today's meals, activity checklist, and key actions.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Meals */}
+        {/* Today's Meals */}
         <Card>
           <CardHeader className="pb-3">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-              Nutrition
-            </p>
-            <CardTitle className="text-base mt-0.5">Meals</CardTitle>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                  Nutrition
+                </p>
+                <CardTitle className="text-base mt-0.5">Today's meals</CardTitle>
+              </div>
+              <Link
+                href="/plan/meals"
+                className="text-xs text-blue-500 hover:underline font-medium flex-shrink-0 mt-0.5"
+              >
+                7-day plan →
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {plan.meals.map((meal) => (
+            {todayMeals.map((meal) => (
               <div
                 key={`${meal.meal}-${meal.name}`}
                 className="rounded-lg bg-slate-50 border border-slate-100 p-3"
@@ -74,42 +87,49 @@ export function PlanView({
           </CardContent>
         </Card>
 
-        {/* Activity */}
-        <Card>
-          <CardHeader className="pb-3">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-              Movement
-            </p>
-            <CardTitle className="text-base mt-0.5">Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {plan.activity.map((item) => (
-              <div
-                key={`${item.title}-${item.frequency}`}
-                className="rounded-lg bg-slate-50 border border-slate-100 p-3"
-              >
-                <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{item.frequency}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        {/* Today's Activity — checklist */}
+        <Checklist
+          title="Today's activity"
+          label="Movement"
+          items={plan.activity.map((item) => ({
+            name: item.title,
+            subtitle: item.frequency,
+            itemType: 'activity',
+          }))}
+        />
 
-        {/* Checklist */}
+        {/* Action checklist */}
         <Checklist
           title="Action checklist"
           items={[
             ...plan.behavioral_actions.map((item) => ({
               name: item,
-              itemType: 'behavioral_action'
+              itemType: 'behavioral_action',
             })),
             ...plan.recommendations.map((item) => ({
               name: item,
-              itemType: 'recommendation'
-            }))
+              itemType: 'recommendation',
+            })),
           ]}
         />
       </div>
     </PageShell>
   );
+}
+
+/** Returns only the first day's meals (stops when a meal type repeats). */
+function getTodayMeals(
+  meals: Array<{ meal: string; name: string }>,
+): Array<{ meal: string; name: string }> {
+  const seen = new Set<string>();
+  const result: Array<{ meal: string; name: string }> = [];
+
+  for (const meal of meals) {
+    const type = meal.meal.toLowerCase();
+    if (seen.has(type)) break;
+    seen.add(type);
+    result.push(meal);
+  }
+
+  return result;
 }

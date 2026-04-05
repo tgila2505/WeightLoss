@@ -33,7 +33,7 @@ const BRANCH_VERTICAL_GAP = 164
 const NODE_WIDTH = 240
 const NODE_HEIGHT = 120
 const NODE_VERTICAL_PADDING = 24
-const MIN_ZOOM = 0.6
+const MIN_ZOOM = 0.25
 const MAX_ZOOM = 1.8
 const ZOOM_STEP = 0.1
 
@@ -125,9 +125,40 @@ function layoutExpandedBranch(
 ): MindMapGraph {
   const childMap = buildChildMap(graph.edges)
   const positionedNodes = new Map(graph.nodes.map((node) => [node.id, node]))
+  const rootNode = getRootNode(graph.nodes, graph.edges)
+
+  // When expanding the root node, re-apply the symmetric left/right fan-out
+  if (startNodeId === rootNode?.id) {
+    const rootChildIds = childMap.get(rootNode.id) ?? []
+    const leftCount = Math.floor(rootChildIds.length / 2)
+    const leftIds = rootChildIds.slice(0, leftCount)
+    const rightIds = rootChildIds.slice(leftCount)
+
+    const positionSide = (childIds: string[], targetX: number) => {
+      const startY = rootNode.y - ((childIds.length - 1) * BRANCH_VERTICAL_GAP) / 2
+      childIds.forEach((childId, index) => {
+        const child = positionedNodes.get(childId)
+        if (child) {
+          positionedNodes.set(childId, {
+            ...child,
+            x: targetX,
+            y: startY + index * BRANCH_VERTICAL_GAP,
+          })
+        }
+      })
+    }
+
+    positionSide(leftIds, rootNode.x - BRANCH_HORIZONTAL_OFFSET)
+    positionSide(rightIds, rootNode.x + BRANCH_HORIZONTAL_OFFSET)
+
+    return {
+      nodes: graph.nodes.map((node) => positionedNodes.get(node.id) ?? node),
+      edges: graph.edges,
+    }
+  }
+
   const branchNodeIds = getDescendantNodeIds(startNodeId, childMap)
   const placedBranchNodeIds = new Set<string>([startNodeId])
-  const rootNode = getRootNode(graph.nodes, graph.edges)
 
   const findAvailablePosition = (
     candidateX: number,
@@ -658,13 +689,42 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
             minHeight: 0,
           }}
         >
+          <div style={{ position: "relative" }}>
+            {nodes.length > 0 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  zIndex: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: 8,
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 10,
+                  backgroundColor: "rgba(255, 255, 255, 0.92)",
+                  backdropFilter: "blur(6px)",
+                }}
+              >
+                <button type="button" onClick={handleZoomOut} style={zoomButtonStyle}>
+                  -
+                </button>
+                <button type="button" onClick={handleZoomReset} style={zoomButtonStyle}>
+                  {Math.round(zoom * 100)}%
+                </button>
+                <button type="button" onClick={handleZoomIn} style={zoomButtonStyle}>
+                  +
+                </button>
+              </div>
+            )}
           <div
             ref={canvasRef}
             className="mindmap-canvas"
             onWheel={handleCanvasWheel}
             style={{
               ...canvasFrameStyle,
-              minHeight: "calc(100vh - 180px)",
+              height: "calc(100vh - 200px)",
             }}
           >
             {nodes.length === 0 ? (
@@ -686,34 +746,6 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
                   height: zoomedCanvasHeight,
                 }}
               >
-                <div
-                  style={{
-                    position: "sticky",
-                    top: 12,
-                    left: 12,
-                    zIndex: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    width: "fit-content",
-                    margin: 12,
-                    padding: 8,
-                    border: "1px solid #cbd5e1",
-                    borderRadius: 10,
-                    backgroundColor: "rgba(255, 255, 255, 0.92)",
-                    backdropFilter: "blur(6px)",
-                  }}
-                >
-                  <button type="button" onClick={handleZoomOut} style={zoomButtonStyle}>
-                    -
-                  </button>
-                  <button type="button" onClick={handleZoomReset} style={zoomButtonStyle}>
-                    {Math.round(zoom * 100)}%
-                  </button>
-                  <button type="button" onClick={handleZoomIn} style={zoomButtonStyle}>
-                    +
-                  </button>
-                </div>
                 <div
                   style={{
                     position: "absolute",
@@ -786,6 +818,7 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
               </div>
             )}
           </div>
+          </div>
         </section>
       </main>
 
@@ -807,7 +840,6 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
 }
 
 const canvasFrameStyle: CSSProperties = {
-  minHeight: 720,
   overflow: "auto",
   border: "1px solid #cbd5e1",
   borderRadius: 12,

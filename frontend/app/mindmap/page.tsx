@@ -5,7 +5,7 @@ import "./styles/mindmap.css"
 import { GraphView } from "./components/graph-view"
 
 export const metadata: Metadata = {
-  title: "User Profile",
+  title: "Profile Questions",
 }
 
 export default function MindMapPage() {
