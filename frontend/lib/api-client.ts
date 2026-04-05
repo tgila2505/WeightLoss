@@ -283,6 +283,15 @@ export async function submitOrchestratorRequest(input: {
     throw new Error('You must be logged in before using the assistant.');
   }
 
+  // Fetch master profile to enrich orchestrator context (non-blocking)
+  let masterProfileText = '';
+  try {
+    const masterProfile = await fetchMasterProfile();
+    masterProfileText = masterProfile?.profile_text ?? '';
+  } catch {
+    // non-blocking — orchestrator still works without it
+  }
+
   const response = await fetch(`${aiServicesBaseUrl}/orchestrator`, {
     method: 'POST',
     headers: {
@@ -323,6 +332,7 @@ export async function submitOrchestratorRequest(input: {
           recorded_date: lab.recorded_date
         })),
         adherence_signals: input.adherenceSignals ?? [],
+        master_profile: masterProfileText || null,
         consistency_level: input.consistencyLevel ?? null,
         adaptive_adjustment: input.adaptiveAdjustment ?? null,
         groq_api_key: getGroqKey() ?? null,

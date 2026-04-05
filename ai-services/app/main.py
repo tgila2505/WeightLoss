@@ -62,6 +62,7 @@ class OrchestrationContextPayload(BaseModel):
     health_metrics: list[HealthMetricPayload] = Field(default_factory=list)
     lab_records: list[LabRecordPayload] = Field(default_factory=list)
     adherence_signals: list[AdherenceSignalPayload] = Field(default_factory=list)
+    master_profile: str | None = None
     consistency_level: str | None = None
     adaptive_adjustment: dict[str, str] | None = None
     metadata: dict[str, object] = Field(default_factory=dict)
@@ -137,6 +138,7 @@ def run_orchestrator(payload: OrchestratorRequestPayload) -> dict[str, object]:
                     AdherenceSignalContext(**signal.model_dump())
                     for signal in context.adherence_signals
                 ],
+                master_profile=context.master_profile,
                 consistency_level=context.consistency_level,
                 adaptive_adjustment=context.adaptive_adjustment,
                 metadata=context.metadata,
