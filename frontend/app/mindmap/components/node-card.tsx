@@ -81,7 +81,7 @@ function NodeCardComponent({
   const completionState = getCompletionState(node)
   const isCompleted = completionState === "completed"
   const isPartial = completionState === "partial"
-  const isReadOnlyLabel = node.type === "profile"
+  const isReadOnlyLabel = true
   const showTypeLabel = node.type !== "category" && node.type !== "attribute"
   const toggleSymbol = hasChildren
     ? isExpanded
