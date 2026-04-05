@@ -35,3 +35,9 @@ class User(Base):
         back_populates="user"
     )
     profile: Mapped["Profile | None"] = relationship(back_populates="user")
+    questionnaire_responses: Mapped[list["QuestionnaireResponse"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    master_profile: Mapped["MasterUserProfile | None"] = relationship(
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
