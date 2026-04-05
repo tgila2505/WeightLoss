@@ -97,13 +97,15 @@ export function NodeModal({
         onClick={(event) => event.stopPropagation()}
         style={{
           width: "100%",
-          maxWidth: 520,
+          maxWidth: 560,
           borderRadius: 12,
           backgroundColor: "#ffffff",
           padding: 20,
           boxShadow: "0 20px 40px rgba(15, 23, 42, 0.18)",
           display: "grid",
           gap: 16,
+          maxHeight: "85vh",
+          overflowY: "auto",
         }}
       >
         <div style={{ display: "grid", gap: 4 }}>

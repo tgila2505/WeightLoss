@@ -7,15 +7,15 @@ import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } fro
 import { PageShell } from "@/app/components/page-shell"
 import {
   fetchProfile,
-  fetchMindMapAnswers,
-  saveMindMapAnswers,
+  fetchAllQuestionnaireAnswers,
+  saveNodeAnswers,
   type MindMapAnswerValue,
 } from "@/lib/api-client"
 import { initialProfileGraph } from "@/lib/graph/transformer"
 
 import { useGraphState } from "../hooks/useGraphState"
 import { getQuestionsForNode } from "../schema/questions"
-import { propagateCompletionState, syncCompletionState } from "../utils/completion"
+import { propagateCompletionState } from "../utils/completion"
 import { emitNodeClick, emitNodeCompletion, emitNodeUpdate } from "../utils/events"
 import { getNodeMetadata, updateNodeMetadata } from "../utils/metadata"
 import type { MindMapEdge, MindMapEventHooks, MindMapGraph, MindMapNode } from "../types/graph"
@@ -353,51 +353,20 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
       return
     }
 
-    let isMounted = true
-
-    const loadSavedAnswers = async () => {
-      try {
-        const records = await fetchMindMapAnswers()
-
-        if (!isMounted || records.length === 0) {
-          return
-        }
-
-        updateGraph((currentGraph) =>
-          syncCompletionState({
-            ...currentGraph,
-            nodes: currentGraph.nodes.map((node) => {
-              const record = records.find((item) => item.nodeId === node.id)
-
-              if (!record) {
-                return node
-              }
-
-              return {
-                ...updateNodeMetadata(node, {
-                  answers: record.answers,
-                  completion: {
-                    state: record.completed ? "completed" : "incomplete",
-                  },
-                  savedAt: record.savedAt,
-                }),
-              }
-            }),
-          }),
+    fetchAllQuestionnaireAnswers().then((allAnswers) => {
+      Object.entries(allAnswers).forEach(([nodeId, answers]) => {
+        updateNode(nodeId, (node) =>
+          updateNodeMetadata(node, {
+            answers,
+            completion: { state: Object.keys(answers).length > 0 ? "completed" : "incomplete" },
+            savedAt: new Date().toISOString(),
+          })
         )
-      } catch {
-        if (isMounted) {
-          setModalError("Unable to load saved node answers.")
-        }
-      }
-    }
-
-    void loadSavedAnswers()
-
-    return () => {
-      isMounted = false
-    }
-  }, [hasLoadedStorage])
+      })
+    }).catch(() => {
+      // silently ignore — user may not have saved any answers yet
+    })
+  }, [hasLoadedStorage, updateNode])
 
   useEffect(() => {
     if (!hasLoadedStorage || !rootId) {
@@ -624,11 +593,7 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
     setModalError("")
 
     try {
-      const record = await saveMindMapAnswers({
-        nodeId: modalNode.id,
-        answers,
-        completed: true,
-      })
+      await saveNodeAnswers(modalNode.id, answers)
 
       updateGraph((currentGraph) => {
         const nextGraph = propagateCompletionState(
@@ -637,11 +602,11 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
             nodes: currentGraph.nodes.map((node) =>
               node.id === modalNode.id
                 ? updateNodeMetadata(node, {
-                    answers: record.answers,
+                    answers,
                     completion: {
                       state: "completed",
                     },
-                    savedAt: record.savedAt,
+                    savedAt: new Date().toISOString(),
                   })
                 : node,
             ),

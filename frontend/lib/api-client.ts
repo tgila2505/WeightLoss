@@ -124,7 +124,7 @@ type AdherenceRecordCreate = {
   score?: number | null;
 };
 
-export type MindMapAnswerValue = string | number;
+export type MindMapAnswerValue = string | number | string[];
 
 export type MindMapAnswerRecord = {
   userId: number;
@@ -283,6 +283,15 @@ export async function submitOrchestratorRequest(input: {
     throw new Error('You must be logged in before using the assistant.');
   }
 
+  // Fetch master profile to enrich orchestrator context (non-blocking)
+  let masterProfileText = '';
+  try {
+    const masterProfile = await fetchMasterProfile();
+    masterProfileText = masterProfile?.profile_text ?? '';
+  } catch {
+    // non-blocking — orchestrator still works without it
+  }
+
   const response = await fetch(`${aiServicesBaseUrl}/orchestrator`, {
     method: 'POST',
     headers: {
@@ -323,6 +332,7 @@ export async function submitOrchestratorRequest(input: {
           recorded_date: lab.recorded_date
         })),
         adherence_signals: input.adherenceSignals ?? [],
+        master_profile: masterProfileText || null,
         consistency_level: input.consistencyLevel ?? null,
         adaptive_adjustment: input.adaptiveAdjustment ?? null,
         groq_api_key: getGroqKey() ?? null,
@@ -482,6 +492,60 @@ export async function fetchMindMapAnswers(): Promise<MindMapAnswerRecord[]> {
   }
 
   return Array.from(latestByNodeId.values());
+}
+
+export async function fetchAllQuestionnaireAnswers(): Promise<Record<string, Record<string, MindMapAnswerValue>>> {
+  const data = await request<{ responses: Record<string, Record<string, MindMapAnswerValue>> }>(
+    `${apiBaseUrl}/api/v1/questionnaire`
+  );
+  return data.responses;
+}
+
+export async function saveNodeAnswers(
+  nodeId: string,
+  answers: Record<string, MindMapAnswerValue>
+): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before saving answers.');
+  }
+  const response = await fetch(
+    `${apiBaseUrl}/api/v1/questionnaire/${encodeURIComponent(nodeId)}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ answers }),
+    }
+  );
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+}
+
+export async function generateMasterProfile(): Promise<{ profile_text: string; generated_at: string }> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error('You must be logged in before generating a master profile.');
+  }
+  const response = await fetch(`${apiBaseUrl}/api/v1/user-profile/generate`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error(await readError(response));
+  }
+  return (await response.json()) as { profile_text: string; generated_at: string };
+}
+
+export async function fetchMasterProfile(): Promise<{ profile_text: string; generated_at: string } | null> {
+  return requestWithOptional404<{ profile_text: string; generated_at: string }>(
+    `${apiBaseUrl}/api/v1/user-profile/master`
+  );
 }
 
 export type InteractionHistoryItem = {
