@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  UserCircle2,
   CalendarDays,
   TrendingUp,
   MessageCircle,
@@ -17,6 +18,7 @@ import { clearAccessToken } from '../../lib/auth';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/mindmap', label: 'User Profile', icon: UserCircle2 },
   { href: '/plan', label: 'Plan', icon: CalendarDays },
   { href: '/tracking', label: 'Tracking', icon: TrendingUp },
   { href: '/interaction', label: 'Chat', icon: MessageCircle },

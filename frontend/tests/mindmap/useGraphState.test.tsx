@@ -27,7 +27,7 @@ describe('useGraphState', () => {
     window.localStorage.setItem(
       'mindmap-graph-state',
       JSON.stringify({
-        version: 1,
+        version: 2,
         nodes: [
           {
             id: 'saved',

@@ -3,7 +3,7 @@
 import type { MindMapEdge, MindMapNode } from "../types/graph"
 
 const GRAPH_STORAGE_KEY = "mindmap-graph-state"
-const GRAPH_STORAGE_VERSION = 1
+const GRAPH_STORAGE_VERSION = 2
 
 interface StoredGraphState {
   version: number

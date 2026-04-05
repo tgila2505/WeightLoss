@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from "react"
-import type { CSSProperties, MouseEvent } from "react"
+import type { MouseEvent } from "react"
 
 import { getCompletionState, getNodeMetadata } from "../utils/metadata"
 import type { MindMapNode } from "../types/graph"
@@ -14,9 +14,7 @@ interface NodeCardProps {
   onSelect: (nodeId: string) => void
   onToggleExpand: (nodeId: string) => void
   onLabelChange: (nodeId: string, value: string) => void
-  onAddChild: (nodeId: string) => void
-  onDelete: (nodeId: string) => void
-  onDragStart: (event: MouseEvent<HTMLButtonElement>, nodeId: string) => void
+  onDragStart: (event: MouseEvent<HTMLDivElement>, nodeId: string) => void
 }
 
 function getStatusColor(node: MindMapNode): string {
@@ -77,18 +75,24 @@ function NodeCardComponent({
   onSelect,
   onToggleExpand,
   onLabelChange,
-  onAddChild,
-  onDelete,
   onDragStart,
 }: Readonly<NodeCardProps>) {
   const metadataEntries = getMetadataEntries(node)
   const completionState = getCompletionState(node)
   const isCompleted = completionState === "completed"
   const isPartial = completionState === "partial"
+  const isReadOnlyLabel = node.type === "profile"
+  const showTypeLabel = node.type !== "category" && node.type !== "attribute"
+  const toggleSymbol = hasChildren
+    ? isExpanded
+      ? "\u2212"
+      : "\u25a1"
+    : "\u25a1"
 
   return (
     <div
       className="mindmap-node-card"
+      onMouseDown={(event) => onDragStart(event, node.id)}
       onClick={() => onSelect(node.id)}
       tabIndex={0}
       style={{
@@ -100,7 +104,7 @@ function NodeCardComponent({
           ? "0 10px 30px rgba(37, 99, 235, 0.18)"
           : "0 8px 20px rgba(15, 23, 42, 0.08)",
         padding: 12,
-        cursor: "pointer",
+        cursor: "grab",
         outline: isSelected ? "2px solid rgba(37, 99, 235, 0.16)" : "none",
         outlineOffset: 2,
       }}
@@ -125,9 +129,11 @@ function NodeCardComponent({
               flexShrink: 0,
             }}
           />
-          <span style={{ fontSize: 12, color: "#475569", textTransform: "capitalize" }}>
-            {node.type ?? "node"}
-          </span>
+          {showTypeLabel ? (
+            <span style={{ fontSize: 12, color: "#475569", textTransform: "capitalize" }}>
+              {node.type ?? "node"}
+            </span>
+          ) : null}
           {isCompleted ? (
             <span
               style={{
@@ -154,39 +160,64 @@ function NodeCardComponent({
             </span>
           ) : null}
         </div>
-
         <button
           type="button"
-          onMouseDown={(event) => onDragStart(event, node.id)}
-          onClick={(event) => event.stopPropagation()}
-          aria-label={`Drag ${node.label}`}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+
+            if (hasChildren) {
+              onToggleExpand(node.id)
+            }
+          }}
+          aria-label={hasChildren ? (isExpanded ? "Collapse branch" : "Expand branch") : "No child nodes"}
+          disabled={!hasChildren}
           style={{
-            border: "1px solid #cbd5e1",
-            borderRadius: 8,
-            backgroundColor: "#f8fafc",
-            color: "#334155",
-            padding: "2px 8px",
-            cursor: "grab",
+            border: "none",
+            backgroundColor: "transparent",
+            color: hasChildren ? "#0f172a" : "#94a3b8",
+            padding: "0 2px",
+            fontSize: 16,
+            lineHeight: 1,
+            cursor: hasChildren ? "pointer" : "default",
           }}
         >
-          Drag
+          {toggleSymbol}
         </button>
       </div>
 
-      <input
-        value={node.label}
-        onClick={(event) => event.stopPropagation()}
-        onChange={(event) => onLabelChange(node.id, event.target.value)}
-        style={{
-          width: "100%",
-          border: "1px solid #cbd5e1",
-          borderRadius: 8,
-          padding: "8px 10px",
-          fontSize: 15,
-          fontWeight: 600,
-          color: "#0f172a",
-        }}
-      />
+      {isReadOnlyLabel ? (
+        <div
+          style={{
+            width: "100%",
+            border: "1px solid #cbd5e1",
+            borderRadius: 8,
+            padding: "8px 10px",
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#0f172a",
+            backgroundColor: "#ffffff",
+          }}
+        >
+          {node.label}
+        </div>
+      ) : (
+        <input
+          value={node.label}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onLabelChange(node.id, event.target.value)}
+          style={{
+            width: "100%",
+            border: "1px solid #cbd5e1",
+            borderRadius: 8,
+            padding: "8px 10px",
+            fontSize: 15,
+            fontWeight: 600,
+            color: "#0f172a",
+          }}
+        />
+      )}
 
       {metadataEntries.length > 0 ? (
         <div style={{ marginTop: 10, display: "grid", gap: 4 }}>
@@ -201,62 +232,8 @@ function NodeCardComponent({
           ))}
         </div>
       ) : null}
-
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginTop: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            onAddChild(node.id)
-          }}
-          style={buttonStyle}
-        >
-          Add Child
-        </button>
-
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            onDelete(node.id)
-          }}
-          style={buttonStyle}
-        >
-          Delete
-        </button>
-
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation()
-              onToggleExpand(node.id)
-            }}
-            style={buttonStyle}
-          >
-            {isExpanded ? "Collapse" : "Expand"}
-          </button>
-        ) : null}
-      </div>
     </div>
   )
 }
 
 export const NodeCard = memo(NodeCardComponent)
-
-const buttonStyle: CSSProperties = {
-  border: "1px solid #cbd5e1",
-  borderRadius: 8,
-  backgroundColor: "#f8fafc",
-  color: "#0f172a",
-  padding: "6px 10px",
-  fontSize: 12,
-  transition: "background-color 180ms ease, border-color 180ms ease",
-}

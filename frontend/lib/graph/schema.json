@@ -3,71 +3,206 @@
   "label": "Personal Profile",
   "type": "profile",
   "metadata": {
-    "version": 1
+    "version": 2
   },
   "children": [
     {
-      "id": "identity",
-      "label": "Identity",
+      "id": "past-medical-history",
+      "label": "Past Medical History",
       "type": "category",
       "children": [
-        {
-          "id": "identity-name",
-          "label": "Name",
-          "type": "attribute",
-          "metadata": {
-            "value": "Alex Johnson"
-          }
-        },
-        {
-          "id": "identity-location",
-          "label": "Location",
-          "type": "attribute",
-          "metadata": {
-            "value": "Toronto"
-          }
-        }
+        { "id": "past-medical-history-musculoskeletal", "label": "Musculoskeletal", "type": "attribute" },
+        { "id": "past-medical-history-cancer", "label": "Cancer", "type": "attribute" },
+        { "id": "past-medical-history-cardiovascular", "label": "Cardiovascular", "type": "attribute" },
+        { "id": "past-medical-history-respiratory", "label": "Respiratory", "type": "attribute" },
+        { "id": "past-medical-history-endocrine", "label": "Endocrine", "type": "attribute" },
+        { "id": "past-medical-history-neurologic", "label": "Neurologic", "type": "attribute" },
+        { "id": "past-medical-history-psychiatric", "label": "Psychiatric", "type": "attribute" },
+        { "id": "past-medical-history-infections", "label": "Infections", "type": "attribute" },
+        { "id": "past-medical-history-gynecologic", "label": "Gynecologic", "type": "attribute" },
+        { "id": "past-medical-history-gastroenterological", "label": "Gastroenterological", "type": "attribute" },
+        { "id": "past-medical-history-surgical", "label": "Surgical", "type": "attribute" },
+        { "id": "past-medical-history-other", "label": "Other", "type": "attribute" }
       ]
     },
     {
-      "id": "goals",
-      "label": "Goals",
+      "id": "exercise",
+      "label": "Exercise",
       "type": "category",
       "children": [
-        {
-          "id": "goals-health",
-          "label": "Improve Health",
-          "type": "goal"
-        },
-        {
-          "id": "goals-energy",
-          "label": "Increase Energy",
-          "type": "goal"
-        }
+        { "id": "exercise-types", "label": "Types", "type": "attribute" },
+        { "id": "exercise-habits", "label": "Habits", "type": "attribute" }
       ]
     },
     {
-      "id": "habits",
-      "label": "Habits",
+      "id": "stress-tolerance",
+      "label": "Stress Tolerance",
       "type": "category",
       "children": [
-        {
-          "id": "habits-exercise",
-          "label": "Exercise",
-          "type": "habit",
-          "children": [
-            {
-              "id": "habits-exercise-walking",
-              "label": "Daily Walking",
-              "type": "activity"
-            }
-          ]
-        },
-        {
-          "id": "habits-sleep",
-          "label": "Sleep Routine",
-          "type": "habit"
-        }
+        { "id": "stress-tolerance-routine", "label": "Routine", "type": "attribute" },
+        { "id": "stress-tolerance-habits", "label": "Habits", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "stress-symptoms",
+      "label": "Stress Symptoms",
+      "type": "category",
+      "children": [
+        { "id": "stress-symptoms-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "change-readiness",
+      "label": "Change Readiness",
+      "type": "category",
+      "children": [
+        { "id": "change-readiness-readiness", "label": "Readiness", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "family-history",
+      "label": "Family History",
+      "type": "category",
+      "children": [
+        { "id": "family-history-relative", "label": "Relative", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "purpose",
+      "label": "Purpose",
+      "type": "category",
+      "children": [
+        { "id": "purpose-clarity-of-vision", "label": "Clarity of Vision", "type": "attribute" },
+        { "id": "purpose-assessment", "label": "Assessment", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "metabolic-flexibility",
+      "label": "Metabolic Flexibility",
+      "type": "category",
+      "children": [
+        { "id": "metabolic-flexibility-assessment", "label": "Assessment", "type": "attribute" },
+        { "id": "metabolic-flexibility-habits", "label": "Habits", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "dental",
+      "label": "Dental",
+      "type": "category",
+      "children": [
+        { "id": "dental-hygiene", "label": "Hygiene", "type": "attribute" },
+        { "id": "dental-history", "label": "History", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "nutrition",
+      "label": "Nutrition",
+      "type": "category",
+      "children": [
+        { "id": "nutrition-groups", "label": "Nutrition Groups", "type": "attribute" },
+        { "id": "nutrition-habits", "label": "Habits", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "relationships",
+      "label": "Relationships",
+      "type": "category",
+      "children": [
+        { "id": "relationships-quality", "label": "Quality", "type": "attribute" },
+        { "id": "relationships-habits", "label": "Habits", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "detoxification",
+      "label": "Detoxification",
+      "type": "category",
+      "children": [
+        { "id": "detoxification-experience", "label": "Experience", "type": "attribute" },
+        { "id": "detoxification-work", "label": "Work", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "sleep",
+      "label": "Sleep",
+      "type": "category",
+      "children": [
+        { "id": "sleep-routine", "label": "Routine", "type": "attribute" },
+        { "id": "sleep-habits", "label": "Habits", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "sleep-symptoms",
+      "label": "Sleep Symptoms",
+      "type": "category",
+      "children": [
+        { "id": "sleep-symptoms-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "aerobics-capacity",
+      "label": "Aerobics Capacity",
+      "type": "category",
+      "children": [
+        { "id": "aerobics-capacity-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "regular-medication",
+      "label": "Regular Medication",
+      "type": "category",
+      "children": [
+        { "id": "regular-medication-each-medicine", "label": "Each Medicine", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "inflammation",
+      "label": "Inflammation",
+      "type": "category",
+      "children": [
+        { "id": "inflammation-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "gut-health",
+      "label": "Gut Health",
+      "type": "category",
+      "children": [
+        { "id": "gut-health-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "social-history",
+      "label": "Social History",
+      "type": "category",
+      "children": [
+        { "id": "social-history-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "mental-health",
+      "label": "Mental Health",
+      "type": "category",
+      "children": [
+        { "id": "mental-health-current-state", "label": "Current State", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "harmful-substance",
+      "label": "Harmful Substance",
+      "type": "category",
+      "children": [
+        { "id": "harmful-substance-habits", "label": "Habits", "type": "attribute" }
+      ]
+    },
+    {
+      "id": "diabetes-history",
+      "label": "Diabetes History",
+      "type": "category",
+      "children": [
+        { "id": "diabetes-history-objectives", "label": "Objectives", "type": "attribute" },
+        { "id": "diabetes-history-diagnosis", "label": "Diagnosis", "type": "attribute" },
+        { "id": "diabetes-history-family-history", "label": "Family History", "type": "attribute" },
+        { "id": "diabetes-history-cultural", "label": "Cultural", "type": "attribute" }
       ]
     }
   ]

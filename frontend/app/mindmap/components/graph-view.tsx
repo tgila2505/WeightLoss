@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { CSSProperties } from "react"
-import type { MouseEvent as ReactMouseEvent } from "react"
+import type { MouseEvent as ReactMouseEvent, WheelEvent as ReactWheelEvent } from "react"
 
 import { PageShell } from "@/app/components/page-shell"
 import {
+  fetchProfile,
   fetchMindMapAnswers,
   saveMindMapAnswers,
   type MindMapAnswerValue,
@@ -17,7 +18,7 @@ import { getQuestionsForNode } from "../schema/questions"
 import { propagateCompletionState, syncCompletionState } from "../utils/completion"
 import { emitNodeClick, emitNodeCompletion, emitNodeUpdate } from "../utils/events"
 import { getNodeMetadata, updateNodeMetadata } from "../utils/metadata"
-import type { MindMapEdge, MindMapEventHooks, MindMapNode } from "../types/graph"
+import type { MindMapEdge, MindMapEventHooks, MindMapGraph, MindMapNode } from "../types/graph"
 import { NodeModal } from "./node-modal"
 import { NodeCard } from "./node-card"
 
@@ -26,6 +27,15 @@ interface DragState {
   offsetX: number
   offsetY: number
 }
+
+const BRANCH_HORIZONTAL_OFFSET = 320
+const BRANCH_VERTICAL_GAP = 164
+const NODE_WIDTH = 240
+const NODE_HEIGHT = 120
+const NODE_VERTICAL_PADDING = 24
+const MIN_ZOOM = 0.6
+const MAX_ZOOM = 1.8
+const ZOOM_STEP = 0.1
 
 function buildDepthMap(rootId: string | null, childMap: Map<string, string[]>): Map<string, number> {
   const depthMap = new Map<string, number>()
@@ -70,6 +80,152 @@ function buildChildMap(edges: MindMapEdge[]): Map<string, string[]> {
   return childMap
 }
 
+function getDescendantNodeIds(
+  nodeId: string,
+  childMap: Map<string, string[]>,
+): Set<string> {
+  const descendantIds = new Set<string>()
+  const stack = [nodeId]
+
+  while (stack.length > 0) {
+    const currentId = stack.pop()
+
+    if (!currentId || descendantIds.has(currentId)) {
+      continue
+    }
+
+    descendantIds.add(currentId)
+
+    for (const childId of childMap.get(currentId) ?? []) {
+      stack.push(childId)
+    }
+  }
+
+  return descendantIds
+}
+
+function isOverlappingNode(
+  candidateX: number,
+  candidateY: number,
+  node: MindMapNode,
+): boolean {
+  const verticalPadding = NODE_VERTICAL_PADDING
+
+  return !(
+    candidateX + NODE_WIDTH <= node.x ||
+    node.x + NODE_WIDTH <= candidateX ||
+    candidateY + NODE_HEIGHT + verticalPadding <= node.y ||
+    node.y + NODE_HEIGHT + verticalPadding <= candidateY
+  )
+}
+
+function layoutExpandedBranch(
+  graph: MindMapGraph,
+  startNodeId: string,
+): MindMapGraph {
+  const childMap = buildChildMap(graph.edges)
+  const positionedNodes = new Map(graph.nodes.map((node) => [node.id, node]))
+  const branchNodeIds = getDescendantNodeIds(startNodeId, childMap)
+  const placedBranchNodeIds = new Set<string>([startNodeId])
+  const rootNode = getRootNode(graph.nodes, graph.edges)
+
+  const findAvailablePosition = (
+    candidateX: number,
+    candidateY: number,
+    currentNodeId: string,
+    direction: -1 | 1,
+  ): { x: number; y: number } => {
+    let nextX = candidateX
+
+    while (
+      graph.nodes.some((node) => {
+        if (node.id === currentNodeId) {
+          return false
+        }
+
+        const shouldCheckNode =
+          !branchNodeIds.has(node.id) || placedBranchNodeIds.has(node.id)
+
+        if (!shouldCheckNode) {
+          return false
+        }
+
+        const positionedNode = positionedNodes.get(node.id) ?? node
+        return isOverlappingNode(nextX, candidateY, positionedNode)
+      })
+    ) {
+      nextX += BRANCH_HORIZONTAL_OFFSET * direction
+    }
+
+    return { x: nextX, y: candidateY }
+  }
+
+  const positionChildren = (parentId: string, direction: -1 | 1) => {
+    const parentNode = positionedNodes.get(parentId)
+    const childIds = childMap.get(parentId) ?? []
+
+    if (!parentNode || childIds.length === 0) {
+      return
+    }
+
+    const startY = parentNode.y - ((childIds.length - 1) * BRANCH_VERTICAL_GAP) / 2
+
+    childIds.forEach((childId, index) => {
+      const childNode = positionedNodes.get(childId)
+
+      if (!childNode) {
+        return
+      }
+
+      const preferredX = parentNode.x + BRANCH_HORIZONTAL_OFFSET * direction
+      const preferredY = startY + index * BRANCH_VERTICAL_GAP
+      const nextPosition = findAvailablePosition(
+        preferredX,
+        preferredY,
+        childId,
+        direction,
+      )
+
+      positionedNodes.set(childId, {
+        ...childNode,
+        x: nextPosition.x,
+        y: nextPosition.y,
+      })
+      placedBranchNodeIds.add(childId)
+
+      positionChildren(childId, direction)
+    })
+  }
+
+  const startNode = positionedNodes.get(startNodeId)
+  const direction = getBranchDirection(startNode, rootNode)
+  positionChildren(startNodeId, direction)
+
+  return {
+    nodes: graph.nodes.map((node) => positionedNodes.get(node.id) ?? node),
+    edges: graph.edges,
+  }
+}
+
+function getRootNode(
+  nodes: MindMapNode[],
+  edges: MindMapEdge[],
+): MindMapNode | null {
+  const rootId = getRootId(nodes, edges)
+  return nodes.find((node) => node.id === rootId) ?? null
+}
+
+function getBranchDirection(
+  node: MindMapNode | undefined,
+  rootNode: MindMapNode | null,
+): -1 | 1 {
+  if (!node || !rootNode) {
+    return 1
+  }
+
+  return node.x < rootNode.x ? -1 : 1
+}
+
 function getVisibleNodeIds(
   rootId: string | null,
   childMap: Map<string, string[]>,
@@ -97,81 +253,43 @@ function getVisibleNodeIds(
   return visibleNodeIds
 }
 
-function createChildNode(
-  parent: MindMapNode,
-  nextId: string,
-  siblingIndex: number,
-): MindMapNode {
-  const verticalOffset = siblingIndex * 164
-
-  return {
-    id: nextId,
-    label: "New Node",
-    type: "attribute",
-    x: parent.x + 320,
-    y: parent.y + 100 + verticalOffset,
-    metadata: {
-      completion: {
-        state: "incomplete",
-      },
-      answers: {},
-      savedAt: null,
-      extensions: {
-        createdFrom: parent.id,
-        status: "active",
-      },
-    },
-  }
-}
-
-function createNodeId(nodes: MindMapNode[]): string {
-  const existingIds = new Set(nodes.map((node) => node.id))
-  let nextIndex = nodes.length + 1
-
-  while (existingIds.has(`node-${nextIndex}`)) {
-    nextIndex += 1
-  }
-
-  return `node-${nextIndex}`
-}
-
-function getDescendantIds(nodeId: string, childMap: Map<string, string[]>): Set<string> {
-  const descendantIds = new Set<string>()
-  const stack = [nodeId]
-
-  while (stack.length > 0) {
-    const currentId = stack.pop()
-
-    if (!currentId || descendantIds.has(currentId)) {
-      continue
-    }
-
-    descendantIds.add(currentId)
-
-    for (const childId of childMap.get(currentId) ?? []) {
-      stack.push(childId)
-    }
-  }
-
-  return descendantIds
-}
-
 interface GraphViewProps {
   events?: MindMapEventHooks
 }
 
+function getFirstName(fullName: string | null | undefined): string | null {
+  const normalizedName = fullName?.trim()
+
+  if (!normalizedName) {
+    return null
+  }
+
+  const firstName = normalizedName.split(/\s+/)[0]
+  return firstName || null
+}
+
+function getProfileLabel(firstName: string): string {
+  return `${firstName}'s Profile`
+}
+
+function clampZoom(value: number): number {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
+}
+
 export function GraphView({ events }: Readonly<GraphViewProps>) {
+  const initialRootNodeId = initialProfileGraph.nodes[0]?.id ?? null
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(
-    initialProfileGraph.nodes[0]?.id ?? null,
+    initialRootNodeId,
   )
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(
-    () => new Set(initialProfileGraph.nodes.map((node) => node.id)),
+    () => new Set(initialRootNodeId ? [initialRootNodeId] : []),
   )
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [modalNodeId, setModalNodeId] = useState<string | null>(null)
   const [isSavingAnswers, setIsSavingAnswers] = useState(false)
   const [modalError, setModalError] = useState("")
   const [completionMessage, setCompletionMessage] = useState("")
+  const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const {
@@ -251,6 +369,45 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
   }, [hasLoadedStorage])
 
   useEffect(() => {
+    if (!hasLoadedStorage || !rootId) {
+      return
+    }
+
+    let isMounted = true
+
+    const loadProfileName = async () => {
+      try {
+        const profile = await fetchProfile()
+        const firstName = getFirstName(profile?.name)
+        const profileLabel = firstName ? getProfileLabel(firstName) : null
+
+        if (!isMounted || !profileLabel) {
+          return
+        }
+
+        updateNode(rootId, (node) => {
+          if (node.label === profileLabel) {
+            return node
+          }
+
+          return {
+            ...node,
+            label: profileLabel,
+          }
+        })
+      } catch {
+        // Leave the default root label in place when profile data is unavailable.
+      }
+    }
+
+    void loadProfileName()
+
+    return () => {
+      isMounted = false
+    }
+  }, [hasLoadedStorage, rootId, updateNode])
+
+  useEffect(() => {
     if (!dragState) {
       return
     }
@@ -263,8 +420,8 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
       }
 
       const bounds = canvas.getBoundingClientRect()
-      const nextX = event.clientX - bounds.left - dragState.offsetX
-      const nextY = event.clientY - bounds.top - dragState.offsetY
+      const nextX = (event.clientX - bounds.left) / zoom - dragState.offsetX
+      const nextY = (event.clientY - bounds.top) / zoom - dragState.offsetY
 
       updateNode(dragState.nodeId, (node) => ({
         ...node,
@@ -284,7 +441,7 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [dragState])
+  }, [dragState, updateNode, zoom])
 
   const visibleEdges = edges.filter(
     (edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target),
@@ -298,11 +455,13 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
     [nodes],
   )
 
-  const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? null
   const canvasWidth =
     Math.max(...nodes.map((node) => node.x + 320), 920)
   const canvasHeight =
     Math.max(...nodes.map((node) => node.y + 200), 720)
+
+  const zoomedCanvasWidth = canvasWidth * zoom
+  const zoomedCanvasHeight = canvasHeight * zoom
 
   useEffect(() => {
     if (!selectedNodeId) {
@@ -359,6 +518,12 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
   }, [depthMap, events, nodesById])
 
   const handleToggleExpand = useCallback((nodeId: string) => {
+    const isCurrentlyExpanded = expandedNodeIds.has(nodeId)
+
+    if (!isCurrentlyExpanded) {
+      updateGraph((currentGraph) => layoutExpandedBranch(currentGraph, nodeId))
+    }
+
     setExpandedNodeIds((currentExpanded) => {
       const nextExpanded = new Set(currentExpanded)
 
@@ -370,75 +535,10 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
 
       return nextExpanded
     })
-  }, [])
-
-  const handleAddChild = useCallback((parentId: string) => {
-    const parentNode = nodesById.get(parentId)
-
-    if (!parentNode) {
-      return
-    }
-
-    updateGraph((currentGraph) => {
-      const nextId = createNodeId(currentGraph.nodes)
-      const siblingIndex = currentGraph.edges.filter(
-        (edge) => edge.source === parentNode.id,
-      ).length
-      const newNode = createChildNode(parentNode, nextId, siblingIndex)
-
-      return syncCompletionState({
-        nodes: [...currentGraph.nodes, newNode],
-        edges: [
-          ...currentGraph.edges,
-          {
-            source: parentNode.id,
-            target: newNode.id,
-          },
-        ],
-      })
-    })
-
-    setExpandedNodeIds((currentExpanded) => {
-      const nextExpanded = new Set(currentExpanded)
-      nextExpanded.add(parentNode.id)
-      return nextExpanded
-    })
-
-    setSelectedNodeId(parentNode.id)
-  }, [nodesById, updateGraph])
-
-  const handleDelete = useCallback((nodeId: string) => {
-    if (nodeId === rootId) {
-      return
-    }
-
-    const nodeIdsToRemove = getDescendantIds(nodeId, childMap)
-
-    updateGraph((currentGraph) =>
-      syncCompletionState({
-        nodes: currentGraph.nodes.filter((node) => !nodeIdsToRemove.has(node.id)),
-        edges: currentGraph.edges.filter(
-          (edge) =>
-            !nodeIdsToRemove.has(edge.source) && !nodeIdsToRemove.has(edge.target),
-        ),
-      }),
-    )
-
-    setExpandedNodeIds((currentExpanded) => {
-      const nextExpanded = new Set(currentExpanded)
-
-      for (const nodeId of nodeIdsToRemove) {
-        nextExpanded.delete(nodeId)
-      }
-
-      return nextExpanded
-    })
-
-    setSelectedNodeId(rootId)
-  }, [childMap, rootId, updateGraph])
+  }, [expandedNodeIds, updateGraph])
 
   const handleDragStart = useCallback((
-    event: ReactMouseEvent<HTMLButtonElement>,
+    event: ReactMouseEvent<HTMLDivElement>,
     nodeId: string,
   ) => {
     const canvas = canvasRef.current
@@ -455,10 +555,34 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
     setSelectedNodeId(nodeId)
     setDragState({
       nodeId,
-      offsetX: event.clientX - bounds.left - node.x,
-      offsetY: event.clientY - bounds.top - node.y,
+      offsetX: (event.clientX - bounds.left) / zoom - node.x,
+      offsetY: (event.clientY - bounds.top) / zoom - node.y,
     })
-  }, [nodesById])
+  }, [nodesById, zoom])
+
+  const handleZoomIn = useCallback(() => {
+    setZoom((currentZoom) => clampZoom(currentZoom + ZOOM_STEP))
+  }, [])
+
+  const handleZoomOut = useCallback(() => {
+    setZoom((currentZoom) => clampZoom(currentZoom - ZOOM_STEP))
+  }, [])
+
+  const handleZoomReset = useCallback(() => {
+    setZoom(1)
+  }, [])
+
+  const handleCanvasWheel = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) {
+      return
+    }
+
+    event.preventDefault()
+
+    setZoom((currentZoom) =>
+      clampZoom(currentZoom + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)),
+    )
+  }, [])
 
   const handleModalSubmit = async (answers: Record<string, MindMapAnswerValue>) => {
     if (!modalNode) {
@@ -516,14 +640,13 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
 
   return (
     <PageShell fullWidth>
-      <main style={{ display: "grid", gap: 16 }}>
+      <main style={{ display: "grid", gap: 16, minHeight: "calc(100vh - 48px)" }}>
         <header style={{ display: "grid", gap: 6 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
             Personal Profile Mind Map
           </h1>
           <p style={{ color: "#475569", fontSize: 14 }}>
-            Select a node to edit it, expand or collapse children, add a child, delete a
-            branch, or drag cards to reposition them.
+            Select a node to edit it, expand or collapse children, and drag cards to reposition them.
           </p>
           {completionMessage ? (
             <div className="mindmap-completion-feedback">{completionMessage}</div>
@@ -532,50 +655,17 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
 
         <section
           style={{
-            display: "grid",
-            gridTemplateColumns: "280px 1fr",
-            gap: 16,
-            alignItems: "start",
+            minHeight: 0,
           }}
         >
-          <aside
-            style={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #cbd5e1",
-              borderRadius: 12,
-              padding: 16,
-              minHeight: 180,
-            }}
-          >
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", marginBottom: 12 }}>
-              Selected Node
-            </h2>
-
-            {selectedNode ? (
-              <div style={{ display: "grid", gap: 8, fontSize: 14, color: "#334155" }}>
-                <div>
-                  <strong>ID:</strong> {selectedNode.id}
-                </div>
-                <div>
-                  <strong>Label:</strong> {selectedNode.label}
-                </div>
-                <div>
-                  <strong>Type:</strong> {selectedNode.type ?? "node"}
-                </div>
-                <div>
-                  <strong>Position:</strong> {Math.round(selectedNode.x)},{" "}
-                  {Math.round(selectedNode.y)}
-                </div>
-              </div>
-            ) : (
-              <p style={{ color: "#64748b", fontSize: 14 }}>Select a node to inspect it.</p>
-            )}
-          </aside>
-
           <div
             ref={canvasRef}
             className="mindmap-canvas"
-            style={canvasFrameStyle}
+            onWheel={handleCanvasWheel}
+            style={{
+              ...canvasFrameStyle,
+              minHeight: "calc(100vh - 180px)",
+            }}
           >
             {nodes.length === 0 ? (
               <div className="mindmap-empty-state">
@@ -592,70 +682,107 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
               <div
                 style={{
                   position: "relative",
-                  width: canvasWidth,
-                  height: canvasHeight,
+                  width: zoomedCanvasWidth,
+                  height: zoomedCanvasHeight,
                 }}
               >
-                <svg
-                  width={canvasWidth}
-                  height={canvasHeight}
-                  style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+                <div
+                  style={{
+                    position: "sticky",
+                    top: 12,
+                    left: 12,
+                    zIndex: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    width: "fit-content",
+                    margin: 12,
+                    padding: 8,
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 10,
+                    backgroundColor: "rgba(255, 255, 255, 0.92)",
+                    backdropFilter: "blur(6px)",
+                  }}
                 >
-                  {visibleEdges.map((edge) => {
-                    const source = nodesById.get(edge.source)
-                    const target = nodesById.get(edge.target)
+                  <button type="button" onClick={handleZoomOut} style={zoomButtonStyle}>
+                    -
+                  </button>
+                  <button type="button" onClick={handleZoomReset} style={zoomButtonStyle}>
+                    {Math.round(zoom * 100)}%
+                  </button>
+                  <button type="button" onClick={handleZoomIn} style={zoomButtonStyle}>
+                    +
+                  </button>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: canvasWidth,
+                    height: canvasHeight,
+                    transform: `scale(${zoom})`,
+                    transformOrigin: "top left",
+                  }}
+                >
+                  <svg
+                    width={canvasWidth}
+                    height={canvasHeight}
+                    style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+                  >
+                    {visibleEdges.map((edge) => {
+                      const source = nodesById.get(edge.source)
+                      const target = nodesById.get(edge.target)
 
-                    if (!source || !target) {
-                      return null
-                    }
+                      if (!source || !target) {
+                        return null
+                      }
+
+                      return (
+                        <line
+                          key={`${edge.source}-${edge.target}`}
+                          x1={target.x < source.x ? source.x : source.x + NODE_WIDTH}
+                          y1={source.y + 72}
+                          x2={target.x < source.x ? target.x + NODE_WIDTH : target.x}
+                          y2={target.y + 72}
+                          stroke="#94a3b8"
+                          strokeWidth="2"
+                        />
+                      )
+                    })}
+                  </svg>
+
+                  {visibleNodes.map((node) => {
+                    const hasChildren = (childMap.get(node.id) ?? []).length > 0
 
                     return (
-                      <line
-                        key={`${edge.source}-${edge.target}`}
-                        x1={source.x + 240}
-                        y1={source.y + 72}
-                        x2={target.x}
-                        y2={target.y + 72}
-                        stroke="#94a3b8"
-                        strokeWidth="2"
-                      />
+                      <div
+                        key={node.id}
+                        ref={(element) => {
+                          nodeRefs.current[node.id] = element
+                        }}
+                        tabIndex={-1}
+                        className="mindmap-node"
+                        data-visible="true"
+                        style={{
+                          position: "absolute",
+                          left: node.x,
+                          top: node.y,
+                        }}
+                      >
+                        <NodeCard
+                          node={node}
+                          isSelected={selectedNodeId === node.id}
+                          hasChildren={hasChildren}
+                          isExpanded={expandedNodeIds.has(node.id)}
+                          onSelect={handleNodeSelect}
+                          onToggleExpand={handleToggleExpand}
+                          onLabelChange={handleLabelChange}
+                          onDragStart={handleDragStart}
+                        />
+                      </div>
                     )
                   })}
-                </svg>
-
-                {visibleNodes.map((node) => {
-                  const hasChildren = (childMap.get(node.id) ?? []).length > 0
-
-                  return (
-                    <div
-                      key={node.id}
-                      ref={(element) => {
-                        nodeRefs.current[node.id] = element
-                      }}
-                      tabIndex={-1}
-                      className="mindmap-node"
-                      data-visible="true"
-                      style={{
-                        position: "absolute",
-                        left: node.x,
-                        top: node.y,
-                      }}
-                    >
-                      <NodeCard
-                        node={node}
-                        isSelected={selectedNodeId === node.id}
-                        hasChildren={hasChildren}
-                        isExpanded={expandedNodeIds.has(node.id)}
-                        onSelect={handleNodeSelect}
-                        onToggleExpand={handleToggleExpand}
-                        onLabelChange={handleLabelChange}
-                        onAddChild={handleAddChild}
-                        onDelete={handleDelete}
-                        onDragStart={handleDragStart}
-                      />
-                    </div>
-                  )
-                })}
+                </div>
               </div>
             )}
           </div>
@@ -689,4 +816,14 @@ const canvasFrameStyle: CSSProperties = {
     "linear-gradient(to right, rgba(148, 163, 184, 0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148, 163, 184, 0.12) 1px, transparent 1px)",
   backgroundSize: "24px 24px",
   padding: 24,
+}
+
+const zoomButtonStyle: CSSProperties = {
+  border: "1px solid #cbd5e1",
+  borderRadius: 8,
+  backgroundColor: "#ffffff",
+  color: "#0f172a",
+  padding: "6px 10px",
+  fontSize: 12,
+  minWidth: 44,
 }
