@@ -11,15 +11,20 @@ import {
   type AdherenceRecordResponse
 } from '../../lib/api-client';
 
+interface ChecklistItem {
+  name: string;
+  itemType: string;
+  subtitle?: string;
+}
+
 export function Checklist({
   items,
-  title
+  title,
+  label,
 }: Readonly<{
-  items: Array<{
-    name: string;
-    itemType: string;
-  }>;
+  items: ChecklistItem[];
   title: string;
+  label?: string;
 }>) {
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [error, setError] = useState('');
@@ -103,6 +108,11 @@ export function Checklist({
   return (
     <Card>
       <CardHeader className="pb-3">
+        {label ? (
+          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+            {label}
+          </p>
+        ) : null}
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent>
@@ -125,12 +135,19 @@ export function Checklist({
                     onCheckedChange={() => handleToggle(item.name, item.itemType)}
                     className="mt-0.5"
                   />
-                  <span
-                    className={`text-sm leading-snug ${
-                      isDone ? 'line-through text-slate-400' : 'text-slate-700'
-                    }`}
-                  >
-                    {item.name}
+                  <span className="flex flex-col gap-0.5 min-w-0">
+                    <span
+                      className={`text-sm leading-snug ${
+                        isDone ? 'line-through text-slate-400' : 'text-slate-700'
+                      }`}
+                    >
+                      {item.name}
+                    </span>
+                    {item.subtitle ? (
+                      <span className={`text-xs ${isDone ? 'text-slate-300' : 'text-slate-400'}`}>
+                        {item.subtitle}
+                      </span>
+                    ) : null}
                   </span>
                 </label>
               );
@@ -146,7 +163,7 @@ export function Checklist({
 }
 
 function buildCompletionState(
-  items: Array<{ name: string; itemType: string }>,
+  items: ChecklistItem[],
   records: AdherenceRecordResponse[]
 ): Record<string, boolean> {
   const allowedKeys = new Set(items.map((item) => buildItemKey(item.name, item.itemType)));

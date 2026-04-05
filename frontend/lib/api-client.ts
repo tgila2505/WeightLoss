@@ -256,6 +256,18 @@ export async function fetchLabs(): Promise<LabRecordResponse[]> {
   return request<LabRecordResponse[]>(`${apiBaseUrl}/api/v1/labs`);
 }
 
+export type LabRecordCreate = {
+  test_name: string;
+  value: number;
+  unit?: string | null;
+  reference_range?: string | null;
+  recorded_date: string; // YYYY-MM-DD
+};
+
+export async function createLabRecord(payload: LabRecordCreate): Promise<LabRecordResponse> {
+  return requestWithBody<LabRecordResponse>(`${apiBaseUrl}/api/v1/labs`, payload);
+}
+
 export async function submitOrchestratorRequest(input: {
   prompt: string;
   intent: OrchestratorIntent;
