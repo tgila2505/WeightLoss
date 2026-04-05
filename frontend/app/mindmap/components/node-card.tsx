@@ -187,36 +187,66 @@ function NodeCardComponent({
       </div>
 
       {isReadOnlyLabel ? (
-        <div
-          style={{
-            width: "100%",
-            border: "1px solid #cbd5e1",
-            borderRadius: 8,
-            padding: "8px 10px",
-            fontSize: 15,
-            fontWeight: 600,
-            color: "#0f172a",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          {node.label}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div
+            style={{
+              flex: 1,
+              border: "1px solid #cbd5e1",
+              borderRadius: 8,
+              padding: "8px 10px",
+              fontSize: 15,
+              fontWeight: 600,
+              color: "#0f172a",
+              backgroundColor: "#ffffff",
+            }}
+          >
+            {node.label}
+          </div>
+          {isCompleted ? (
+            <span
+              title="Answers saved"
+              style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                backgroundColor: "#16a34a",
+                flexShrink: 0,
+              }}
+            />
+          ) : null}
         </div>
       ) : (
-        <input
-          value={node.label}
-          onMouseDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-          onChange={(event) => onLabelChange(node.id, event.target.value)}
-          style={{
-            width: "100%",
-            border: "1px solid #cbd5e1",
-            borderRadius: 8,
-            padding: "8px 10px",
-            fontSize: 15,
-            fontWeight: 600,
-            color: "#0f172a",
-          }}
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <input
+            value={node.label}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => onLabelChange(node.id, event.target.value)}
+            style={{
+              flex: 1,
+              border: "1px solid #cbd5e1",
+              borderRadius: 8,
+              padding: "8px 10px",
+              fontSize: 15,
+              fontWeight: 600,
+              color: "#0f172a",
+            }}
+          />
+          {isCompleted ? (
+            <span
+              title="Answers saved"
+              style={{
+                display: "inline-block",
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                backgroundColor: "#16a34a",
+                flexShrink: 0,
+              }}
+            />
+          ) : null}
+        </div>
       )}
 
       {metadataEntries.length > 0 ? (
