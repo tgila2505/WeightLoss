@@ -15,10 +15,49 @@ interface InitialGraph {
   edges: MindMapEdge[]
 }
 
+function getRootSchemaVersion(nodes: MindMapNode[]): number | null {
+  const rootNode = nodes[0]
+  const version = rootNode?.metadata?.extensions?.version
+
+  return typeof version === "number" ? version : null
+}
+
+function mergeStoredNodesWithInitialLayout(
+  initialNodes: MindMapNode[],
+  storedNodes: MindMapNode[],
+): MindMapNode[] {
+  const storedNodesById = new Map(storedNodes.map((node) => [node.id, node]))
+
+  return initialNodes.map((initialNode) => {
+    const storedNode = storedNodesById.get(initialNode.id)
+
+    if (!storedNode) {
+      return initialNode
+    }
+
+    return {
+      ...storedNode,
+      x: initialNode.x,
+      y: initialNode.y,
+      metadata: {
+        ...initialNode.metadata,
+        ...storedNode.metadata,
+        completion: storedNode.metadata.completion,
+        answers: storedNode.metadata.answers,
+        savedAt: storedNode.metadata.savedAt,
+        extensions: {
+          ...initialNode.metadata.extensions,
+          ...storedNode.metadata.extensions,
+        },
+      },
+    }
+  })
+}
+
 export function useGraphState(initialGraph: InitialGraph | PositionedGraph) {
-  const [nodes, setNodes] = useState<MindMapNode[]>(
-    initialGraph.nodes.map(normalizeNode),
-  )
+  const normalizedInitialNodes = initialGraph.nodes.map(normalizeNode)
+  const initialSchemaVersion = getRootSchemaVersion(normalizedInitialNodes)
+  const [nodes, setNodes] = useState<MindMapNode[]>(normalizedInitialNodes)
   const [edges, setEdges] = useState<MindMapEdge[]>(initialGraph.edges)
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
   const nodesRef = useRef(nodes)
@@ -36,12 +75,25 @@ export function useGraphState(initialGraph: InitialGraph | PositionedGraph) {
     const storedGraph = loadGraphState()
 
     if (storedGraph) {
-      setNodes(storedGraph.nodes.map(normalizeNode))
-      setEdges(storedGraph.edges)
+      const normalizedStoredNodes = storedGraph.nodes.map(normalizeNode)
+      const storedSchemaVersion = getRootSchemaVersion(normalizedStoredNodes)
+
+      if (
+        initialSchemaVersion === null ||
+        storedSchemaVersion === initialSchemaVersion
+      ) {
+        setNodes(
+          mergeStoredNodesWithInitialLayout(
+            normalizedInitialNodes,
+            normalizedStoredNodes,
+          ),
+        )
+        setEdges(initialGraph.edges)
+      }
     }
 
     setHasLoadedStorage(true)
-  }, [])
+  }, [initialSchemaVersion])
 
   useEffect(() => {
     if (!hasLoadedStorage) {
