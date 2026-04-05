@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
@@ -42,14 +42,14 @@ def upsert_node_answers(
     )
 
 
-@router.get("/user-profile/master", response_model=MasterProfileResponse | None)
+@router.get("/user-profile/master", response_model=MasterProfileResponse)
 def get_master_profile(
     session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
-) -> MasterProfileResponse | None:
+) -> MasterProfileResponse:
     master = questionnaire_service.get_master_profile(session, current_user)
     if master is None:
-        return None
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No master profile found.")
     return MasterProfileResponse(
         profile_text=master.profile_text, generated_at=master.generated_at
     )
