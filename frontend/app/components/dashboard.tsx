@@ -57,77 +57,14 @@ export function DashboardView({
         <h1 className="text-2xl font-bold text-slate-900">
           {profile?.name ? `${profile.name}'s overview` : 'Today overview'}
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-2">
           Your latest plan, key metrics, and alerts in one place.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-        {/* Right column — Metrics & Alerts */}
-        <div className="lg:order-2 space-y-4">
-          {/* Metrics card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-                Metrics
-              </p>
-              <CardTitle className="text-base mt-0.5">Key numbers</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-0">
-              {latestMetric ? (
-                <>
-                  <MetricRow
-                    label="Weight"
-                    value={`${latestMetric.weight_kg} kg`}
-                    accent
-                  />
-                  <MetricRow
-                    label="BMI"
-                    value={`${latestMetric.bmi ?? latestMetric.processed.derived_bmi ?? '—'}`}
-                  />
-                  <MetricRow
-                    label="Steps"
-                    value={`${latestMetric.steps ?? '—'}`}
-                  />
-                  <MetricRow
-                    label="Sleep"
-                    value={`${latestMetric.sleep_hours ?? '—'} h`}
-                    last
-                  />
-                </>
-              ) : (
-                <p className="text-sm text-slate-500">No health metrics available yet.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Alerts card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
-                Alerts
-              </p>
-              <CardTitle className="text-base mt-0.5">Flags & reminders</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {alerts.length > 0 ? (
-                <ul className="space-y-2">
-                  {alerts.map((alert, i) => (
-                    <li key={`${alert}-${i}`} className="flex items-start gap-2 text-sm text-slate-700">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
-                      {alert}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-slate-500">No current alerts.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Left column — Plan */}
-        <Card className="lg:order-1">
+        {/* Left column — Plan (first in DOM = first on mobile) */}
+        <Card>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -178,6 +115,70 @@ export function DashboardView({
             )}
           </CardContent>
         </Card>
+
+        {/* Right column — Metrics & Alerts */}
+        <div className="space-y-4">
+          {/* Metrics card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                Metrics
+              </p>
+              <CardTitle className="text-base mt-0.5">Key numbers</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-0">
+              {latestMetric ? (
+                <>
+                  <MetricRow
+                    label="Weight"
+                    value={`${latestMetric.weight_kg} kg`}
+                    accent
+                  />
+                  <MetricRow
+                    label="BMI"
+                    value={`${latestMetric.bmi ?? latestMetric.processed.derived_bmi ?? '—'}`}
+                  />
+                  <MetricRow
+                    label="Steps"
+                    value={`${latestMetric.steps ?? '—'}`}
+                  />
+                  <MetricRow
+                    label="Sleep"
+                    value={`${latestMetric.sleep_hours ?? '—'} h`}
+                    last
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-slate-500">No health metrics available yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Alerts card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                Alerts
+              </p>
+              <CardTitle className="text-base mt-0.5">Flags & reminders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {alerts.length > 0 ? (
+                <ul className="space-y-2">
+                  {alerts.map((alert, i) => (
+                    <li key={`${alert}-${i}`} className="flex items-start gap-2.5 text-sm text-slate-700">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                      {alert}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-500">No current alerts.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
       </div>
     </PageShell>
   );
@@ -201,7 +202,7 @@ function MetricRow({
         <span
           className={
             accent
-              ? 'text-sm font-bold text-teal-600'
+              ? 'text-base font-bold text-teal-600'
               : 'text-sm font-semibold text-slate-900'
           }
         >
@@ -223,7 +224,7 @@ function PlanBlock({
   clickable?: boolean;
 }>) {
   return (
-    <div className={`rounded-xl bg-slate-50 border p-3 space-y-2 transition-colors ${
+    <div className={`rounded-xl bg-slate-50 border p-4 space-y-2 transition-colors ${
       clickable
         ? 'border-slate-100 group-hover:border-blue-200 group-hover:bg-blue-50 cursor-pointer'
         : 'border-slate-100'

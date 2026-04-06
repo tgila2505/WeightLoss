@@ -113,7 +113,7 @@ export function Checklist({
             {label}
           </p>
         ) : null}
-        <CardTitle className="text-base">{title}</CardTitle>
+        <CardTitle className={label ? 'text-base mt-0.5' : 'text-base'}>{title}</CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
@@ -126,7 +126,7 @@ export function Checklist({
               return (
                 <label
                   key={`${item.itemType}:${item.name}`}
-                  className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                     isDone ? 'bg-emerald-50' : 'bg-slate-50'
                   }`}
                 >

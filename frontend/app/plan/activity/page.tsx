@@ -42,7 +42,7 @@ export default function ActivityPage() {
     <PageShell>
       <Header />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {plan.activity.map((item, idx) => (
           <ActivityCard
             key={`${item.title}-${idx}`}
@@ -67,7 +67,7 @@ function Header() {
         Movement
       </p>
       <h1 className="text-2xl font-bold text-slate-900">Activity Plan</h1>
-      <p className="text-sm text-slate-500 mt-1">
+      <p className="text-sm text-slate-500 mt-2">
         Your recommended activities with suggested frequency.
       </p>
     </div>
@@ -83,7 +83,7 @@ function ActivityCard({
   return (
     <Card className="overflow-hidden">
       {/* Illustration area */}
-      <div className={`${bg} flex flex-col items-center justify-center py-10 gap-2`}>
+      <div className={`${bg} flex flex-col items-center justify-center py-8 gap-2`}>
         <span className="text-6xl" role="img" aria-label={title}>{emoji}</span>
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{label}</span>
       </div>

@@ -135,7 +135,7 @@ export function OnboardingForm() {
   return (
     <Card className="w-full max-w-lg shadow-lg">
       <CardHeader className="pb-4">
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-3">
           <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">
             Step {stepIndex + 1} of {steps.length} — {currentStep.title}
           </p>
@@ -420,7 +420,7 @@ export function OnboardingForm() {
           <p className="text-sm text-emerald-600">{success}</p>
         ) : null}
 
-        <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex items-center justify-between gap-3 pt-4">
           <Button
             variant="ghost"
             onClick={() => setStepIndex((s) => Math.max(s - 1, 0))}
