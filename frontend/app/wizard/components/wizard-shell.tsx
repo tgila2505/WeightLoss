@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { WizardStep, WizardStepId, WizardStepState, StepValidationError, StepProps } from '../types/wizard'
 import { validateStep } from '../utils/step-validator'
+import { UXModeSwitcher } from '@/components/ux-mode-switcher'
 import { StepPersonalInfo } from './steps/step-personal'
 import { StepGoals } from './steps/step-goals'
 import { StepMedicalHistory } from './steps/step-health'
@@ -62,6 +63,8 @@ interface WizardShellProps {
   onBack: () => void
   onSkip: () => void
   isSaving: boolean
+  userId?: number
+  onBeforeSwitch: () => Promise<void>
 }
 
 export function WizardShell({
@@ -72,6 +75,8 @@ export function WizardShell({
   onBack,
   onSkip,
   isSaving,
+  userId,
+  onBeforeSwitch,
 }: WizardShellProps) {
   const [errors, setErrors] = useState<StepValidationError[]>([])
 
@@ -139,7 +144,7 @@ export function WizardShell({
       </div>
 
       {/* Navigation */}
-      <div className="border-t px-6 py-4">
+      <div className="border-t px-6 py-4 space-y-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <Button
             variant="ghost"
@@ -161,6 +166,16 @@ export function WizardShell({
               {!isLastStep && <ChevronRight className="w-4 h-4 ml-1" />}
             </Button>
           </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <UXModeSwitcher
+            currentMode="wizard"
+            userId={userId}
+            stepId={step.id}
+            stepIndex={currentStepIndex}
+            onBeforeSwitch={onBeforeSwitch}
+          />
         </div>
       </div>
     </div>
