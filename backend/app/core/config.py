@@ -35,6 +35,7 @@ class Settings:
     jwt_secret_key: str
     jwt_algorithm: str
     access_token_expire_minutes: int
+    refresh_token_expire_days: int
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -54,7 +55,10 @@ class Settings:
             jwt_secret_key=os.environ.get("BACKEND_JWT_SECRET", "change-me-in-production"),
             jwt_algorithm=os.environ.get("BACKEND_JWT_ALGORITHM", "HS256"),
             access_token_expire_minutes=int(
-                os.environ.get("BACKEND_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+                os.environ.get("BACKEND_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+            ),
+            refresh_token_expire_days=int(
+                os.environ.get("BACKEND_REFRESH_TOKEN_EXPIRE_DAYS", "7")
             ),
         )
 

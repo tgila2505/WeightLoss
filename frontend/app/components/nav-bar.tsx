@@ -17,6 +17,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { clearAccessToken } from '../../lib/auth';
+import { LogoMark, LogoText } from './logo';
 
 const links = [
   { href: '/onboarding-view', label: 'Onboarding', icon: ClipboardList },
@@ -44,10 +45,8 @@ export function NavBar() {
       {/* Desktop left sidebar */}
       <nav className="fixed left-0 top-0 h-full w-64 flex-col bg-white border-r border-slate-200 z-50 hidden md:flex">
         <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5 border-b border-slate-100 hover:bg-slate-50 transition-colors">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-sm font-bold">W</span>
-          </div>
-          <span className="font-semibold text-slate-900 text-sm">WeightLoss</span>
+          <LogoMark size="sm" />
+          <LogoText size="sm" />
         </Link>
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
           {links.map(({ href, label, icon: Icon }) => {
