@@ -1,5 +1,5 @@
-import { getAccessToken } from './auth';
 import { getGroqKey, getMistralKey } from './ai-keys';
+import { getAccessToken } from './auth';
 
 export type OnboardingPayload = {
   name: string;
@@ -530,10 +530,18 @@ export async function generateMasterProfile(): Promise<{ profile_text: string; g
   if (!token) {
     throw new Error('You must be logged in before generating a master profile.');
   }
+  const groqKey = getGroqKey();
+  const mistralKey = getMistralKey();
+  const aiHeaders: Record<string, string> = {};
+  if (groqKey) aiHeaders['x-groq-key'] = groqKey;
+  if (mistralKey) aiHeaders['x-mistral-key'] = mistralKey;
+
   const response = await fetch(`${apiBaseUrl}/api/v1/user-profile/generate`, {
     method: 'POST',
+    cache: 'no-store',
     headers: {
       Authorization: `Bearer ${token}`,
+      ...aiHeaders,
     },
   });
   if (!response.ok) {
@@ -622,6 +630,9 @@ function optionalInteger(value: string): number | undefined {
 }
 
 async function readError(response: Response): Promise<string> {
+  if (response.status === 401) {
+    return 'SESSION_EXPIRED';
+  }
   try {
     const data = (await response.json()) as {
       detail?: string | Array<{ msg?: string; message?: string }>;

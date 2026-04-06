@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PDFParse } from 'pdf-parse';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MISTRAL_URL = 'https://api.mistral.ai/v1/chat/completions';
@@ -16,8 +17,13 @@ export interface ParseLabResponse {
   service_date: string | null;
 }
 
+interface AIParseResult {
+  records: ParsedLabEntry[];
+  service_date: string | null;
+}
+
 const SYSTEM_PROMPT = `You are a medical laboratory data extraction specialist.
-Extract all lab test results from the provided lab report image or text.
+Extract all lab test results from the provided lab report.
 
 Return ONLY a valid JSON object with this exact structure — no markdown, no explanation, just JSON:
 {
@@ -33,25 +39,58 @@ Return ONLY a valid JSON object with this exact structure — no markdown, no ex
 }
 
 Rules:
-- Extract EVERY numeric lab result you can find.
+- ONLY include tests that have an actual numeric result present. If the result column is blank, empty, or contains only a unit string (e.g. "fl", "ug/L"), SKIP that test entirely — do not include it.
 - Normalise test names to standard medical names (e.g. "HbA1c" not "Glycated Haemoglobin").
-- value must be a number — parse "< 0.5" as 0.5, "> 10" as 10.
+- value MUST be a JSON number (not a string). Parse "< 0.5" as 0.5, "> 10" as 10, "0" as 0.
 - If a reference range is present capture it exactly (e.g. "3.5-5.0", "< 200", "> 40").
-- Set service_date to the collection date on the report if visible (YYYY-MM-DD format).
+- Set service_date to the collection/service date on the report if visible (YYYY-MM-DD format).
 - If no collection date is visible, set service_date to null.
-- Never include non-numeric results (e.g. "Negative", "Positive").`;
+- Never include non-numeric results (e.g. "Negative", "Positive", unit-only strings).`;
 
-async function callGroqVision(
-  imageBase64: string,
-  mimeType: string,
-  apiKey: string,
-): Promise<ParsedLabEntry[]> {
+/** Extract the first numeric value from a mixed string, e.g. ">10" → 10, "6.3" → 6.3 */
+function coerceToNumber(raw: unknown): number | null {
+  if (typeof raw === 'number' && isFinite(raw)) return raw;
+  if (typeof raw === 'string') {
+    const match = raw.match(/-?\d+(\.\d+)?/);
+    if (match) {
+      const n = parseFloat(match[0]);
+      return isFinite(n) ? n : null;
+    }
+  }
+  return null;
+}
+
+function parseAIResponse(content: string): AIParseResult {
+  const parsed = JSON.parse(content) as {
+    records?: Array<Record<string, unknown>>;
+    service_date?: string | null;
+  };
+
+  const raw = parsed.records ?? [];
+  const records: ParsedLabEntry[] = [];
+
+  for (const r of raw) {
+    const value = coerceToNumber(r.value);
+    if (value === null) continue; // skip blank / unit-only / non-numeric rows
+    records.push({
+      test_name: String(r.test_name ?? '').trim(),
+      value,
+      unit: r.unit != null ? String(r.unit).trim() || null : null,
+      reference_range: r.reference_range != null ? String(r.reference_range).trim() || null : null,
+      recorded_date: '',
+    });
+  }
+
+  return {
+    records,
+    service_date: parsed.service_date ?? null,
+  };
+}
+
+async function callGroqVision(imageBase64: string, mimeType: string, apiKey: string): Promise<AIParseResult> {
   const response = await fetch(GROQ_URL, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       messages: [
@@ -59,14 +98,8 @@ async function callGroqVision(
         {
           role: 'user',
           content: [
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mimeType};base64,${imageBase64}` },
-            },
-            {
-              type: 'text',
-              text: 'Please extract all lab results from this report.',
-            },
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+            { type: 'text', text: 'Please extract all lab results from this report.' },
           ],
         },
       ],
@@ -76,30 +109,16 @@ async function callGroqVision(
     }),
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Groq vision error ${response.status}: ${text}`);
-  }
+  if (!response.ok) throw new Error(`Groq vision error ${response.status}: ${await response.text()}`);
 
-  const data = await response.json() as {
-    choices: Array<{ message: { content: string } }>;
-  };
-  const content = data.choices[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(content) as { records?: ParsedLabEntry[]; service_date?: string };
-  return parsed.records ?? [];
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+  return parseAIResponse(data.choices[0]?.message?.content ?? '{}');
 }
 
-async function callMistralVision(
-  imageBase64: string,
-  mimeType: string,
-  apiKey: string,
-): Promise<ParsedLabEntry[]> {
+async function callMistralVision(imageBase64: string, mimeType: string, apiKey: string): Promise<AIParseResult> {
   const response = await fetch(MISTRAL_URL, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'pixtral-large-latest',
       messages: [
@@ -107,14 +126,8 @@ async function callMistralVision(
         {
           role: 'user',
           content: [
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mimeType};base64,${imageBase64}` },
-            },
-            {
-              type: 'text',
-              text: 'Please extract all lab results from this report.',
-            },
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+            { type: 'text', text: 'Please extract all lab results from this report.' },
           ],
         },
       ],
@@ -124,17 +137,60 @@ async function callMistralVision(
     }),
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Mistral vision error ${response.status}: ${text}`);
-  }
+  if (!response.ok) throw new Error(`Mistral vision error ${response.status}: ${await response.text()}`);
 
-  const data = await response.json() as {
-    choices: Array<{ message: { content: string } }>;
-  };
-  const content = data.choices[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(content) as { records?: ParsedLabEntry[]; service_date?: string };
-  return parsed.records ?? [];
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+  return parseAIResponse(data.choices[0]?.message?.content ?? '{}');
+}
+
+async function callGroqText(text: string, apiKey: string): Promise<AIParseResult> {
+  const response = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Please extract all lab results from this report:\n\n${text}`,
+        },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Groq text error ${response.status}: ${await response.text()}`);
+
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+  return parseAIResponse(data.choices[0]?.message?.content ?? '{}');
+}
+
+async function callMistralText(text: string, apiKey: string): Promise<AIParseResult> {
+  const response = await fetch(MISTRAL_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'mistral-large-latest',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Please extract all lab results from this report:\n\n${text}`,
+        },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Mistral text error ${response.status}: ${await response.text()}`);
+
+  const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+  return parseAIResponse(data.choices[0]?.message?.content ?? '{}');
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -159,48 +215,89 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const file = formData.get('file') as File | null;
-  const serviceDate = formData.get('service_date') as string | null;
+  // UI-selected date — takes priority over whatever is found in the document
+  const uiServiceDate = (formData.get('service_date') as string | null) || null;
 
   if (!file) {
     return NextResponse.json({ error: 'No file provided.' }, { status: 400 });
   }
 
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  const mimeType = file.type || 'image/jpeg';
+  const mimeType = file.type || 'application/octet-stream';
+  const isPdf = mimeType === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-  if (!allowedTypes.includes(mimeType)) {
+  if (!isPdf && !allowedImageTypes.includes(mimeType)) {
     console.warn(`[parse-lab] Unsupported file type: ${mimeType}`);
     return NextResponse.json(
-      { error: 'Unsupported file type. Please upload a JPEG, PNG, or WebP image of your lab report.' },
+      { error: 'Unsupported file type. Please upload a JPEG, PNG, WebP image or a PDF of your lab report.' },
       { status: 400 },
     );
   }
 
   const provider = groqKey ? 'groq' : 'mistral';
-  console.log(`[parse-lab] Parsing lab report via ${provider} (file: ${file.name}, size: ${file.size}B)`);
+  console.log(`[parse-lab] Parsing ${isPdf ? 'PDF' : 'image'} via ${provider} (file: ${file.name}, size: ${file.size}B)`);
 
-  const buffer = await file.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString('base64');
+  const buffer = Buffer.from(await file.arrayBuffer());
 
   try {
-    let records: ParsedLabEntry[] = [];
+    let aiResult: AIParseResult = { records: [], service_date: null };
     let usedProvider = provider;
 
-    if (groqKey) {
+    if (isPdf) {
+      // Extract text from PDF, then send to AI as text
+      let pdfText: string;
       try {
-        records = await callGroqVision(base64, mimeType, groqKey);
-      } catch (groqError) {
-        console.warn('[parse-lab] Groq vision failed, falling back to Mistral:', groqError);
-        if (!mistralKey) throw groqError;
-        records = await callMistralVision(base64, mimeType, mistralKey);
-        usedProvider = 'mistral';
+        const parser = new PDFParse({ data: new Uint8Array(buffer) });
+        const result = await parser.getText();
+        pdfText = result.text;
+        await parser.destroy();
+        if (!pdfText.trim()) {
+          return NextResponse.json(
+            { error: 'Could not extract text from the PDF. The file may be scanned as an image — please try a text-based PDF.' },
+            { status: 422 },
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: 'Failed to read the PDF file. Please ensure it is a valid, non-password-protected PDF.' },
+          { status: 422 },
+        );
       }
-    } else if (mistralKey) {
-      records = await callMistralVision(base64, mimeType, mistralKey);
+
+      if (groqKey) {
+        try {
+          aiResult = await callGroqText(pdfText, groqKey);
+        } catch (groqError) {
+          console.warn('[parse-lab] Groq text failed, falling back to Mistral:', groqError);
+          if (!mistralKey) throw groqError;
+          aiResult = await callMistralText(pdfText, mistralKey);
+          usedProvider = 'mistral';
+        }
+      } else if (mistralKey) {
+        aiResult = await callMistralText(pdfText, mistralKey);
+      }
+    } else {
+      // Image: use vision models
+      const base64 = buffer.toString('base64');
+      if (groqKey) {
+        try {
+          aiResult = await callGroqVision(base64, mimeType, groqKey);
+        } catch (groqError) {
+          console.warn('[parse-lab] Groq vision failed, falling back to Mistral:', groqError);
+          if (!mistralKey) throw groqError;
+          aiResult = await callMistralVision(base64, mimeType, mistralKey);
+          usedProvider = 'mistral';
+        }
+      } else if (mistralKey) {
+        aiResult = await callMistralVision(base64, mimeType, mistralKey);
+      }
     }
 
-    const finalDate = serviceDate ?? new Date().toISOString().slice(0, 10);
-    const finalRecords: ParsedLabEntry[] = records.map((r) => ({
+    // Service date priority: UI selection → date found in document → today
+    const today = new Date().toISOString().slice(0, 10);
+    const finalDate = uiServiceDate ?? aiResult.service_date ?? today;
+
+    const finalRecords: ParsedLabEntry[] = aiResult.records.map((r) => ({
       ...r,
       recorded_date: finalDate,
     }));
@@ -208,13 +305,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (finalRecords.length === 0) {
       console.warn(`[parse-lab] ${usedProvider} returned no extractable records`);
       return NextResponse.json(
-        { error: 'No lab results could be extracted. Please ensure the image is clear and contains numeric test results.' },
+        { error: 'No lab results could be extracted. Please ensure the file contains numeric test results.' },
         { status: 422 },
       );
     }
 
     const elapsed = Date.now() - start;
-    console.log(`[parse-lab] Success via ${usedProvider} — ${finalRecords.length} records in ${elapsed}ms`);
+    console.log(`[parse-lab] Success via ${usedProvider} — ${finalRecords.length} records in ${elapsed}ms (date: ${finalDate})`);
     return NextResponse.json({ records: finalRecords, service_date: finalDate } satisfies ParseLabResponse);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected error';

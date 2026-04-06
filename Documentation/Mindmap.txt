@@ -1,0 +1,68 @@
+Personal Profile
+├── Past Medical History
+│   ├── Musculoskeletal
+│   ├── Cancer
+│   ├── Cardiovascular
+│   ├── Respiratory
+│   ├── Endocrine
+│   ├── Neurologic
+│   ├── Psychiatric
+│   ├── Infections
+│   ├── Gynecologic
+│   ├── Gastroenterological
+│   ├── Surgical
+│   └── Other
+├── Exercise
+│   ├── Types
+│   └── Habits
+├── Stress Tolerance
+│   ├── Routine
+│   └── Habits
+├── Stress Symptoms
+│   └── Current State
+├── Change Readiness
+│   └── Readiness
+├── Family History
+│   └── Relative
+├── Purpose
+│   ├── Clarity of Vision
+│   └── Assessment
+├── Metabolic Flexibility
+│   ├── Assessment
+│   └── Habits
+├── Dental
+│   ├── Hygiene
+│   └── History
+├── Nutrition
+│   ├── Nutrition Groups
+│   └── Habits
+├── Relationships
+│   ├── Quality
+│   └── Habits
+├── Detoxification
+│   ├── Experience
+│   └── Work
+├── Sleep
+│   ├── Routine
+│   └── Habits
+├── Sleep Symptoms
+│   └── Current State
+├── Aerobics Capacity
+│   ├── Current State
+├── Regular Medication
+│   ├── Each Medicine
+├── Inflammation
+│   ├── Current State
+├── Gut Health
+│   ├── Current State
+├── Social History
+│   ├── Current State
+├── Mental Health
+│   ├── Current State
+├── Harmful Substance
+│   ├── Habits
+└── Diabetes History
+    ├── Objectives
+    ├── Diagnosis
+    ├── Family History
+    └── Cultural

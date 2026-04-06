@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
@@ -61,10 +61,13 @@ def get_master_profile(
     status_code=status.HTTP_200_OK,
 )
 def generate_master_profile(
+    request: Request,
     session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
 ) -> MasterProfileResponse:
-    master = questionnaire_service.generate_master_profile(session, current_user)
-    return MasterProfileResponse(
-        profile_text=master.profile_text, generated_at=master.generated_at
+    groq_key = request.headers.get("x-groq-key")
+    mistral_key = request.headers.get("x-mistral-key")
+    profile_text, generated_at = questionnaire_service.generate_master_profile(
+        session, current_user, groq_key=groq_key, mistral_key=mistral_key
     )
+    return MasterProfileResponse(profile_text=profile_text, generated_at=generated_at)

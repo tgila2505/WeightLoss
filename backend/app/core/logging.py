@@ -14,6 +14,14 @@ def configure_logging(settings: Settings) -> None:
         stream=sys.stdout,
         force=True,
     )
+    # Keep uvicorn's access logger active so HTTP requests appear in the terminal
+    uvicorn_access = logging.getLogger("uvicorn.access")
+    if not uvicorn_access.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter(LOG_FORMAT))
+        uvicorn_access.addHandler(handler)
+    uvicorn_access.setLevel(logging.INFO)
+    uvicorn_access.propagate = True
 
 
 def get_logger(name: str) -> logging.Logger:
