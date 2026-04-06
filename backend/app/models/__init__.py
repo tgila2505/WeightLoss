@@ -2,6 +2,7 @@
 
 from app.db.base import Base
 from app.models.adherence import AdherenceRecord
+from app.models.analytics import AnalyticsEvent
 from app.models.behavior_tracking import BehaviorTracking
 from app.models.health_metrics import HealthMetrics
 from app.models.lab import LabRecord
@@ -15,6 +16,7 @@ from app.models.user import User
 __all__ = [
     "Base",
     "AdherenceRecord",
+    "AnalyticsEvent",
     "BehaviorTracking",
     "HealthMetrics",
     "LabRecord",
