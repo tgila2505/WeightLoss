@@ -130,6 +130,7 @@ class Orchestrator:
             variables={
                 "intent": context.intent,
                 "user_profile": asdict(context.user_profile) if context.user_profile else None,
+                "master_profile": context.master_profile or "",
                 "health_metrics": [asdict(metric) for metric in context.health_metrics],
                 "lab_records": [asdict(record) for record in context.lab_records],
                 "adherence_signals": [asdict(signal) for signal in context.adherence_signals],

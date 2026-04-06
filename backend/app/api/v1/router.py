@@ -8,6 +8,7 @@ from app.api.v1.endpoints.lab import router as lab_router
 from app.api.v1.endpoints.metrics import router as metrics_router
 from app.api.v1.endpoints.plans import router as plans_router
 from app.api.v1.endpoints.profile import router as profile_router
+from app.api.v1.endpoints.questionnaire import router as questionnaire_router
 from app.api.v1.endpoints.reminders import router as reminders_router
 
 router = APIRouter()
@@ -19,4 +20,5 @@ router.include_router(lab_router, tags=["labs"])
 router.include_router(metrics_router, tags=["observability"])
 router.include_router(plans_router, tags=["plans"])
 router.include_router(profile_router, tags=["profile"])
+router.include_router(questionnaire_router, tags=["questionnaire"])
 router.include_router(reminders_router, tags=["reminders"])

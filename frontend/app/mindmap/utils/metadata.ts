@@ -41,7 +41,10 @@ export function getNodeMetadata(node: NodeWithUnknownMetadata): MindMapNodeMetad
     },
     answers: Object.fromEntries(
       Object.entries(answers).filter(
-        ([, value]) => typeof value === "string" || typeof value === "number",
+        ([, value]) =>
+          typeof value === "string" ||
+          typeof value === "number" ||
+          (Array.isArray(value) && value.every((v) => typeof v === "string")),
       ),
     ) as Record<string, MindMapAnswerValue>,
     savedAt: typeof raw.savedAt === "string" ? raw.savedAt : null,

@@ -1,7 +1,7 @@
 """add refresh tokens table
 
 Revision ID: b3c1d4e2f567
-Revises: a8f3e1d2c9b4
+Revises: c3d4e5f6a7b8
 Create Date: 2026-04-05 00:00:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "b3c1d4e2f567"
-down_revision: str | None = "a8f3e1d2c9b4"
+down_revision: str | None = "c3d4e5f6a7b8"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

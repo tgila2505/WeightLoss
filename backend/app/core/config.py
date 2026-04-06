@@ -36,6 +36,7 @@ class Settings:
     jwt_algorithm: str
     access_token_expire_minutes: int
     refresh_token_expire_days: int
+    ai_services_url: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -60,6 +61,7 @@ class Settings:
             refresh_token_expire_days=int(
                 os.environ.get("BACKEND_REFRESH_TOKEN_EXPIRE_DAYS", "7")
             ),
+            ai_services_url=os.environ.get("AI_SERVICES_URL", "http://localhost:8001"),
         )
 
 
