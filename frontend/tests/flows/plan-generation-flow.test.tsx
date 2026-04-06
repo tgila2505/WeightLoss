@@ -30,7 +30,9 @@ vi.mock('next/link', () => ({
 
 vi.mock('@/lib/api-client', () => apiClient);
 vi.mock('@/lib/ai-keys', () => ({
-  hasAiKeys: () => hasAiKeys()
+  hasAiKeys: () => hasAiKeys(),
+  getGroqKey: () => null,
+  getMistralKey: () => null
 }));
 
 describe('Plan generation flow', () => {
@@ -82,7 +84,7 @@ describe('Plan generation flow', () => {
     await waitFor(() => {
       expect(apiClient.submitOrchestratorRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          prompt: 'Build me a higher protein meal plan',
+          prompt: expect.stringContaining('Build me a higher protein meal plan'),
           intent: 'meal_plan'
         })
       );

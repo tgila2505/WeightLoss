@@ -35,7 +35,7 @@ describe('PlanView', () => {
       />
     );
 
-    expect(screen.getByText(/daily breakdown/i)).toBeInTheDocument();
+    expect(screen.getByText(/today's breakdown/i)).toBeInTheDocument();
     expect(screen.getByText(/oats/i)).toBeInTheDocument();
     expect(screen.getByText(/walk/i)).toBeInTheDocument();
     expect(screen.getByText(/hydrate, add protein/i)).toBeInTheDocument();

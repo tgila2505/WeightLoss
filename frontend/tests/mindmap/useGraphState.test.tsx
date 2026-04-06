@@ -30,8 +30,8 @@ describe('useGraphState', () => {
         version: 2,
         nodes: [
           {
-            id: 'saved',
-            label: 'Saved Node',
+            id: 'root',
+            label: 'Saved Root',
             type: 'profile',
             x: 12,
             y: 18,
@@ -51,7 +51,8 @@ describe('useGraphState', () => {
 
     await waitFor(() => {
       expect(result.current.hasLoadedStorage).toBe(true);
-      expect(result.current.nodes[0].id).toBe('saved');
+      expect(result.current.nodes[0].label).toBe('Saved Root');
+      expect(result.current.nodes[0].metadata.completion.state).toBe('completed');
     });
   });
 
