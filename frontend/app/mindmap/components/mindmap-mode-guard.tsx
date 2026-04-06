@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchProfile } from '@/lib/api-client'
 import { resolveUXMode } from '@/lib/ux-mode'
 
-export function MindMapModeGuard({ children }: { children: React.ReactNode }) {
+export function MindMapModeGuard({ children }: { children: ReactNode }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [allowed, setAllowed] = useState(false)
