@@ -4,7 +4,9 @@ from datetime import datetime, timezone
 
 import httpx
 from fastapi import HTTPException, status
-from sqlalchemy import select, update as sql_update
+from sqlalchemy import func, select, update as sql_update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -30,26 +32,38 @@ class QuestionnaireService:
         node_id: str,
         payload: QuestionnaireAnswerUpsert,
     ) -> QuestionnaireResponse:
-        existing = session.scalar(
-            select(QuestionnaireResponse).where(
-                QuestionnaireResponse.user_id == user.id,
-                QuestionnaireResponse.node_id == node_id,
+        # Atomic upsert: single statement with no TOCTOU window.
+        # Concurrent requests for the same (user_id, node_id) are handled by the
+        # database — the conflict target ensures exactly one row is ever written.
+        stmt = (
+            pg_insert(QuestionnaireResponse)
+            .values(user_id=user.id, node_id=node_id, answers=payload.answers)
+            .on_conflict_do_update(
+                constraint="uq_questionnaire_user_node",
+                set_={
+                    "answers": payload.answers,
+                    "updated_at": func.now(),
+                },
             )
+            .returning(QuestionnaireResponse)
         )
-        if existing is None:
-            row = QuestionnaireResponse(
-                user_id=user.id, node_id=node_id, answers=payload.answers
+        try:
+            row = session.scalar(stmt)
+            session.commit()
+        except IntegrityError:
+            # Defense-in-depth: should not be reachable via the upsert path,
+            # but catches any edge case that bypasses the ON CONFLICT clause.
+            session.rollback()
+            row = session.scalar(
+                select(QuestionnaireResponse).where(
+                    QuestionnaireResponse.user_id == user.id,
+                    QuestionnaireResponse.node_id == node_id,
+                )
             )
-            session.add(row)
-            session.commit()
-            session.refresh(row)
-            return row
-        else:
-            existing.answers = payload.answers
-            session.add(existing)
-            session.commit()
-            session.refresh(existing)
-            return existing
+            if row is None:
+                raise
+        session.refresh(row)
+        return row
 
     def get_master_profile(
         self, session: Session, user: User
