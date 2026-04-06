@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 import { PageShell } from '../components/page-shell';
 import { getGroqKey, getMistralKey, setAiKeys, clearAiKeys } from '../../lib/ai-keys';
+import { fetchProfile, patchProfileGender } from '../../lib/api-client';
 
 export default function SettingsPage() {
   const [groqKey, setGroqKey] = useState('');
@@ -20,10 +22,32 @@ export default function SettingsPage() {
   const [showMistralKey, setShowMistralKey] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // Profile — gender
+  const [gender, setGender] = useState<string>('');
+  const [genderSaving, setGenderSaving] = useState(false);
+  const [genderSaved, setGenderSaved] = useState(false);
+  const [genderError, setGenderError] = useState('');
+
   useEffect(() => {
     setGroqKey(getGroqKey() ?? '');
     setMistralKey(getMistralKey() ?? '');
+    fetchProfile().then((p) => { if (p?.gender) setGender(p.gender); });
   }, []);
+
+  async function handleGenderChange(value: string) {
+    setGender(value);
+    setGenderSaving(true);
+    setGenderError('');
+    try {
+      await patchProfileGender(value);
+      setGenderSaved(true);
+      setTimeout(() => setGenderSaved(false), 2500);
+    } catch {
+      setGenderError('Failed to save. Please try again.');
+    } finally {
+      setGenderSaving(false);
+    }
+  }
 
   function handleSave() {
     if (groqKey.trim() && mistralKey.trim()) {
@@ -48,17 +72,47 @@ export default function SettingsPage() {
   return (
     <PageShell>
       {/* Header */}
-      <div className="mb-6 md:mb-8">
+      <div className="mb-8">
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
           Settings
         </p>
         <h1 className="text-2xl font-bold text-slate-900">AI provider setup</h1>
-        <p className="text-sm text-slate-500 mt-2">
+        <p className="text-sm text-slate-500 mt-1">
           Configure Groq (primary) and Mistral (fallback) to enable personalised AI responses.
         </p>
       </div>
 
-      <div className="max-w-xl">
+      <div className="max-w-xl space-y-4">
+        {/* Profile */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="gender-select">Biological sex</Label>
+              <p className="text-xs text-slate-500">
+                Used to apply sex-specific reference ranges on your lab requisition.
+              </p>
+              <div className="flex items-center gap-3">
+                <Select value={gender} onValueChange={handleGenderChange} disabled={genderSaving}>
+                  <SelectTrigger id="gender-select" className="w-48">
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+                {genderSaving && <span className="text-xs text-slate-400">Saving…</span>}
+                {genderSaved && !genderSaving && <span className="text-xs font-semibold text-emerald-600">Saved.</span>}
+              </div>
+              {genderError && <p className="text-xs text-red-500">{genderError}</p>}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* API keys */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -102,7 +156,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowGroqKey((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={showGroqKey ? 'Hide Groq key' : 'Show Groq key'}
                   >
                     {showGroqKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -136,7 +190,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowMistralKey((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={showMistralKey ? 'Hide Mistral key' : 'Show Mistral key'}
                   >
                     {showMistralKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
