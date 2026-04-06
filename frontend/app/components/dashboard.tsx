@@ -98,8 +98,8 @@ export function DashboardView({
             <CardContent>
               {alerts.length > 0 ? (
                 <ul className="space-y-2">
-                  {alerts.map((alert) => (
-                    <li key={alert} className="flex items-start gap-2 text-sm text-slate-700">
+                  {alerts.map((alert, i) => (
+                    <li key={`${alert}-${i}`} className="flex items-start gap-2 text-sm text-slate-700">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
                       {alert}
                     </li>
