@@ -248,6 +248,20 @@ export async function fetchProfile(): Promise<ProfileResponse | null> {
   return requestWithOptional404<ProfileResponse>(`${apiBaseUrl}/api/v1/profile`);
 }
 
+export async function patchProfileGender(gender: string): Promise<void> {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
+  const res = await fetch(`${apiBaseUrl}/api/v1/profile`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ gender }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(text || 'Failed to update profile');
+  }
+}
+
 export async function fetchHealthMetrics(): Promise<HealthMetricResponse[]> {
   return request<HealthMetricResponse[]>(`${apiBaseUrl}/api/v1/health-metrics`);
 }
