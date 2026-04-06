@@ -48,7 +48,7 @@ export function PlanView({
           Plan
         </p>
         <h1 className="text-2xl font-bold text-slate-900">Today's breakdown</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-2">
           Today's meals, activity checklist, and key actions.
         </p>
       </div>
@@ -76,7 +76,7 @@ export function PlanView({
             {todayMeals.map((meal) => (
               <div
                 key={`${meal.meal}-${meal.name}`}
-                className="rounded-lg bg-slate-50 border border-slate-100 p-3"
+                className="rounded-lg bg-slate-50 border border-slate-100 p-4"
               >
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide capitalize">
                   {meal.meal}

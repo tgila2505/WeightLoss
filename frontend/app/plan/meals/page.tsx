@@ -269,7 +269,7 @@ export default function MealsPage() {
       )}
 
       {/* Day tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1 mb-6">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 mb-6">
         {weekLabels.map((day, i) => (
           <button
             key={day}
@@ -326,7 +326,7 @@ function Header() {
         Nutrition
       </p>
       <h1 className="text-2xl font-bold text-slate-900">7-Day Meal Plan</h1>
-      <p className="text-sm text-slate-500 mt-1">
+      <p className="text-sm text-slate-500 mt-2">
         Breakfast, snack, lunch, snack, and dinner — for each day of the week.
       </p>
     </div>
