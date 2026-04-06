@@ -24,11 +24,19 @@ export function isLoggedIn(): boolean {
   return getAccessToken() !== null;
 }
 
+async function apiFetch(path: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`${apiBaseUrl}${path}`, init);
+  } catch {
+    throw new Error('Unable to reach the server. Please check that the backend is running.');
+  }
+}
+
 export async function register(
   email: string,
   password: string
 ): Promise<void> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
+  const response = await apiFetch('/api/v1/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -44,7 +52,7 @@ export async function login(
   email: string,
   password: string
 ): Promise<void> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
+  const response = await apiFetch('/api/v1/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })

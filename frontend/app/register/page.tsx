@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/card';
 
 import { login, register } from '../../lib/auth';
+import { LogoMark } from '../components/logo';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -58,9 +59,7 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto mb-4 w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
-            <span className="text-white text-xl font-bold">W</span>
-          </div>
+          <LogoMark size="md" className="mx-auto mb-4" />
           <CardTitle className="text-2xl font-bold">Create account</CardTitle>
           <CardDescription>Start your weight loss journey today</CardDescription>
         </CardHeader>
