@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { LogoMark, LogoText } from '@/app/components/logo';
 
 export default function HomePage() {
   return (
@@ -8,11 +9,9 @@ export default function HomePage() {
       <div className="w-full max-w-sm text-center space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg">
-            <span className="text-white text-2xl font-bold">W</span>
-          </div>
+          <LogoMark size="lg" />
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">WeightLoss</h1>
+            <LogoText size="lg" as="h1" />
             <p className="text-sm text-slate-500 mt-1">
               Your personal weight loss assistant
             </p>
