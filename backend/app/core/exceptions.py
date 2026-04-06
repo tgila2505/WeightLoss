@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from app.core.logging import get_logger
+from app.core.logging import get_logger, get_request_id
 
 logger = get_logger(__name__)
 
@@ -13,7 +13,11 @@ def register_exception_handlers(app: FastAPI) -> None:
     ) -> JSONResponse:
         logger.warning(
             "HTTP exception raised",
-            extra={"path": str(request.url.path), "status_code": exc.status_code},
+            extra={
+                "path": str(request.url.path),
+                "status_code": exc.status_code,
+                "request_id": get_request_id(),
+            },
         )
         return JSONResponse(
             status_code=exc.status_code,
@@ -29,7 +33,11 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def unhandled_exception_handler(
         request: Request, exc: Exception
     ) -> JSONResponse:
-        logger.exception("Unhandled exception raised for path %s", request.url.path)
+        logger.exception(
+            "Unhandled exception raised for path %s",
+            request.url.path,
+            extra={"request_id": get_request_id()},
+        )
         return JSONResponse(
             status_code=500,
             content={

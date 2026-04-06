@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
+from app.middleware.observability import ObservabilityMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
         version=settings.app_version,
         lifespan=lifespan,
     )
+    application.add_middleware(ObservabilityMiddleware)
     application.add_middleware(SecurityHeadersMiddleware)
     application.add_middleware(
         CORSMiddleware,
