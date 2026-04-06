@@ -39,7 +39,11 @@ export function mapStepToNodeAnswers(
   answers: Record<string, unknown>,
 ): Record<string, Record<string, MindMapAnswerValue>> {
   if (stepId === 'medical-history' || stepId === 'family-history') {
-    return answers as Record<string, Record<string, MindMapAnswerValue>>
+    // Exclude UI-state keys (__ prefix) and the flat summary field —
+    // only questionnaire node IDs should be sent to saveNodeAnswers.
+    return Object.fromEntries(
+      Object.entries(answers).filter(([k]) => !k.startsWith('__') && k !== 'summary')
+    ) as Record<string, Record<string, MindMapAnswerValue>>
   }
   return {}
 }

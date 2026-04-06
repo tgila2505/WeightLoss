@@ -110,8 +110,22 @@ export default function WizardPage() {
     }
   }
 
-  function handleSkip() {
+  async function handleSkip() {
     const stepId = WIZARD_STEPS[state.currentStepIndex].id
+    const stepAnswers = state.steps[stepId].answers
+
+    // Persist whatever partial answers exist before advancing so no data is lost
+    try {
+      const nodeAnswers = mapStepToNodeAnswers(stepId, stepAnswers)
+      await Promise.all(
+        Object.entries(nodeAnswers).map(([nodeId, answers]) =>
+          saveNodeAnswers(nodeId, answers as Record<string, MindMapAnswerValue>)
+        )
+      )
+    } catch (err) {
+      console.error('Failed to persist partial answers on skip:', err)
+    }
+
     trackEvent('wizard_step_dropped', {
       userId: userId ?? undefined,
       uxMode: 'wizard',
