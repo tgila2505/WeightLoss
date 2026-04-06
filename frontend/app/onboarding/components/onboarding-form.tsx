@@ -362,7 +362,7 @@ export function OnboardingForm() {
                 <button
                   type="button"
                   onClick={() => setShowGroqKey((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-slate-600 transition-colors"
                   aria-label={showGroqKey ? 'Hide Groq key' : 'Show Groq key'}
                 >
                   {showGroqKey ? (
@@ -395,7 +395,7 @@ export function OnboardingForm() {
                 <button
                   type="button"
                   onClick={() => setShowMistralKey((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-slate-600 transition-colors"
                   aria-label={showMistralKey ? 'Hide Mistral key' : 'Show Mistral key'}
                 >
                   {showMistralKey ? (

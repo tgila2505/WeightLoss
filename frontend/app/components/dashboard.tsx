@@ -50,7 +50,7 @@ export function DashboardView({
   return (
     <PageShell>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
           Dashboard
         </p>
@@ -234,7 +234,7 @@ function PlanBlock({
           {title}
         </h3>
         {clickable && (
-          <span className="text-[10px] text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[10px] text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity">
             View all →
           </span>
         )}

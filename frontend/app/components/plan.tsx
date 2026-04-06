@@ -53,7 +53,7 @@ export function PlanView({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Today's Meals */}
         <Card>
           <CardHeader className="pb-3">
@@ -98,20 +98,22 @@ export function PlanView({
           }))}
         />
 
-        {/* Action checklist */}
-        <Checklist
-          title="Action checklist"
-          items={[
-            ...plan.behavioral_actions.map((item) => ({
-              name: item,
-              itemType: 'behavioral_action',
-            })),
-            ...plan.recommendations.map((item) => ({
-              name: item,
-              itemType: 'recommendation',
-            })),
-          ]}
-        />
+        {/* Action checklist — spans both tablet columns to avoid orphaned half-row */}
+        <div className="md:col-span-2 lg:col-span-1">
+          <Checklist
+            title="Action checklist"
+            items={[
+              ...plan.behavioral_actions.map((item) => ({
+                name: item,
+                itemType: 'behavioral_action',
+              })),
+              ...plan.recommendations.map((item) => ({
+                name: item,
+                itemType: 'recommendation',
+              })),
+            ]}
+          />
+        </div>
       </div>
     </PageShell>
   );

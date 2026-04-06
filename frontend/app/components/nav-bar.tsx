@@ -82,9 +82,9 @@ export function NavBar() {
         </div>
       </nav>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav — horizontally scrollable so all items have adequate tap targets */}
       <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 flex md:hidden">
-        <div className="flex justify-around items-center h-16 px-1 w-full">
+        <div className="flex items-center h-16 w-full overflow-x-auto">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -92,21 +92,21 @@ export function NavBar() {
                 key={href}
                 href={href}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 px-1 py-1 text-[10px] font-medium rounded-lg transition-colors min-w-0',
+                  'flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-medium rounded-lg transition-colors flex-shrink-0',
                   active ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
                 )}
               >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                <span className="truncate">{label}</span>
+                <Icon className="h-5 w-5" />
+                <span className="max-w-[52px] truncate">{label}</span>
               </Link>
             );
           })}
           {/* Logout in mobile nav */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-1 py-1 text-[10px] font-medium text-slate-400 hover:text-red-500 transition-colors min-w-0"
+            className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-medium text-slate-400 hover:text-red-500 transition-colors flex-shrink-0"
           >
-            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <LogOut className="h-5 w-5" />
             <span>Log out</span>
           </button>
         </div>
