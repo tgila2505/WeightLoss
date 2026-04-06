@@ -57,19 +57,16 @@ function mergeStoredNodesWithInitialLayout(
 export function useGraphState(initialGraph: InitialGraph | PositionedGraph) {
   const normalizedInitialNodes = initialGraph.nodes.map(normalizeNode)
   const initialSchemaVersion = getRootSchemaVersion(normalizedInitialNodes)
-  const [nodes, setNodes] = useState<MindMapNode[]>(normalizedInitialNodes)
-  const [edges, setEdges] = useState<MindMapEdge[]>(initialGraph.edges)
+
+  // Single combined state — updateGraph uses functional setState so it always
+  // receives the latest committed value, eliminating the stale-ref race condition
+  // that previously existed when nodesRef was updated via useEffect.
+  const [graph, setGraph] = useState<MindMapGraph>({
+    nodes: normalizedInitialNodes,
+    edges: initialGraph.edges,
+  })
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
-  const nodesRef = useRef(nodes)
-  const edgesRef = useRef(edges)
-
-  useEffect(() => {
-    nodesRef.current = nodes
-  }, [nodes])
-
-  useEffect(() => {
-    edgesRef.current = edges
-  }, [edges])
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const storedGraph = loadGraphState()
@@ -82,67 +79,83 @@ export function useGraphState(initialGraph: InitialGraph | PositionedGraph) {
         initialSchemaVersion === null ||
         storedSchemaVersion === initialSchemaVersion
       ) {
-        setNodes(
-          mergeStoredNodesWithInitialLayout(
+        setGraph({
+          nodes: mergeStoredNodesWithInitialLayout(
             normalizedInitialNodes,
             normalizedStoredNodes,
           ),
-        )
-        setEdges(initialGraph.edges)
+          edges: initialGraph.edges,
+        })
       }
     }
 
     setHasLoadedStorage(true)
   }, [initialSchemaVersion])
 
+  // Debounced auto-save: coalesces rapid state changes into a single write,
+  // preventing main-thread thrash from burst completion propagation updates.
   useEffect(() => {
     if (!hasLoadedStorage) {
       return
     }
 
-    saveGraphState({ nodes, edges })
-  }, [edges, hasLoadedStorage, nodes])
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+    }
+    saveTimerRef.current = setTimeout(() => {
+      saveGraphState({ nodes: graph.nodes, edges: graph.edges })
+    }, 300)
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+      }
+    }
+  }, [graph, hasLoadedStorage])
 
   const replaceGraph = useCallback((nextGraph: MindMapGraph) => {
-    setNodes(nextGraph.nodes.map(normalizeNode))
-    setEdges(nextGraph.edges)
+    setGraph({
+      nodes: nextGraph.nodes.map(normalizeNode),
+      edges: nextGraph.edges,
+    })
   }, [])
 
   const updateNode = useCallback((
     nodeId: string,
     updater: (node: MindMapNode) => MindMapNode,
   ) => {
-    setNodes((currentNodes) =>
-      currentNodes.map((node) => (node.id === nodeId ? updater(node) : node)),
-    )
+    setGraph((current) => ({
+      ...current,
+      nodes: current.nodes.map((node) => (node.id === nodeId ? updater(node) : node)),
+    }))
   }, [])
 
   const updateGraph = useCallback((updater: (currentGraph: MindMapGraph) => MindMapGraph) => {
-    const currentGraph = { nodes: nodesRef.current, edges: edgesRef.current }
-    const nextGraph = updater(currentGraph)
-    setNodes(nextGraph.nodes.map(normalizeNode))
-    setEdges(nextGraph.edges)
+    setGraph((current) => {
+      const nextGraph = updater(current)
+      return { nodes: nextGraph.nodes.map(normalizeNode), edges: nextGraph.edges }
+    })
   }, [])
 
   const removeNodes = useCallback((nodeIds: Set<string>) => {
-    updateGraph((currentGraph) => ({
-      nodes: currentGraph.nodes.filter((node) => !nodeIds.has(node.id)),
-      edges: currentGraph.edges.filter(
+    setGraph((current) => ({
+      nodes: current.nodes.filter((node) => !nodeIds.has(node.id)),
+      edges: current.edges.filter(
         (edge) => !nodeIds.has(edge.source) && !nodeIds.has(edge.target),
       ),
     }))
-  }, [updateGraph])
+  }, [])
 
   const addNode = useCallback((node: MindMapNode, edge?: MindMapEdge) => {
-    updateGraph((currentGraph) => ({
-      nodes: [...currentGraph.nodes, node],
-      edges: edge ? [...currentGraph.edges, edge] : currentGraph.edges,
+    setGraph((current) => ({
+      nodes: [...current.nodes, node],
+      edges: edge ? [...current.edges, edge] : current.edges,
     }))
-  }, [updateGraph])
+  }, [])
 
   return {
-    nodes,
-    edges,
+    nodes: graph.nodes,
+    edges: graph.edges,
     hasLoadedStorage,
     replaceGraph,
     updateNode,

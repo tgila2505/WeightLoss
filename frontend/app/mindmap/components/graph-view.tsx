@@ -323,6 +323,9 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
   const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  // Tracks node IDs with an in-flight save to prevent concurrent duplicate requests
+  // (e.g. rapid re-submit or network-retry scenario).
+  const savingNodesRef = useRef<Set<string>>(new Set())
   const {
     nodes,
     edges,
@@ -589,6 +592,11 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
       return
     }
 
+    if (savingNodesRef.current.has(modalNode.id)) {
+      return
+    }
+
+    savingNodesRef.current.add(modalNode.id)
     setIsSavingAnswers(true)
     setModalError("")
 
@@ -630,6 +638,7 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
         error instanceof Error ? error.message : "Unable to save node answers.",
       )
     } finally {
+      savingNodesRef.current.delete(modalNode.id)
       setIsSavingAnswers(false)
     }
   }
