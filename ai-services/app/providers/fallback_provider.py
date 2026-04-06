@@ -24,16 +24,16 @@ class FallbackProvider:
         self._mistral = MistralProvider(mistral_key)
         self._rls = rate_limit_service or RateLimitService()
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, max_tokens: int = 1024) -> str:
         if not self._rls.is_limited("groq"):
             try:
-                return self._groq.generate(prompt)
+                return self._groq.generate(prompt, max_tokens=max_tokens)
             except GroqRateLimitError:
                 self._rls.mark_limited("groq")
 
         if not self._rls.is_limited("mistral"):
             try:
-                return self._mistral.generate(prompt)
+                return self._mistral.generate(prompt, max_tokens=max_tokens)
             except MistralRateLimitError:
                 self._rls.mark_limited("mistral")
 

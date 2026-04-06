@@ -16,11 +16,11 @@ class MistralProvider:
     def __init__(self, api_key: str) -> None:
         self._api_key = api_key
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, max_tokens: int = 1024) -> str:
         payload = json.dumps({
             "model": _MODEL,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 1024,
+            "max_tokens": max_tokens,
             "temperature": 0.7,
         }).encode()
 

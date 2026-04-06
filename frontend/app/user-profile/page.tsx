@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import type { CSSProperties } from "react"
 
+import { useRouter } from "next/navigation"
+
 import { PageShell } from "@/app/components/page-shell"
 import { generateMasterProfile, fetchMasterProfile } from "@/lib/api-client"
 
@@ -12,10 +14,12 @@ interface ProfileState {
 }
 
 export default function UserProfilePage() {
+  const router = useRouter()
   const [profile, setProfile] = useState<ProfileState | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState("")
+  const [sessionExpired, setSessionExpired] = useState(false)
 
   useEffect(() => {
     fetchMasterProfile()
@@ -24,18 +28,29 @@ export default function UserProfilePage() {
           setProfile({ profileText: data.profile_text, generatedAt: data.generated_at })
         }
       })
-      .catch(() => setError("Failed to load profile."))
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.message === "SESSION_EXPIRED") {
+          setSessionExpired(true)
+        } else {
+          setError("Failed to load profile.")
+        }
+      })
       .finally(() => setIsLoading(false))
   }, [])
 
   async function handleGenerate() {
     setIsGenerating(true)
     setError("")
+    setSessionExpired(false)
     try {
       const data = await generateMasterProfile()
       setProfile({ profileText: data.profile_text, generatedAt: data.generated_at })
-    } catch {
-      setError("Failed to generate profile. Make sure the AI service is running.")
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === "SESSION_EXPIRED") {
+        setSessionExpired(true)
+      } else {
+        setError("Failed to generate profile. Make sure the AI service is running.")
+      }
     } finally {
       setIsGenerating(false)
     }
@@ -60,24 +75,40 @@ export default function UserProfilePage() {
       <div style={containerStyle} className="print-container">
         {/* Header */}
         <div style={headerStyle} className="no-print">
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0 }}>
-            User Profile
-          </h1>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0 }}>
+              User Profile
+            </h1>
+            {formattedDate && (
+              <p style={{ fontSize: 13, color: "#64748b", margin: "4px 0 0" }}>
+                Last generated: {formattedDate}
+              </p>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            style={generateButtonStyle}
+            style={profile ? regenerateButtonStyle : generateButtonStyle}
           >
-            {isGenerating ? "Generating…" : "Generate"}
+            {isGenerating
+              ? (profile ? "Re-generating…" : "Generating…")
+              : (profile ? "Re-generate" : "Generate")}
           </button>
         </div>
 
-        {/* Meta strip */}
-        {formattedDate && (
-          <p style={{ fontSize: 13, color: "#64748b", margin: 0 }} className="no-print">
-            Last generated: {formattedDate}
-          </p>
+        {/* Session expired banner */}
+        {sessionExpired && (
+          <div style={sessionBannerStyle} className="no-print">
+            <span>Your session has expired. Please log in again to continue.</span>
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              style={sessionLoginButtonStyle}
+            >
+              Log in
+            </button>
+          </div>
         )}
 
         {/* Error */}
@@ -106,7 +137,12 @@ export default function UserProfilePage() {
 
         {/* Profile content */}
         {profile && (
-          <div style={profileContentStyle} className="profile-text">
+          <div style={{ ...profileContentStyle, opacity: isGenerating ? 0.45 : 1, transition: "opacity 0.3s" }} className="profile-text">
+            {isGenerating && (
+              <p style={{ fontSize: 13, color: "#2563eb", marginBottom: 16, fontStyle: "italic" }}>
+                Re-generating with your latest lab results, weight trends, and health data…
+              </p>
+            )}
             <MarkdownRenderer text={profile.profileText} />
           </div>
         )}
@@ -191,6 +227,12 @@ const generateButtonStyle: CSSProperties = {
   cursor: "pointer",
 }
 
+const regenerateButtonStyle: CSSProperties = {
+  ...generateButtonStyle,
+  backgroundColor: "#ffffff",
+  color: "#2563eb",
+}
+
 const emptyStateStyle: CSSProperties = {
   padding: "40px 20px",
   textAlign: "center",
@@ -222,4 +264,29 @@ const printButtonStyle: CSSProperties = {
   fontSize: 14,
   fontWeight: 500,
   cursor: "pointer",
+}
+
+const sessionBannerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  padding: "10px 16px",
+  borderRadius: 8,
+  backgroundColor: "#fffbeb",
+  border: "1px solid #fbbf24",
+  fontSize: 14,
+  color: "#92400e",
+}
+
+const sessionLoginButtonStyle: CSSProperties = {
+  padding: "4px 14px",
+  borderRadius: 6,
+  border: "1px solid #d97706",
+  backgroundColor: "#ffffff",
+  color: "#b45309",
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
 }

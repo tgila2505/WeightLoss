@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import httpx
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update as sql_update
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.models.health_metrics import HealthMetrics
+from app.models.lab import LabRecord
 from app.models.profile import Profile
 from app.models.questionnaire import MasterUserProfile, QuestionnaireResponse
 from app.models.user import User
@@ -55,8 +59,12 @@ class QuestionnaireService:
         )
 
     def generate_master_profile(
-        self, session: Session, user: User
-    ) -> MasterUserProfile:
+        self,
+        session: Session,
+        user: User,
+        groq_key: str | None = None,
+        mistral_key: str | None = None,
+    ) -> tuple[str, datetime]:
         questionnaire = self.get_all_answers(session, user)
         profile = session.scalar(select(Profile).where(Profile.user_id == user.id))
 
@@ -79,6 +87,42 @@ class QuestionnaireService:
                 "diet_pattern": profile.diet_pattern,
             }
 
+        # Fetch latest lab records (most recent 50, ordered by date desc)
+        lab_rows = session.scalars(
+            select(LabRecord)
+            .where(LabRecord.user_id == user.id)
+            .order_by(LabRecord.recorded_date.desc())
+            .limit(50)
+        ).all()
+        lab_records = [
+            {
+                "test_name": r.test_name,
+                "value": float(r.value),
+                "unit": r.unit,
+                "reference_range": r.reference_range,
+                "recorded_date": r.recorded_date.isoformat(),
+            }
+            for r in lab_rows
+        ]
+
+        # Fetch latest health metrics (most recent 30, ordered by recorded_at desc)
+        metric_rows = session.scalars(
+            select(HealthMetrics)
+            .where(HealthMetrics.user_id == user.id)
+            .order_by(HealthMetrics.recorded_at.desc())
+            .limit(30)
+        ).all()
+        health_metrics = [
+            {
+                "weight_kg": float(r.weight_kg) if r.weight_kg else None,
+                "bmi": float(r.bmi) if r.bmi else None,
+                "steps": r.steps,
+                "sleep_hours": float(r.sleep_hours) if r.sleep_hours else None,
+                "recorded_at": r.recorded_at.isoformat(),
+            }
+            for r in metric_rows
+        ]
+
         settings = get_settings()
         try:
             response = httpx.post(
@@ -87,6 +131,10 @@ class QuestionnaireService:
                     "user_id": user.id,
                     "demographics": demographics,
                     "questionnaire": questionnaire,
+                    "lab_records": lab_records,
+                    "health_metrics": health_metrics,
+                    "groq_api_key": groq_key,
+                    "mistral_api_key": mistral_key,
                 },
                 timeout=120.0,
             )
@@ -103,17 +151,32 @@ class QuestionnaireService:
             ) from exc
 
         profile_text: str = response.json().get("profile_text", "")
+        now = datetime.now(timezone.utc)
+
+        print(
+            f"[profile] generate called for user_id={user.id} "
+            f"new_ts={now.isoformat()} "
+            f"text_len={len(profile_text)}",
+            flush=True,
+        )
 
         existing = self.get_master_profile(session, user)
         if existing is None:
-            master = MasterUserProfile(user_id=user.id, profile_text=profile_text)
-            session.add(master)
+            session.add(MasterUserProfile(
+                user_id=user.id, profile_text=profile_text, generated_at=now
+            ))
             session.commit()
-            session.refresh(master)
-            return master
+            print(f"[profile] inserted new row for user_id={user.id}", flush=True)
         else:
-            existing.profile_text = profile_text
-            session.add(existing)
+            session.execute(
+                sql_update(MasterUserProfile)
+                .where(MasterUserProfile.user_id == user.id)
+                .values(profile_text=profile_text, generated_at=now)
+                .execution_options(synchronize_session=False)
+            )
             session.commit()
-            session.refresh(existing)
-            return existing
+            print(f"[profile] updated row for user_id={user.id}", flush=True)
+
+        # Return the known values as a plain tuple — no ORM object involved,
+        # no lazy-loads, no session-state surprises.
+        return profile_text, now

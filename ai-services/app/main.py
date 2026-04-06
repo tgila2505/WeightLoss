@@ -156,178 +156,348 @@ def run_orchestrator(payload: OrchestratorRequestPayload) -> dict[str, object]:
         ) from e
 
 
+class LabRecordEntry(BaseModel):
+    test_name: str
+    value: float
+    unit: str | None = None
+    reference_range: str | None = None
+    recorded_date: str | None = None
+
+
+class HealthMetricEntry(BaseModel):
+    weight_kg: float | None = None
+    bmi: float | None = None
+    steps: int | None = None
+    sleep_hours: float | None = None
+    recorded_at: str | None = None
+
+
 class MasterProfileRequest(BaseModel):
     user_id: int | None = None
     demographics: dict[str, object] = Field(default_factory=dict)
     questionnaire: dict[str, dict[str, object]] = Field(default_factory=dict)
+    lab_records: list[LabRecordEntry] = Field(default_factory=list)
+    health_metrics: list[HealthMetricEntry] = Field(default_factory=list)
     groq_api_key: str | None = None
     mistral_api_key: str | None = None
 
 
-@app.post("/orchestrator/master-profile")
-def generate_master_profile(payload: MasterProfileRequest) -> dict[str, object]:
-    demographics = payload.demographics
-    questionnaire = payload.questionnaire
+def _build_data_context(
+    demographics: dict,
+    questionnaire: dict,
+    lab_records: list[LabRecordEntry],
+    health_metrics: list[HealthMetricEntry],
+) -> str:
+    """Build a structured plain-text data summary to feed into the LLM prompt."""
+    lines: list[str] = []
 
-    sections: list[str] = []
+    # --- Demographics ---
+    lines.append("=== PATIENT DEMOGRAPHICS ===")
+    for key, label in [
+        ("name", "Name"), ("age", "Age"), ("gender", "Gender"),
+        ("height_cm", "Height (cm)"), ("weight_kg", "Current weight (kg)"),
+        ("goal_target_weight_kg", "Target weight (kg)"),
+        ("health_conditions", "Known conditions"),
+        ("activity_level", "Activity level"), ("diet_pattern", "Diet pattern"),
+    ]:
+        val = demographics.get(key)
+        if val:
+            lines.append(f"  {label}: {val}")
 
-    # Demographics & Goals
-    demo_parts: list[str] = []
-    if demographics.get("name"):
-        demo_parts.append(f"Name: {demographics['name']}")
-    if demographics.get("age"):
-        demo_parts.append(f"Age: {demographics['age']}")
-    if demographics.get("gender"):
-        demo_parts.append(f"Gender: {demographics['gender']}")
-    if demographics.get("height_cm"):
-        demo_parts.append(f"Height: {demographics['height_cm']} cm")
-    if demographics.get("weight_kg"):
-        demo_parts.append(f"Weight: {demographics['weight_kg']} kg")
-    if demographics.get("goal_target_weight_kg"):
-        demo_parts.append(f"Target weight: {demographics['goal_target_weight_kg']} kg")
-    if demographics.get("health_conditions"):
-        demo_parts.append(f"Known conditions: {demographics['health_conditions']}")
-    if demographics.get("activity_level"):
-        demo_parts.append(f"Activity level: {demographics['activity_level']}")
-    if demographics.get("diet_pattern"):
-        demo_parts.append(f"Diet pattern: {demographics['diet_pattern']}")
-    sections.append("## Demographics & Goals\n" + ("\n".join(demo_parts) if demo_parts else "Not reported."))
-
-    def q(node_id: str) -> dict[str, object]:
+    def q(node_id: str) -> dict:
         return questionnaire.get(node_id, {})
 
-    def fmt_list(values: object) -> str:
+    def fmt(values: object) -> str:
         if isinstance(values, list) and values:
             return ", ".join(str(v) for v in values)
         if isinstance(values, str) and values:
             return values
         return ""
 
-    # Medical History
-    med_parts: list[str] = []
-    for section_id, label in [
+    # --- Medical History ---
+    lines.append("\n=== MEDICAL HISTORY ===")
+    for sid, label in [
         ("past-medical-history-cardiovascular", "Cardiovascular"),
-        ("past-medical-history-endocrine", "Endocrine"),
+        ("past-medical-history-endocrine", "Endocrine/Metabolic"),
         ("past-medical-history-musculoskeletal", "Musculoskeletal"),
         ("past-medical-history-neurologic", "Neurologic"),
         ("past-medical-history-psychiatric", "Psychiatric"),
         ("past-medical-history-respiratory", "Respiratory"),
         ("past-medical-history-gastroenterological", "Gastrointestinal"),
-        ("past-medical-history-gynecologic", "Gynecologic"),
-        ("past-medical-history-infections", "Infections"),
+        ("past-medical-history-cancer", "Cancer"),
+        ("past-medical-history-surgical", "Surgical history"),
+    ]:
+        items = fmt(q(sid).get("conditions") or q(sid).get("procedures"))
+        if items:
+            lines.append(f"  {label}: {items}")
+    meds = fmt(q("regular-medication-each-medicine").get("medications"))
+    if meds:
+        lines.append(f"  Current medications: {meds}")
+    fp = fmt(q("family-history-relative").get("parent"))
+    fs = fmt(q("family-history-relative").get("sibling"))
+    if fp:
+        lines.append(f"  Family history (parents): {fp}")
+    if fs:
+        lines.append(f"  Family history (siblings): {fs}")
+    diabetes_dx = fmt(q("diabetes-history-diagnosis").get("diagnosis"))
+    if diabetes_dx:
+        lines.append(f"  Diabetes status: {diabetes_dx}")
+
+    # --- Lifestyle ---
+    lines.append("\n=== LIFESTYLE ===")
+    sleep_h = fmt(q("sleep-routine").get("total-sleep"))
+    if sleep_h:
+        lines.append(f"  Sleep: {sleep_h}")
+    sleep_s = fmt(q("sleep-symptoms-current-state").get("symptoms"))
+    if sleep_s:
+        lines.append(f"  Sleep symptoms: {sleep_s}")
+    stress = q("stress-symptoms-current-state").get("stress-level")
+    if stress:
+        lines.append(f"  Stress level: {stress}/10")
+    ex_freq = fmt(q("exercise-habits").get("frequency"))
+    ex_type = fmt(q("exercise-types").get("types"))
+    if ex_freq:
+        lines.append(f"  Exercise frequency: {ex_freq}")
+    if ex_type:
+        lines.append(f"  Exercise types: {ex_type}")
+    gut = fmt(q("gut-health-current-state").get("symptoms"))
+    if gut:
+        lines.append(f"  Gut symptoms: {gut}")
+    smoking = q("harmful-substance-habits").get("smokes")
+    if smoking:
+        lines.append(f"  Smoking: {smoking}")
+    alcohol = fmt(q("harmful-substance-habits").get("alcohol-frequency"))
+    if alcohol:
+        lines.append(f"  Alcohol use: {alcohol}")
+
+    # --- Weight & Metrics Trend ---
+    if health_metrics:
+        lines.append("\n=== WEIGHT & METRICS HISTORY (most recent first) ===")
+        weights = [m.weight_kg for m in health_metrics if m.weight_kg is not None]
+        if len(weights) >= 2:
+            delta = round(weights[0] - weights[-1], 2)
+            direction = "lost" if delta > 0 else ("gained" if delta < 0 else "maintained")
+            lines.append(f"  Overall trend: {direction} {abs(delta)} kg over {len(weights)} readings")
+        for m in health_metrics[:10]:
+            date_str = (m.recorded_at or "")[:10]
+            parts = []
+            if m.weight_kg is not None:
+                parts.append(f"weight={m.weight_kg} kg")
+            if m.bmi is not None:
+                parts.append(f"BMI={m.bmi}")
+            if m.steps is not None:
+                parts.append(f"steps={m.steps}")
+            if m.sleep_hours is not None:
+                parts.append(f"sleep={m.sleep_hours}h")
+            if parts:
+                lines.append(f"  {date_str}: {', '.join(parts)}")
+
+    # --- Lab Results ---
+    if lab_records:
+        lines.append("\n=== RECENT LAB RESULTS (most recent per test) ===")
+        seen: dict[str, LabRecordEntry] = {}
+        for r in lab_records:
+            key = r.test_name.lower()
+            if key not in seen:
+                seen[key] = r
+        for r in sorted(seen.values(), key=lambda x: x.test_name):
+            line = f"  {r.test_name}: {r.value}"
+            if r.unit:
+                line += f" {r.unit}"
+            if r.reference_range:
+                line += f" (ref: {r.reference_range})"
+            if r.recorded_date:
+                line += f" [{r.recorded_date}]"
+            lines.append(line)
+
+    return "\n".join(lines)
+
+
+def _build_structured_sections(
+    demographics: dict,
+    questionnaire: dict,
+    lab_records: list[LabRecordEntry],
+    health_metrics: list[HealthMetricEntry],
+) -> list[str]:
+    """Build the deterministic structured sections shown at the bottom of the profile."""
+    sections: list[str] = []
+
+    def q(node_id: str) -> dict:
+        return questionnaire.get(node_id, {})
+
+    def fmt(values: object) -> str:
+        if isinstance(values, list) and values:
+            return ", ".join(str(v) for v in values)
+        if isinstance(values, str) and values:
+            return values
+        return ""
+
+    # Demographics
+    demo_parts: list[str] = []
+    for key, label in [
+        ("name", "Name"), ("age", "Age"), ("gender", "Gender"),
+        ("height_cm", "Height (cm)"), ("weight_kg", "Weight (kg)"),
+        ("goal_target_weight_kg", "Target weight (kg)"),
+        ("health_conditions", "Known conditions"),
+        ("activity_level", "Activity level"), ("diet_pattern", "Diet pattern"),
+    ]:
+        val = demographics.get(key)
+        if val:
+            demo_parts.append(f"- **{label}:** {val}")
+    sections.append("## Demographics & Goals\n" + ("\n".join(demo_parts) if demo_parts else "Not reported."))
+
+    # Medical History
+    med_parts: list[str] = []
+    for sid, label in [
+        ("past-medical-history-cardiovascular", "Cardiovascular"),
+        ("past-medical-history-endocrine", "Endocrine/Metabolic"),
+        ("past-medical-history-musculoskeletal", "Musculoskeletal"),
+        ("past-medical-history-neurologic", "Neurologic"),
+        ("past-medical-history-psychiatric", "Psychiatric"),
+        ("past-medical-history-respiratory", "Respiratory"),
+        ("past-medical-history-gastroenterological", "Gastrointestinal"),
         ("past-medical-history-cancer", "Cancer"),
         ("past-medical-history-surgical", "Surgical history"),
         ("past-medical-history-other", "Other"),
     ]:
-        items = fmt_list(q(section_id).get("conditions") or q(section_id).get("procedures"))
+        items = fmt(q(sid).get("conditions") or q(sid).get("procedures"))
         if items:
             med_parts.append(f"- **{label}:** {items}")
-    meds = fmt_list(q("regular-medication-each-medicine").get("medications"))
+    meds = fmt(q("regular-medication-each-medicine").get("medications"))
     if meds:
         med_parts.append(f"- **Current medications:** {meds}")
-    family_parent = fmt_list(q("family-history-relative").get("parent"))
-    family_sibling = fmt_list(q("family-history-relative").get("sibling"))
-    if family_parent:
-        med_parts.append(f"- **Family history (parents):** {family_parent}")
-    if family_sibling:
-        med_parts.append(f"- **Family history (siblings):** {family_sibling}")
-    sections.append("## Medical History Summary\n" + ("\n".join(med_parts) if med_parts else "Not reported."))
+    fp = fmt(q("family-history-relative").get("parent"))
+    fs = fmt(q("family-history-relative").get("sibling"))
+    if fp:
+        med_parts.append(f"- **Family history (parents):** {fp}")
+    if fs:
+        med_parts.append(f"- **Family history (siblings):** {fs}")
+    sections.append("## Medical History\n" + ("\n".join(med_parts) if med_parts else "Not reported."))
 
-    # Lifestyle Snapshot
+    # Lifestyle
     life_parts: list[str] = []
-    sleep_hours = fmt_list(q("sleep-routine").get("total-sleep"))
-    if sleep_hours:
-        life_parts.append(f"- **Sleep:** {sleep_hours}")
-    sleep_syms = fmt_list(q("sleep-symptoms-current-state").get("symptoms"))
-    if sleep_syms:
-        life_parts.append(f"- **Sleep symptoms:** {sleep_syms}")
-    stress_level = q("stress-symptoms-current-state").get("stress-level")
-    if stress_level:
-        life_parts.append(f"- **Stress level:** {stress_level}/10")
-    stress_syms = fmt_list(q("stress-symptoms-current-state").get("symptoms"))
-    if stress_syms:
-        life_parts.append(f"- **Stress symptoms:** {stress_syms}")
-    exercise_freq = fmt_list(q("exercise-habits").get("frequency"))
-    exercise_types = fmt_list(q("exercise-types").get("types"))
-    if exercise_freq:
-        life_parts.append(f"- **Exercise frequency:** {exercise_freq}")
-    if exercise_types:
-        life_parts.append(f"- **Exercise types:** {exercise_types}")
-    diet = fmt_list(q("nutrition-groups").get("diet-pattern"))
-    if diet:
-        life_parts.append(f"- **Diet pattern:** {diet}")
-    gut_syms = fmt_list(q("gut-health-current-state").get("symptoms"))
-    if gut_syms:
-        life_parts.append(f"- **Gut health symptoms:** {gut_syms}")
-    dental = fmt_list(q("dental-hygiene").get("brushing"))
-    if dental:
-        life_parts.append(f"- **Dental hygiene:** {dental}")
-    social_sit = fmt_list(q("social-history-current-state").get("living-situation"))
-    if social_sit:
-        life_parts.append(f"- **Living situation:** {social_sit}")
-    sections.append("## Lifestyle Snapshot\n" + ("\n".join(life_parts) if life_parts else "Not reported."))
-
-    # Key Risk Factors
-    risk_parts: list[str] = []
-    cardio_conds = fmt_list(q("past-medical-history-cardiovascular").get("conditions"))
-    if cardio_conds:
-        risk_parts.append(f"- Cardiovascular: {cardio_conds}")
-    endo_conds = fmt_list(q("past-medical-history-endocrine").get("conditions"))
-    if endo_conds:
-        risk_parts.append(f"- Metabolic/Endocrine: {endo_conds}")
-    inflammation = q("inflammation-current-state").get("pain-level")
-    if inflammation and int(str(inflammation)) >= 5:
-        risk_parts.append(f"- Elevated inflammation score: {inflammation}/10")
-    smoking = q("harmful-substance-habits").get("smokes")
-    if smoking == "yes":
-        risk_parts.append("- Current tobacco user")
-    alcohol = fmt_list(q("harmful-substance-habits").get("alcohol-frequency"))
-    if alcohol and "day" in alcohol.lower():
-        risk_parts.append(f"- Daily alcohol use: {alcohol}")
-    diabetes_dx = fmt_list(q("diabetes-history-diagnosis").get("diagnosis"))
-    if diabetes_dx and diabetes_dx != "No":
-        risk_parts.append(f"- Diabetes status: {diabetes_dx}")
-    aerobic = fmt_list(q("aerobics-capacity-current-state").get("fitness-level"))
-    if aerobic and "Poor" in aerobic:
-        risk_parts.append(f"- Poor aerobic capacity: {aerobic}")
-    sections.append("## Key Risk Factors\n" + ("\n".join(risk_parts) if risk_parts else "No significant risk factors identified from reported data."))
-
-    # Behavioral Readiness
-    readiness_node = q("change-readiness-readiness")
-    readiness_parts: list[str] = []
-    readiness_labels = {
-        "motivated": "Motivation",
-        "capable": "Self-efficacy",
-        "clear-why": "Clarity of why",
-        "time-resources": "Time/resources",
-        "social-support": "Social support",
-        "willing-to-track": "Willing to track",
-        "wants-coaching": "Open to coaching",
-    }
-    for key, label in readiness_labels.items():
-        val = readiness_node.get(key)
+    for getter, label in [
+        (lambda: fmt(q("sleep-routine").get("total-sleep")), "Sleep"),
+        (lambda: fmt(q("sleep-symptoms-current-state").get("symptoms")), "Sleep symptoms"),
+        (lambda: (str(q("stress-symptoms-current-state").get("stress-level", "")) + "/10") if q("stress-symptoms-current-state").get("stress-level") else "", "Stress level"),
+        (lambda: fmt(q("exercise-habits").get("frequency")), "Exercise frequency"),
+        (lambda: fmt(q("exercise-types").get("types")), "Exercise types"),
+        (lambda: fmt(q("nutrition-groups").get("diet-pattern")), "Diet pattern"),
+        (lambda: fmt(q("gut-health-current-state").get("symptoms")), "Gut symptoms"),
+    ]:
+        val = getter()
         if val:
-            readiness_parts.append(f"- {label}: {val}/5")
-    purpose = fmt_list(q("purpose-assessment").get("sense-of-purpose"))
-    if purpose:
-        readiness_parts.append(f"- Sense of purpose: {purpose}")
-    sections.append("## Behavioral Readiness & Motivation\n" + ("\n".join(readiness_parts) if readiness_parts else "Not reported."))
+            life_parts.append(f"- **{label}:** {val}")
+    sections.append("## Lifestyle\n" + ("\n".join(life_parts) if life_parts else "Not reported."))
 
-    # Recommendations Summary
-    rec_parts: list[str] = []
-    if sleep_hours and ("< 5" in sleep_hours or "5-6" in sleep_hours):
-        rec_parts.append("- Prioritize sleep extension — reported sleep below optimal range")
-    if stress_level and int(str(stress_level)) >= 7:
-        rec_parts.append("- Address high stress — consider structured stress management techniques")
-    if exercise_freq and ("Rarely" in exercise_freq or "month" in exercise_freq):
-        rec_parts.append("- Begin graduated exercise program — currently sedentary")
-    if diabetes_dx and diabetes_dx != "No":
-        rec_parts.append("- Metabolic optimization focus — diabetes/pre-diabetes present")
-    if smoking == "yes":
-        rec_parts.append("- Smoking cessation support recommended")
-    if not rec_parts:
-        rec_parts.append("- Maintain current healthy habits and monitor key biomarkers")
-    sections.append("## Personalized Recommendations Summary\n" + "\n".join(rec_parts))
+    # Weight & Metrics Trend
+    if health_metrics:
+        metrics_parts: list[str] = []
+        weights = [m.weight_kg for m in health_metrics if m.weight_kg is not None]
+        if len(weights) >= 2:
+            delta = round(weights[0] - weights[-1], 2)
+            direction = "lost" if delta > 0 else ("gained" if delta < 0 else "maintained")
+            metrics_parts.append(f"- **Trend:** {direction} {abs(delta)} kg over {len(weights)} readings")
+        for m in health_metrics[:10]:
+            date_str = (m.recorded_at or "")[:10]
+            parts = []
+            if m.weight_kg is not None:
+                parts.append(f"Weight: {m.weight_kg} kg")
+            if m.bmi is not None:
+                parts.append(f"BMI: {m.bmi}")
+            if m.steps is not None:
+                parts.append(f"Steps: {m.steps}")
+            if m.sleep_hours is not None:
+                parts.append(f"Sleep: {m.sleep_hours} h")
+            if parts:
+                metrics_parts.append(f"- {date_str}: {', '.join(parts)}")
+        if metrics_parts:
+            sections.append("## Weight & Metrics Trend\n" + "\n".join(metrics_parts))
 
-    profile_text = "\n\n".join(sections)
+    # Lab Results
+    if lab_records:
+        seen: dict[str, LabRecordEntry] = {}
+        for r in lab_records:
+            if r.test_name.lower() not in seen:
+                seen[r.test_name.lower()] = r
+        lab_parts: list[str] = []
+        for r in sorted(seen.values(), key=lambda x: x.test_name):
+            line = f"- **{r.test_name}:** {r.value}"
+            if r.unit:
+                line += f" {r.unit}"
+            if r.reference_range:
+                line += f" (ref: {r.reference_range})"
+            if r.recorded_date:
+                line += f" — {r.recorded_date}"
+            lab_parts.append(line)
+        sections.append("## Recent Lab Results\n" + "\n".join(lab_parts))
+
+    return sections
+
+
+@app.post("/orchestrator/master-profile")
+def generate_master_profile(payload: MasterProfileRequest) -> dict[str, object]:
+    demographics = payload.demographics
+    questionnaire = payload.questionnaire
+    lab_records = payload.lab_records
+    health_metrics = payload.health_metrics
+
+    # Build structured sections (always present regardless of AI availability)
+    structured_sections = _build_structured_sections(
+        demographics, questionnaire, lab_records, health_metrics
+    )
+
+    # If API keys are available, use the LLM to generate an AI assessment
+    ai_assessment: str | None = None
+    if payload.groq_api_key or payload.mistral_api_key:
+        try:
+            groq_key = payload.groq_api_key or ""
+            mistral_key = payload.mistral_api_key or ""
+            provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+
+            data_context = _build_data_context(
+                demographics, questionnaire, lab_records, health_metrics
+            )
+
+            prompt = f"""You are a clinical health coach writing a comprehensive, personalised health profile for a patient on a weight-loss programme.
+
+Use ONLY the data provided below — do not invent values, hallucinate conditions, or add generic filler.
+
+{data_context}
+
+Write a structured health assessment with these sections (use ## headings):
+## Clinical Summary
+A 3-5 sentence narrative overview: patient background, primary health challenges, current status, and main goal.
+
+## Lab Result Interpretation
+For each lab test provided, briefly explain what the value means and whether it is within, above, or below the reference range. If no lab data is available, omit this section entirely.
+
+## Weight Trend Analysis
+Interpret the weight history: direction, pace, consistency. If no weight data is available, omit this section entirely.
+
+## Personalised Recommendations
+4-6 specific, actionable bullet points tailored to this patient's conditions, medications, lab results, and lifestyle. Be concrete (e.g. specific foods, exercise types, monitoring targets).
+
+Rules:
+- Write in clear, professional but accessible language.
+- Do NOT include sections for data that was not provided.
+- Do NOT repeat raw numbers already listed in the structured data below.
+- Keep total response under 500 words."""
+
+            ai_assessment = provider.generate(prompt, max_tokens=2048)
+        except Exception:
+            # If the LLM call fails for any reason, fall through to structured-only output
+            ai_assessment = None
+
+    # Combine: AI assessment (if available) + structured data sections
+    all_sections: list[str] = []
+    if ai_assessment:
+        all_sections.append(ai_assessment.strip())
+        all_sections.append("---")
+        all_sections.append("## Reference Data")
+        all_sections.extend(structured_sections)
+    else:
+        all_sections.extend(structured_sections)
+
+    profile_text = "\n\n".join(all_sections)
     return {"profile_text": profile_text}

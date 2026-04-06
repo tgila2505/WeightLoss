@@ -25,6 +25,20 @@ export function DashboardView({
   plan: PlanSnapshot | null;
 }>) {
   const latestMetric = metrics[0] ?? null;
+
+  // Extract only today's meals: take entries until a meal slot (e.g. "Breakfast") repeats
+  const todaysMeals = (() => {
+    if (!plan) return [];
+    const seen = new Set<string>();
+    const result: typeof plan.meals = [];
+    for (const m of plan.meals) {
+      if (seen.has(m.meal)) break;
+      seen.add(m.meal);
+      result.push(m);
+    }
+    return result;
+  })();
+
   const alerts = [
     ...labs
       .filter((lab) => lab.evaluation.is_abnormal)
@@ -98,8 +112,8 @@ export function DashboardView({
             <CardContent>
               {alerts.length > 0 ? (
                 <ul className="space-y-2">
-                  {alerts.map((alert) => (
-                    <li key={alert} className="flex items-start gap-2 text-sm text-slate-700">
+                  {alerts.map((alert, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
                       {alert}
                     </li>
@@ -136,7 +150,7 @@ export function DashboardView({
                 <Link href="/plan/meals" className="block group">
                   <PlanBlock
                     title="Meals"
-                    items={plan.meals.map((meal) => {
+                    items={todaysMeals.map((meal) => {
                       const shortName = meal.name.split(':')[0].trim();
                       return `${meal.meal}: ${shortName}`;
                     })}
