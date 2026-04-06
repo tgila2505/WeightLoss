@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { Container } from '@/components/ui/container';
 import { cn } from '@/lib/utils';
 
 export function PageShell({
@@ -12,10 +13,10 @@ export function PageShell({
   fullWidth?: boolean;
 }>) {
   return (
-    <div className={cn('min-h-screen bg-slate-50 pb-20 md:pb-0 md:pl-64', className)}>
-      <div className={cn('mx-auto px-4 py-8', fullWidth ? 'max-w-full' : 'max-w-5xl')}>
+    <div className={cn('min-h-screen bg-muted/30 pb-20 md:pb-0 md:pl-64', className)}>
+      <Container size={fullWidth ? 'full' : 'lg'} className="py-8">
         {children}
-      </div>
+      </Container>
     </div>
   );
 }
