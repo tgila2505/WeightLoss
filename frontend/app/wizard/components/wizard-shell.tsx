@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { type ComponentType, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -45,7 +45,7 @@ export const WIZARD_STEPS: WizardStep[] = [
   },
 ]
 
-const STEP_COMPONENTS: Record<WizardStepId, React.ComponentType<StepProps>> = {
+const STEP_COMPONENTS: Record<WizardStepId, ComponentType<StepProps>> = {
   'personal-info': StepPersonalInfo,
   'goals': StepGoals,
   'medical-history': StepMedicalHistory,

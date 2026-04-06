@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Loader2, Send } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ export function InputBox({
 }>) {
   const [value, setValue] = useState('');
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (value.trim() === '') {
       return;
