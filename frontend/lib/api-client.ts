@@ -775,3 +775,79 @@ function parseMindMapItem(
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
+
+// ---------------------------------------------------------------------------
+// Onboarding state persistence
+// ---------------------------------------------------------------------------
+
+export type OnboardingStateResponse = {
+  user_id: number;
+  current_step: number;
+  completed: boolean;
+  form_data: Record<string, unknown>;
+  updated_at: string;
+};
+
+export async function fetchOnboardingState(): Promise<OnboardingStateResponse | null> {
+  return requestWithOptional404<OnboardingStateResponse>(`${apiBaseUrl}/api/v1/onboarding/state`);
+}
+
+export async function saveOnboardingState(payload: {
+  current_step: number;
+  form_data: Record<string, unknown>;
+  completed: boolean;
+}): Promise<OnboardingStateResponse> {
+  const token = getAccessToken();
+  if (!token) throw new Error('You must be logged in before saving progress.');
+  const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  return (await res.json()) as OnboardingStateResponse;
+}
+
+// ---------------------------------------------------------------------------
+// Feedback
+// ---------------------------------------------------------------------------
+
+export type FeedbackPayload = {
+  session_id: string;
+  feedback_type: 'rating' | 'text' | 'mixed';
+  rating?: number;
+  text?: string;
+  context?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
+  const token = typeof window !== 'undefined' ? getAccessToken() : null;
+  await fetch(`${apiBaseUrl}/api/v1/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ ...payload, metadata: payload.metadata ?? {} }),
+  }).catch(() => {});
+}
+
+export type BehaviorSignalPayload = {
+  session_id: string;
+  signal_type: string;
+  context?: string;
+  properties?: Record<string, unknown>;
+};
+
+export async function logBehaviorSignal(payload: BehaviorSignalPayload): Promise<void> {
+  const token = typeof window !== 'undefined' ? getAccessToken() : null;
+  await fetch(`${apiBaseUrl}/api/v1/feedback/signals`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ ...payload, properties: payload.properties ?? {} }),
+  }).catch(() => {});
+}

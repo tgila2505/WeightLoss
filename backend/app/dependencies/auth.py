@@ -45,3 +45,23 @@ def get_current_user(
         )
 
     return user
+
+
+def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
+    session: Session = Depends(get_db_session),
+) -> User | None:
+    """Like get_current_user but returns None instead of raising 401."""
+    if credentials is None:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        user_id = int(payload["sub"])
+        jti = payload.get("jti", "")
+    except (ValueError, TypeError):
+        return None
+
+    if jti and get_token_blacklist().is_revoked(jti):
+        return None
+
+    return session.scalar(select(User).where(User.id == user_id))
