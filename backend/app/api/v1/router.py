@@ -9,10 +9,12 @@ from app.api.v1.endpoints.metrics import router as metrics_router
 from app.api.v1.endpoints.plans import router as plans_router
 from app.api.v1.endpoints.profile import router as profile_router
 from app.api.v1.endpoints.questionnaire import router as questionnaire_router
+from app.api.v1.endpoints.analytics import router as analytics_router
 from app.api.v1.endpoints.reminders import router as reminders_router
 
 router = APIRouter()
 router.include_router(adherence_router, tags=["adherence"])
+router.include_router(analytics_router, tags=["analytics"])
 router.include_router(auth_router, tags=["auth"])
 router.include_router(health_router, tags=["health"])
 router.include_router(health_metrics_router, tags=["health-metrics"])
