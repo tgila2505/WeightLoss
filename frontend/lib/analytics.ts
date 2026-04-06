@@ -11,6 +11,7 @@ export type AnalyticsEventName =
   | 'profile_questionnaire_completed'
   | 'ux_mode_preference_set'
   | 'ux_mode_resolved'
+  | 'ux_mode_switched'
 
 export interface AnalyticsEventProperties {
   userId?: number

@@ -110,6 +110,18 @@ export default function WizardPage() {
     }
   }
 
+  async function handleBeforeSwitch() {
+    // Flush the current step's partial answers before navigating away so no data is lost
+    const stepId = WIZARD_STEPS[state.currentStepIndex].id
+    const stepAnswers = state.steps[stepId].answers
+    const nodeAnswers = mapStepToNodeAnswers(stepId, stepAnswers)
+    await Promise.all(
+      Object.entries(nodeAnswers).map(([nodeId, answers]) =>
+        saveNodeAnswers(nodeId, answers as Record<string, MindMapAnswerValue>)
+      )
+    )
+  }
+
   async function handleSkip() {
     const stepId = WIZARD_STEPS[state.currentStepIndex].id
     const stepAnswers = state.steps[stepId].answers
@@ -146,6 +158,8 @@ export default function WizardPage() {
       onBack={handleBack}
       onSkip={handleSkip}
       isSaving={isSaving}
+      userId={userId ?? undefined}
+      onBeforeSwitch={handleBeforeSwitch}
     />
   )
 }
