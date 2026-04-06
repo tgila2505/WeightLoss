@@ -92,6 +92,24 @@ const LAB_STANDARDS: Record<string, UnitRefOption[]> = {
   'prolactin':                      [{ unit: 'mIU/L',         referenceRange: '70–430'    }, { unit: 'ng/mL',   referenceRange: '3.4–20.7' }],
 };
 
+// ---------------------------------------------------------------------------
+// Female-specific overrides — replaces the corresponding LAB_STANDARDS entry
+// when profile.gender === 'female'. Also contains female-only tests.
+// ---------------------------------------------------------------------------
+const LAB_STANDARDS_FEMALE: Record<string, UnitRefOption[]> = {
+  // Hormone reference range overrides
+  'total testosterone':             [{ unit: 'nmol/L',        referenceRange: '0.3–2.0'   }, { unit: 'ng/dL',   referenceRange: '8.7–57.8' }],
+  'free testosterone':              [{ unit: 'pmol/L',        referenceRange: '5–30'       }, { unit: 'pg/mL',   referenceRange: '1.4–8.7'  }],
+  'shbg':                           [{ unit: 'nmol/L',        referenceRange: '30–120'     }],
+  // Metabolic overrides
+  'vitamin d':                      [{ unit: 'nmol/L',        referenceRange: '75–250'     }, { unit: 'ng/mL',   referenceRange: '30–100'   }],
+  'cortisol':                       [{ unit: 'nmol/L',        referenceRange: '275–555'    }, { unit: 'ug/dL',   referenceRange: '10–20'    }],
+  // Female-only tests
+  'dhea-s':                         [{ unit: 'µmol/L',        referenceRange: '2–10'       }],
+  'estradiol':                      [{ unit: 'pmol/L',        referenceRange: 'Cycle dependent' }],
+  'progesterone':                   [{ unit: 'nmol/L',        referenceRange: 'Cycle dependent' }],
+};
+
 /** Normalise a test name to a lookup key: lowercase, strip parenthetical suffixes, trim. */
 function normaliseTestKey(name: string): string {
   return name
@@ -101,14 +119,18 @@ function normaliseTestKey(name: string): string {
     .trim();
 }
 
-/** Return the unit/reference options for a test name (empty array if unknown). */
-function getTestStandards(testName: string): UnitRefOption[] {
+/** Return the unit/reference options for a test name, with female overrides when applicable. */
+function getTestStandards(testName: string, gender?: string | null): UnitRefOption[] {
   const key = normaliseTestKey(testName);
+  const isFemale = gender === 'female';
+  // Exact match — female override takes precedence
+  if (isFemale && LAB_STANDARDS_FEMALE[key]) return LAB_STANDARDS_FEMALE[key];
   if (LAB_STANDARDS[key]) return LAB_STANDARDS[key];
-  // Partial match: find the longest key contained in our query or vice-versa
+  // Partial match across the applicable standard set
+  const combined = isFemale ? { ...LAB_STANDARDS, ...LAB_STANDARDS_FEMALE } : LAB_STANDARDS;
   let best: UnitRefOption[] = [];
   let bestLen = 0;
-  for (const [k, v] of Object.entries(LAB_STANDARDS)) {
+  for (const [k, v] of Object.entries(combined)) {
     if ((key.includes(k) || k.includes(key)) && k.length > bestLen) {
       best = v; bestLen = k.length;
     }
@@ -117,16 +139,18 @@ function getTestStandards(testName: string): UnitRefOption[] {
 }
 
 /** Given a test name and a unit string, return the matching reference range (or first default). */
-function getReferenceRange(testName: string, unit: string): string {
-  const options = getTestStandards(testName);
+function getReferenceRange(testName: string, unit: string, gender?: string | null): string {
+  const options = getTestStandards(testName, gender);
   if (!options.length) return '';
   return (options.find((o) => o.unit === unit) ?? options[0]).referenceRange;
 }
 
 // ---------------------------------------------------------------------------
-// Tests ordered on the requisition
+// Tests ordered on the requisition (gender-aware)
 // ---------------------------------------------------------------------------
-const REQUISITION_TESTS = [
+function getRequisitionTests(gender?: string | null) {
+  const isFemale = gender === 'female';
+  return [
   {
     section: 'Biochemistry',
     tests: [
@@ -205,15 +229,23 @@ const REQUISITION_TESTS = [
       'LH (IU/L)',
       'FSH (IU/L)',
       'Prolactin (mIU/L)',
+      ...(isFemale ? [
+        'DHEA-S (µmol/L)',
+        'Estradiol (pmol/L)',
+        'Progesterone (nmol/L)',
+      ] : []),
     ],
   },
-];
+  ];
+}
 
 function buildRequisitionBlob(profile: ProfileResponse | null, serviceDate: string): Blob {
   const today = new Date().toLocaleDateString('en-CA');
   const name = profile?.name ?? '';
+  const gender = profile?.gender;
+  const sexValue = gender === 'female' ? 'F' : gender === 'male' ? 'M' : '';
 
-  const testSections = REQUISITION_TESTS.map(
+  const testSections = getRequisitionTests(gender).map(
     ({ section, tests }) =>
       `<div class="section">
         <div class="section-title">${section}</div>
@@ -224,7 +256,7 @@ function buildRequisitionBlob(profile: ProfileResponse | null, serviceDate: stri
           <span class="col-ref">Reference Range</span>
         </div>
         ${tests.map((t) => {
-          const standards = getTestStandards(t);
+          const standards = getTestStandards(t, gender);
           const defaultUnit = standards[0]?.unit ?? '';
           const defaultRef  = standards[0]?.referenceRange ?? '';
           return `<div class="test-row">
@@ -281,7 +313,7 @@ function buildRequisitionBlob(profile: ProfileResponse | null, serviceDate: stri
 <div class="patient-grid">
   <div class="patient-field"><label>Patient Name</label><input type="text" value="${name.replace(/"/g, '&quot;')}" placeholder="Enter name" /></div>
   <div class="patient-field"><label>Date of Birth</label><input type="text" placeholder="DD/MM/YYYY" /></div>
-  <div class="patient-field"><label>Sex</label><input type="text" placeholder="M / F / Other" /></div>
+  <div class="patient-field"><label>Sex</label><input type="text" value="${sexValue}" placeholder="M / F / Other" /></div>
   <div class="patient-field"><label>Telephone</label><input type="text" placeholder="Phone number" /></div>
   <div class="patient-field full"><label>Address</label><input type="text" placeholder="Street, City, Postcode" /></div>
 </div>
@@ -467,7 +499,7 @@ export default function LabTestPage() {
 
       setParsedRecords(data.records);
       setDraftValues(data.records.map((r) => {
-        const options = getTestStandards(r.test_name);
+        const options = getTestStandards(r.test_name, profile?.gender);
         // Use AI unit if it matches a known option, otherwise fall back to primary
         const matchedOption =
           options.find((o) => o.unit === (r.unit ?? '')) ?? options[0];
@@ -549,7 +581,7 @@ export default function LabTestPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-5">
-            {REQUISITION_TESTS.map(({ section, tests }) => (
+            {getRequisitionTests(profile?.gender).map(({ section, tests }) => (
               <div key={section}>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{section}</p>
                 <ul className="space-y-1.5">
