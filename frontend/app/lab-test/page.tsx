@@ -66,6 +66,30 @@ const LAB_STANDARDS: Record<string, UnitRefOption[]> = {
   'c-peptide':                      [{ unit: 'nmol/L',        referenceRange: '0.37–1.47' }, { unit: 'ng/mL',   referenceRange: '1.1–4.4'  }],
   'vitamin b12':                    [{ unit: 'pmol/L',        referenceRange: '148–738'   }, { unit: 'pg/mL',   referenceRange: '200–1000' }],
   'tsh':                            [{ unit: 'mIU/L',         referenceRange: '0.4–4.0'   }, { unit: 'uIU/mL',  referenceRange: '0.4–4.0'  }],
+  // Biochemistry additions
+  'fasting insulin':                [{ unit: 'mIU/L',         referenceRange: '2–25'      }, { unit: 'pmol/L',  referenceRange: '14–180'   }],
+  'ast':                            [{ unit: 'U/L',           referenceRange: '10–40'     }],
+  'alp':                            [{ unit: 'U/L',           referenceRange: '40–130'    }],
+  'bilirubin':                      [{ unit: 'umol/L',        referenceRange: '3.4–20.5'  }, { unit: 'mg/dL',   referenceRange: '0.2–1.2'  }],
+  'bun':                            [{ unit: 'mmol/L',        referenceRange: '2.5–7.1'   }, { unit: 'mg/dL',   referenceRange: '7–20'     }],
+  // Lipid Panel additions
+  'apob':                           [{ unit: 'g/L',           referenceRange: '< 1.0'     }, { unit: 'mg/dL',   referenceRange: '< 100'    }],
+  // Metabolic / Other
+  'ogtt':                           [{ unit: 'mmol/L',        referenceRange: '< 7.8'     }, { unit: 'mg/dL',   referenceRange: '< 140'    }],
+  'cortisol':                       [{ unit: 'nmol/L',        referenceRange: '140–690'   }, { unit: 'ug/dL',   referenceRange: '5–25'     }],
+  'vitamin d':                      [{ unit: 'nmol/L',        referenceRange: '> 50'      }, { unit: 'ng/mL',   referenceRange: '> 20'     }],
+  'folate':                         [{ unit: 'nmol/L',        referenceRange: '> 7.0'     }, { unit: 'ng/mL',   referenceRange: '> 3.1'    }],
+  'nt-probnp':                      [{ unit: 'pg/mL',         referenceRange: '< 125'     }, { unit: 'ng/L',    referenceRange: '< 125'    }],
+  // Thyroid additions
+  'free t3':                        [{ unit: 'pmol/L',        referenceRange: '3.1–6.8'   }, { unit: 'pg/mL',   referenceRange: '2.0–4.4'  }],
+  'free t4':                        [{ unit: 'pmol/L',        referenceRange: '12–22'     }, { unit: 'ng/dL',   referenceRange: '0.9–1.7'  }],
+  // Hormones
+  'total testosterone':             [{ unit: 'nmol/L',        referenceRange: '9.9–27.8'  }, { unit: 'ng/dL',   referenceRange: '300–800'  }],
+  'free testosterone':              [{ unit: 'pmol/L',        referenceRange: '225–725'   }, { unit: 'pg/mL',   referenceRange: '65–210'   }],
+  'shbg':                           [{ unit: 'nmol/L',        referenceRange: '16–55'     }],
+  'lh':                             [{ unit: 'IU/L',          referenceRange: '1.5–9.3'   }],
+  'fsh':                            [{ unit: 'IU/L',          referenceRange: '1.5–12.4'  }],
+  'prolactin':                      [{ unit: 'mIU/L',         referenceRange: '70–430'    }, { unit: 'ng/mL',   referenceRange: '3.4–20.7' }],
 };
 
 /** Normalise a test name to a lookup key: lowercase, strip parenthetical suffixes, trim. */
@@ -115,6 +139,11 @@ const REQUISITION_TESTS = [
       'Sodium (mmol/L)',
       'Potassium (mmol/L)',
       'Albumin/Creatinine Ratio (Urine)',
+      'Fasting Insulin (mIU/L)',
+      'AST (U/L)',
+      'ALP (U/L)',
+      'Bilirubin (umol/L)',
+      'BUN (mmol/L)',
     ],
   },
   {
@@ -126,6 +155,7 @@ const REQUISITION_TESTS = [
       'LDL Cholesterol (mmol/L)',
       'NON-HDL-Cholesterol (mmol/L)',
       'Cholesterol/HDL Ratio',
+      'ApoB (g/L)',
     ],
   },
   {
@@ -157,6 +187,24 @@ const REQUISITION_TESTS = [
       'C-peptide (Not Citrullinated peptide Ab)',
       'Vitamin B12 (pmol/L)',
       'TSH (mIU/L)',
+      'OGTT (2h)',
+      'Free T3 (pmol/L)',
+      'Free T4 (pmol/L)',
+      'Cortisol (AM)',
+      'Vitamin D (25-OH)',
+      'Folate (nmol/L)',
+      'NT-proBNP (pg/mL)',
+    ],
+  },
+  {
+    section: 'Hormones',
+    tests: [
+      'Total Testosterone (nmol/L)',
+      'Free Testosterone (pmol/L)',
+      'SHBG (nmol/L)',
+      'LH (IU/L)',
+      'FSH (IU/L)',
+      'Prolactin (mIU/L)',
     ],
   },
 ];
