@@ -7,6 +7,7 @@ from app.models.health_metrics import HealthMetrics
 from app.models.lab import LabRecord
 from app.models.plan import Plan
 from app.models.profile import Profile
+from app.models.refresh_token import RefreshToken
 from app.models.reminder import Reminder
 from app.models.user import User
 
@@ -18,6 +19,7 @@ __all__ = [
     "LabRecord",
     "Plan",
     "Profile",
+    "RefreshToken",
     "Reminder",
     "User",
 ]
