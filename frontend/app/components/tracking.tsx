@@ -175,10 +175,10 @@ export function TrackingView({
   return (
     <PageShell>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Tracking</p>
         <h1 className="text-2xl font-bold text-slate-900">Progress &amp; History</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-2">
           Trend lines for weight, biomarkers, and adherence over time.
         </p>
       </div>

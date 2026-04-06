@@ -85,12 +85,12 @@ export function RemindersView() {
   return (
     <PageShell>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
           Reminders
         </p>
         <h1 className="text-2xl font-bold text-slate-900">Scheduled reminders</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-2">
           Set daily reminders for medications, meals, exercise, and other habits.
         </p>
       </div>

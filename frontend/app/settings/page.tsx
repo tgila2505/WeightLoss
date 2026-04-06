@@ -48,12 +48,12 @@ export default function SettingsPage() {
   return (
     <PageShell>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
           Settings
         </p>
         <h1 className="text-2xl font-bold text-slate-900">AI provider setup</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-500 mt-2">
           Configure Groq (primary) and Mistral (fallback) to enable personalised AI responses.
         </p>
       </div>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowGroqKey((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={showGroqKey ? 'Hide Groq key' : 'Show Groq key'}
                   >
                     {showGroqKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -136,7 +136,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowMistralKey((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded text-slate-400 hover:text-slate-600 transition-colors"
                     aria-label={showMistralKey ? 'Hide Mistral key' : 'Show Mistral key'}
                   >
                     {showMistralKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

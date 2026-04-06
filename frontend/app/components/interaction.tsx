@@ -264,7 +264,7 @@ export function InteractionView() {
                     className="rounded-xl bg-slate-50 border border-slate-100 p-4"
                   >
                     <p className="text-sm font-semibold text-blue-700 mb-2">{item.prompt}</p>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed break-words">
                       {item.reply}
                     </p>
                   </article>

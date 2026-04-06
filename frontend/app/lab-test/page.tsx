@@ -710,7 +710,7 @@ export default function LabTestPage() {
                               <button
                                 type="button"
                                 onClick={() => removeRow(i)}
-                                className="text-slate-300 hover:text-red-500 transition-colors"
+                                className="p-2 rounded text-slate-300 hover:text-red-500 transition-colors"
                                 title="Remove row"
                               >
                                 <X className="h-3.5 w-3.5" />
