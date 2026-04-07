@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.core.security import create_access_token, get_password_hash
 from app.db.base import Base
 from app.db.session import get_db_session
+from app.models.funnel import UserSubscription
 from app.dependencies.auth import get_current_user
 from app.main import create_app
 from app.models.user import User
@@ -101,6 +102,18 @@ class ApiTestCase(unittest.TestCase):
             session.refresh(user)
             session.expunge(user)
             return user
+
+    def give_user_pro_subscription(self, user: User) -> None:
+        with self.session_factory() as session:
+            sub = UserSubscription(
+                user_id=user.id,
+                stripe_customer_id="cus_test",
+                stripe_subscription_id="sub_test",
+                tier="pro",
+                status="active",
+            )
+            session.add(sub)
+            session.commit()
 
     def auth_headers_for_user(self, user: User) -> dict[str, str]:
         token = create_access_token(str(user.id))

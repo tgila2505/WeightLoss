@@ -6,6 +6,7 @@ from backend.tests.support import ApiTestCase
 class PlanApiTest(ApiTestCase):
     def test_plan_create_and_get_today(self) -> None:
         user = self.create_user()
+        self.give_user_pro_subscription(user)
         headers = self.auth_headers_for_user(user)
 
         missing_response = self.client.get("/api/v1/plans/today", headers=headers)
