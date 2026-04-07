@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -15,6 +16,39 @@ from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
 from app.main import create_app
 from app.models.user import User
+
+# Import all models so their tables are registered in Base.metadata
+import app.models.adherence  # noqa: F401
+import app.models.analytics  # noqa: F401
+import app.models.behavior_tracking  # noqa: F401
+import app.models.experiment  # noqa: F401
+import app.models.feedback  # noqa: F401
+import app.models.health_metrics  # noqa: F401
+import app.models.lab  # noqa: F401
+import app.models.onboarding  # noqa: F401
+import app.models.plan  # noqa: F401
+import app.models.profile  # noqa: F401
+import app.models.questionnaire  # noqa: F401
+import app.models.refresh_token  # noqa: F401
+import app.models.reminder  # noqa: F401
+
+
+def _sqlite_compatible_tables() -> list:
+    """Return tables from Base.metadata that can be created in SQLite.
+
+    Tables with PostgreSQL-specific column types (e.g. JSONB) are excluded
+    because SQLite cannot compile them.
+    """
+    compatible = []
+    for table in Base.metadata.sorted_tables:
+        skip = False
+        for col in table.columns:
+            if isinstance(col.type, JSONB):
+                skip = True
+                break
+        if not skip:
+            compatible.append(table)
+    return compatible
 
 
 class ApiTestCase(unittest.TestCase):
@@ -30,7 +64,7 @@ class ApiTestCase(unittest.TestCase):
             autocommit=False,
             class_=Session,
         )
-        Base.metadata.create_all(self.engine)
+        Base.metadata.create_all(self.engine, tables=_sqlite_compatible_tables())
 
         self.app = create_app()
 
@@ -47,7 +81,7 @@ class ApiTestCase(unittest.TestCase):
     def tearDown(self) -> None:
         self.client.close()
         self.app.dependency_overrides.clear()
-        Base.metadata.drop_all(self.engine)
+        Base.metadata.drop_all(self.engine, tables=_sqlite_compatible_tables())
         self.engine.dispose()
 
     def create_user(
