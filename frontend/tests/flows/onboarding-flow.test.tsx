@@ -23,6 +23,19 @@ vi.mock('@/lib/ai-keys', () => ({
   setAiKeys: (...args: unknown[]) => setAiKeys(...args)
 }));
 
+vi.mock('@/hooks/use-onboarding-progress', () => ({
+  useOnboardingProgress: () => ({
+    loading: false,
+    progress: { currentStep: 0, formData: {}, completed: false },
+    save: vi.fn(),
+    markCompleted: vi.fn()
+  })
+}));
+
+vi.mock('@/hooks/use-behavior-tracker', () => ({
+  useBehaviorTracker: () => ({ track: vi.fn() })
+}));
+
 vi.mock('@/components/ui/select', () => {
   function Select({
     value,
