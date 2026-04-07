@@ -16,6 +16,10 @@ class User(Base):
     adherence_score: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     consistency_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
     plan_refresh_needed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    premium_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    leaderboard_opt_in: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -40,4 +44,14 @@ class User(Base):
     )
     master_profile: Mapped["MasterUserProfile | None"] = relationship(
         back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    referral: Mapped["Referral | None"] = relationship(
+        "Referral",
+        back_populates="referrer",
+        foreign_keys="Referral.referrer_user_id",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    shared_plans: Mapped[list["SharedPlan"]] = relationship(
+        "SharedPlan", back_populates="user", cascade="all, delete-orphan"
     )

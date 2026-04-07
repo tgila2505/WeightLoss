@@ -6,7 +6,7 @@ from backend.tests.support import ApiTestCase
 class ProfileApiTest(ApiTestCase):
     def test_profile_crud_flow(self) -> None:
         user = self.create_user()
-        self.create_pro_subscription(user)
+        self.give_user_pro_subscription(user)
         headers = self.auth_headers_for_user(user)
 
         create_response = self.client.post(

@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.core.security import create_access_token, get_password_hash
 from app.db.base import Base
 from app.db.session import get_db_session
+from app.models.funnel import UserSubscription
 from app.dependencies.auth import get_current_user
 from app.main import create_app
 from app.models.funnel import UserSubscription
@@ -31,7 +32,9 @@ import app.models.plan  # noqa: F401
 import app.models.profile  # noqa: F401
 import app.models.questionnaire  # noqa: F401
 import app.models.refresh_token  # noqa: F401
+import app.models.referral  # noqa: F401
 import app.models.reminder  # noqa: F401
+import app.models.shared_plan  # noqa: F401
 
 
 def sqlite_compatible_tables() -> list:
@@ -103,21 +106,21 @@ class ApiTestCase(unittest.TestCase):
             session.expunge(user)
             return user
 
-    def auth_headers_for_user(self, user: User) -> dict[str, str]:
-        token = create_access_token(str(user.id))
-        return {"Authorization": f"Bearer {token}"}
-
-    def create_pro_subscription(self, user: User, tier: str = 'pro') -> None:
+    def give_user_pro_subscription(self, user: User) -> None:
         with self.session_factory() as session:
             sub = UserSubscription(
                 user_id=user.id,
-                stripe_customer_id='cus_test',
-                stripe_subscription_id='sub_test',
-                tier=tier,
-                status='active',
+                stripe_customer_id="cus_test",
+                stripe_subscription_id="sub_test",
+                tier="pro",
+                status="active",
             )
             session.add(sub)
             session.commit()
+
+    def auth_headers_for_user(self, user: User) -> dict[str, str]:
+        token = create_access_token(str(user.id))
+        return {"Authorization": f"Bearer {token}"}
 
     def force_current_user(self, user: User) -> None:
         self.app.dependency_overrides[get_current_user] = lambda: user

@@ -46,14 +46,20 @@ async function apiFetch(path: string, init: RequestInit): Promise<Response> {
   }
 }
 
+export const REF_CODE_KEY = 'ref_code';
+
 export async function register(
   email: string,
-  password: string
+  password: string,
+  refCode?: string | null
 ): Promise<void> {
+  const body: Record<string, unknown> = { email, password };
+  if (refCode) body.ref_code = refCode;
+
   const response = await apiFetch('/api/v1/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {
