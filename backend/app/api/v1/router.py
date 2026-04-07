@@ -13,6 +13,7 @@ from app.api.v1.endpoints.onboarding import router as onboarding_router
 from app.api.v1.endpoints.plans import router as plans_router
 from app.api.v1.endpoints.profile import router as profile_router
 from app.api.v1.endpoints.questionnaire import router as questionnaire_router
+from app.api.v1.endpoints.experiments import router as experiments_router
 from app.api.v1.endpoints.reminders import router as reminders_router
 
 router = APIRouter()
@@ -29,4 +30,5 @@ router.include_router(onboarding_router, tags=["onboarding"])
 router.include_router(plans_router, tags=["plans"])
 router.include_router(profile_router, tags=["profile"])
 router.include_router(questionnaire_router, tags=["questionnaire"])
+router.include_router(experiments_router, tags=["experiments"])
 router.include_router(reminders_router, tags=["reminders"])
