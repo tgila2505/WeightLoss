@@ -18,6 +18,8 @@ from app.schemas.auth import (
     TokenResponse,
 )
 from app.services.auth_service import AuthService
+from app.services.referral_service import assign_referral_to_user, get_referral_by_code
+from app.services.reward_service import apply_signup_reward
 
 router = APIRouter(prefix="/auth")
 
@@ -39,6 +41,17 @@ def register(
         email=payload.email,
         password=payload.password,
     )
+
+    referral_event_id: int | None = None
+    if payload.ref_code:
+        referral = get_referral_by_code(session, payload.ref_code)
+        if referral:
+            event = assign_referral_to_user(session, referral, user.id)
+            if event:
+                referral_event_id = event.id
+
+    apply_signup_reward(session, user.id, referral_event_id)
+
     return RegisterResponse(id=user.id, email=user.email)
 
 
