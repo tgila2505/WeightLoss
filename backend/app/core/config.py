@@ -37,6 +37,9 @@ class Settings:
     access_token_expire_minutes: int
     refresh_token_expire_days: int
     ai_services_url: str
+    stripe_secret_key: str
+    stripe_webhook_secret: str
+    stripe_pro_price_id: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -62,6 +65,9 @@ class Settings:
                 os.environ.get("BACKEND_REFRESH_TOKEN_EXPIRE_DAYS", "7")
             ),
             ai_services_url=os.environ.get("AI_SERVICES_URL", "http://localhost:8001"),
+            stripe_secret_key=os.environ.get("STRIPE_SECRET_KEY", ""),
+            stripe_webhook_secret=os.environ.get("STRIPE_WEBHOOK_SECRET", ""),
+            stripe_pro_price_id=os.environ.get("STRIPE_PRO_PRICE_ID", ""),
         )
 
 
