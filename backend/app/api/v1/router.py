@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints.adherence import router as adherence_router
+from app.api.v1.endpoints.funnel import router as funnel_router
 from app.api.v1.endpoints.analytics import router as analytics_router
 from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.feedback import router as feedback_router
@@ -16,6 +17,7 @@ from app.api.v1.endpoints.reminders import router as reminders_router
 
 router = APIRouter()
 router.include_router(adherence_router, tags=["adherence"])
+router.include_router(funnel_router, tags=["funnel"])
 router.include_router(analytics_router, tags=["analytics"])
 router.include_router(auth_router, tags=["auth"])
 router.include_router(feedback_router, tags=["feedback"])

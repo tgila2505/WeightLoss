@@ -4,6 +4,7 @@ from app.db.base import Base
 from app.models.adherence import AdherenceRecord
 from app.models.analytics import AnalyticsEvent
 from app.models.behavior_tracking import BehaviorTracking
+from app.models.funnel import AnonymousSession, ConversionEvent, UserSubscription
 from app.models.health_metrics import HealthMetrics
 from app.models.lab import LabRecord
 from app.models.plan import Plan
@@ -17,7 +18,9 @@ __all__ = [
     "Base",
     "AdherenceRecord",
     "AnalyticsEvent",
+    "AnonymousSession",
     "BehaviorTracking",
+    "ConversionEvent",
     "HealthMetrics",
     "LabRecord",
     "MasterUserProfile",
@@ -27,4 +30,5 @@ __all__ = [
     "RefreshToken",
     "Reminder",
     "User",
+    "UserSubscription",
 ]
