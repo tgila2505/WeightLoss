@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import './globals.css';
 import { NavBarWrapper } from './components/nav-bar-wrapper';
+import { SpeedInsights } from './components/speed-insights';
 import { PostHogProvider } from './components/providers/posthog-provider';
 import { SubscriptionProvider } from '@/lib/subscription-context';
 
@@ -23,6 +24,7 @@ export default function RootLayout({
             {children}
           </SubscriptionProvider>
         </PostHogProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

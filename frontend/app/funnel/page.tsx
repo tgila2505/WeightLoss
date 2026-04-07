@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { trackFunnelEvent } from '@/lib/analytics'
 import { CostAnchor } from './components/cost-anchor'
+import { FeaturedPlans } from './components/featured-plans'
 import { FunnelHero } from './components/funnel-hero'
 import { HowItWorks } from './components/how-it-works'
 import { PlanCounter } from './components/social-proof/plan-counter'
@@ -99,6 +100,9 @@ export default function FunnelLandingPage() {
           <TransformationCard startWeight="78kg" currentWeight="68kg" weeks={12} />
         </div>
       </section>
+
+      {/* Featured pSEO plans */}
+      <FeaturedPlans />
 
       {/* Final CTA */}
       <section className="px-4 py-12 text-center">
