@@ -11,8 +11,10 @@ from app.models.lab import LabRecord
 from app.models.plan import Plan
 from app.models.profile import Profile
 from app.models.questionnaire import MasterUserProfile, QuestionnaireResponse
+from app.models.referral import Referral, ReferralEvent, RewardLog
 from app.models.refresh_token import RefreshToken
 from app.models.reminder import Reminder
+from app.models.shared_plan import SharedPlan
 from app.models.user import User
 
 __all__ = [
@@ -29,8 +31,12 @@ __all__ = [
     "Plan",
     "Profile",
     "QuestionnaireResponse",
+    "Referral",
+    "ReferralEvent",
     "RefreshToken",
     "Reminder",
+    "RewardLog",
+    "SharedPlan",
     "User",
     "UserSubscription",
 ]
