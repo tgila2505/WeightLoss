@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Speed Insights wrapper — renders after `npm install` adds @vercel/speed-insights.
  * Package is declared in package.json; run `npm install` to activate.

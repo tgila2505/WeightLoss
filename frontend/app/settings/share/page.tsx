@@ -116,9 +116,13 @@ export default function ShareSettingsPage() {
 
   async function copyLink() {
     if (!shareState.url) return
-    await navigator.clipboard.writeText(shareState.url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(shareState.url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API unavailable (non-HTTPS or permissions denied) — silently ignore
+    }
   }
 
   if (loading) {

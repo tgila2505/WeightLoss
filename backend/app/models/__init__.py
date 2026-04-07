@@ -17,6 +17,7 @@ from app.models.refresh_token import RefreshToken
 from app.models.reminder import Reminder
 from app.models.habits import HabitLog, NotificationPreferences, ProgressEntry, StreakRecord
 from app.models.reports import AiReport, NotificationEvent
+from app.models.seo import BlogPost, KeywordMapping, SeoPage, UserGeneratedPage
 from app.models.shared_plan import SharedPlan
 from app.models.user import User
 
@@ -47,8 +48,12 @@ __all__ = [
     "RefreshToken",
     "Reminder",
     "RewardLog",
+    "BlogPost",
+    "KeywordMapping",
+    "SeoPage",
     "SharedPlan",
     "StreakRecord",
+    "UserGeneratedPage",
     "UsageTracking",
     "User",
     "UserSubscription",

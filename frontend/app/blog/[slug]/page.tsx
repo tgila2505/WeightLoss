@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
   const post = getBlogPost(slug)
-  if (!post) notFound()
+  if (!post) return notFound()
 
   const related = getRelatedPosts(slug, post.tags)
 
