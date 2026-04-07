@@ -208,10 +208,12 @@ export function OnboardingForm() {
           {stepIndex === 0 ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="name" className="flex items-center gap-0.5">
-                  Full name <span className="text-red-500">*</span>
+                <div className="flex items-center gap-0.5">
+                  <Label htmlFor="name">
+                    Full name <span className="text-red-500">*</span>
+                  </Label>
                   <FieldTooltip content="Used to personalise your AI-generated plans and reminders." />
-                </Label>
+                </div>
                 <Input
                   id="name"
                   value={form.name}
@@ -223,10 +225,12 @@ export function OnboardingForm() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="age" className="flex items-center gap-0.5">
-                    Age <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="age">
+                      Age <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="Age affects your baseline calorie needs and safe weight-loss rate." />
-                  </Label>
+                  </div>
                   <Input
                     id="age"
                     type="number"
@@ -257,10 +261,12 @@ export function OnboardingForm() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="height_cm" className="flex items-center gap-0.5">
-                    Height (cm) <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="height_cm">
+                      Height (cm) <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="Used to calculate your BMI and recommended calorie targets." />
-                  </Label>
+                  </div>
                   <Input
                     id="height_cm"
                     type="number"
@@ -272,10 +278,12 @@ export function OnboardingForm() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="weight_kg" className="flex items-center gap-0.5">
-                    Current weight (kg) <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="weight_kg">
+                      Current weight (kg) <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="Your starting point. Track changes over time to see your progress." />
-                  </Label>
+                  </div>
                   <Input
                     id="weight_kg"
                     type="number"
@@ -294,10 +302,12 @@ export function OnboardingForm() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="goal_target_weight_kg" className="flex items-center gap-0.5">
-                    Target weight (kg) <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="goal_target_weight_kg">
+                      Target weight (kg) <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="Your goal weight. The AI will build a safe, realistic plan to get there." />
-                  </Label>
+                  </div>
                   <Input
                     id="goal_target_weight_kg"
                     type="number"
@@ -309,10 +319,12 @@ export function OnboardingForm() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="goal_timeline_weeks" className="flex items-center gap-0.5">
-                    Timeline (weeks) <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="goal_timeline_weeks">
+                      Timeline (weeks) <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="A realistic timeline helps set a sustainable weekly deficit. 12–24 weeks is typical." />
-                  </Label>
+                  </div>
                   <Input
                     id="goal_timeline_weeks"
                     type="number"
@@ -325,10 +337,10 @@ export function OnboardingForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="health_conditions" className="flex items-center gap-0.5">
-                  Health conditions
+                <div className="flex items-center gap-0.5">
+                  <Label htmlFor="health_conditions">Health conditions</Label>
                   <FieldTooltip content="E.g. diabetes, hypertension, PCOS. The AI uses this to exclude contraindicated foods and activities." />
-                </Label>
+                </div>
                 <Textarea
                   id="health_conditions"
                   value={form.health_conditions}
@@ -346,10 +358,12 @@ export function OnboardingForm() {
           {stepIndex === 2 ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="activity_level" className="flex items-center gap-0.5">
-                  Activity level <span className="text-red-500">*</span>
+                <div className="flex items-center gap-0.5">
+                  <Label htmlFor="activity_level">
+                    Activity level <span className="text-red-500">*</span>
+                  </Label>
                   <FieldTooltip content="Your typical weekly exercise. Affects your total daily energy expenditure (TDEE)." />
-                </Label>
+                </div>
                 <Select
                   value={form.activity_level}
                   onValueChange={(v) => updateField('activity_level', v)}
@@ -367,10 +381,12 @@ export function OnboardingForm() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="sleep_hours" className="flex items-center gap-0.5">
-                    Average sleep (hours) <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="sleep_hours">
+                      Average sleep (hours) <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="Sleep quality directly affects hunger hormones (ghrelin/leptin) and weight loss." />
-                  </Label>
+                  </div>
                   <Input
                     id="sleep_hours"
                     type="number"
@@ -383,10 +399,12 @@ export function OnboardingForm() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="diet_pattern" className="flex items-center gap-0.5">
-                    Diet pattern <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-0.5">
+                    <Label htmlFor="diet_pattern">
+                      Diet pattern <span className="text-red-500">*</span>
+                    </Label>
                     <FieldTooltip content="E.g. balanced, vegetarian, desi, keto. The AI tailors meal suggestions to your preferences." />
-                  </Label>
+                  </div>
                   <Input
                     id="diet_pattern"
                     value={form.diet_pattern}
