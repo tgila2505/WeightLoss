@@ -15,12 +15,15 @@ from app.models.questionnaire import MasterUserProfile, QuestionnaireResponse
 from app.models.referral import Referral, ReferralEvent, RewardLog
 from app.models.refresh_token import RefreshToken
 from app.models.reminder import Reminder
+from app.models.habits import HabitLog, NotificationPreferences, ProgressEntry, StreakRecord
+from app.models.reports import AiReport, NotificationEvent
 from app.models.shared_plan import SharedPlan
 from app.models.user import User
 
 __all__ = [
     "Base",
     "AdherenceRecord",
+    "AiReport",
     "AnalyticsEvent",
     "AnonymousSession",
     "BehaviorTracking",
@@ -28,12 +31,16 @@ __all__ = [
     "CoachingSession",
     "ConversionEvent",
     "ExperimentAssignment",
+    "HabitLog",
     "HealthMetrics",
     "LabRecord",
     "MasterUserProfile",
+    "NotificationEvent",
+    "NotificationPreferences",
     "Plan",
     "PricingPlan",
     "Profile",
+    "ProgressEntry",
     "QuestionnaireResponse",
     "Referral",
     "ReferralEvent",
@@ -41,6 +48,7 @@ __all__ = [
     "Reminder",
     "RewardLog",
     "SharedPlan",
+    "StreakRecord",
     "UsageTracking",
     "User",
     "UserSubscription",

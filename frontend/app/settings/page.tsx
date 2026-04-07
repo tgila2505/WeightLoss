@@ -13,7 +13,8 @@ import { Separator } from '@/components/ui/separator';
 
 import { PageShell } from '../components/page-shell';
 import { getGroqKey, getMistralKey, setAiKeys, clearAiKeys } from '../../lib/ai-keys';
-import { fetchProfile, patchProfileGender } from '../../lib/api-client';
+import { fetchProfile, fetchGamificationStatus, patchProfileGender } from '../../lib/api-client';
+import { BadgeGallery } from '@/components/gamification/badge-gallery';
 
 export default function SettingsPage() {
   const [groqKey, setGroqKey] = useState('');
@@ -27,11 +28,13 @@ export default function SettingsPage() {
   const [genderSaving, setGenderSaving] = useState(false);
   const [genderSaved, setGenderSaved] = useState(false);
   const [genderError, setGenderError] = useState('');
+  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
 
   useEffect(() => {
     setGroqKey(getGroqKey() ?? '');
     setMistralKey(getMistralKey() ?? '');
     fetchProfile().then((p) => { if (p?.gender) setGender(p.gender); });
+    fetchGamificationStatus().then(g => setEarnedBadges(g.badges)).catch(() => {});
   }, []);
 
   async function handleGenderChange(value: string) {
@@ -219,6 +222,9 @@ export default function SettingsPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Phase 13: Badge gallery */}
+        <BadgeGallery earnedBadges={earnedBadges} />
       </div>
     </PageShell>
   );

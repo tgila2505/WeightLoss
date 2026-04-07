@@ -13,16 +13,19 @@ import {
   MessageCircle,
   Bell,
   Settings,
-  LogOut
+  LogOut,
+  Activity,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { clearAccessToken } from '../../lib/auth';
 import { LogoMark, LogoText } from './logo';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 const links = [
   { href: '/onboarding-view', label: 'Onboarding', icon: ClipboardList },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/progress', label: 'Progress', icon: Activity },
   { href: '/mindmap', label: 'Profile Questions', icon: UserCircle2 },
   { href: '/user-profile', label: 'User Profile', icon: FileText },
   { href: '/plan', label: 'Plan', icon: CalendarDays },
@@ -46,10 +49,13 @@ export function NavBar() {
     <>
       {/* Desktop left sidebar */}
       <nav className="fixed left-0 top-0 h-full w-64 flex-col bg-white border-r border-slate-200 z-50 hidden md:flex">
-        <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5 border-b border-slate-100 hover:bg-slate-50 transition-colors">
-          <LogoMark size="sm" />
-          <LogoText size="sm" />
-        </Link>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+          <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <LogoMark size="sm" />
+            <LogoText size="sm" />
+          </Link>
+          <NotificationBell />
+        </div>
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
