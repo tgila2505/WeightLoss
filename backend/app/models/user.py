@@ -55,3 +55,9 @@ class User(Base):
     shared_plans: Mapped[list["SharedPlan"]] = relationship(
         "SharedPlan", back_populates="user", cascade="all, delete-orphan"
     )
+    habit_logs: Mapped[list["HabitLog"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    progress_entries: Mapped[list["ProgressEntry"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    streak_record: Mapped["StreakRecord | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
+    notification_preferences: Mapped["NotificationPreferences | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
+    notification_events: Mapped[list["NotificationEvent"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    ai_reports: Mapped[list["AiReport"]] = relationship(back_populates="user", cascade="all, delete-orphan")
