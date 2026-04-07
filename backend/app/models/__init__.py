@@ -4,6 +4,7 @@ from app.db.base import Base
 from app.models.adherence import AdherenceRecord
 from app.models.analytics import AnalyticsEvent
 from app.models.behavior_tracking import BehaviorTracking
+from app.models.experiment import ExperimentAssignment
 from app.models.health_metrics import HealthMetrics
 from app.models.lab import LabRecord
 from app.models.plan import Plan
@@ -18,6 +19,7 @@ __all__ = [
     "AdherenceRecord",
     "AnalyticsEvent",
     "BehaviorTracking",
+    "ExperimentAssignment",
     "HealthMetrics",
     "LabRecord",
     "MasterUserProfile",
