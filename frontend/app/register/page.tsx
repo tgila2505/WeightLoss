@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -16,16 +16,25 @@ import {
   CardTitle
 } from '@/components/ui/card';
 
-import { login, register } from '../../lib/auth';
+import { login, register, REF_CODE_KEY } from '../../lib/auth';
 import { LogoMark } from '../components/logo';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Persist ref_code from URL into localStorage so it survives the full flow
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      localStorage.setItem(REF_CODE_KEY, ref);
+    }
+  }, [searchParams]);
 
   async function handleSubmit() {
     setError('');
@@ -40,9 +49,12 @@ export default function RegisterPage() {
       return;
     }
 
+    const refCode = localStorage.getItem(REF_CODE_KEY);
+
     setIsSubmitting(true);
     try {
-      await register(email, password);
+      await register(email, password, refCode);
+      localStorage.removeItem(REF_CODE_KEY);
       await login(email, password);
       router.push('/onboarding');
     } catch (err) {
