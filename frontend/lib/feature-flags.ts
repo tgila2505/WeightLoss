@@ -5,6 +5,12 @@ export interface FeatureFlags {
   wizardRolloutPct: number
   landingAbEnabled: boolean
   landingAbRollout: number
+  // Phase 12 — billing A/B
+  pricingUrgencyEnabled: boolean
+  abPricingIntervalEnabled: boolean
+  abPricingIntervalRollout: number
+  abHeroPlanEnabled: boolean
+  abHeroPlanRollout: number
 }
 
 export function getFeatureFlags(): FeatureFlags {
@@ -15,6 +21,12 @@ export function getFeatureFlags(): FeatureFlags {
     wizardRolloutPct: parseInt(process.env.NEXT_PUBLIC_WIZARD_ROLLOUT_PCT ?? '0', 10),
     landingAbEnabled: process.env.NEXT_PUBLIC_LANDING_AB_ENABLED === 'true',
     landingAbRollout: parseInt(process.env.NEXT_PUBLIC_LANDING_AB_ROLLOUT ?? '50', 10),
+    // Phase 12 — billing A/B
+    pricingUrgencyEnabled: process.env.NEXT_PUBLIC_PRICING_URGENCY_ENABLED === 'true',
+    abPricingIntervalEnabled: process.env.NEXT_PUBLIC_AB_PRICING_INTERVAL_ENABLED === 'true',
+    abPricingIntervalRollout: parseInt(process.env.NEXT_PUBLIC_AB_PRICING_INTERVAL_ROLLOUT ?? '50', 10),
+    abHeroPlanEnabled: process.env.NEXT_PUBLIC_AB_HERO_PLAN_ENABLED === 'true',
+    abHeroPlanRollout: parseInt(process.env.NEXT_PUBLIC_AB_HERO_PLAN_ROLLOUT ?? '50', 10),
   }
 }
 

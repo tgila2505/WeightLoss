@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import './globals.css';
 import { NavBarWrapper } from './components/nav-bar-wrapper';
 import { PostHogProvider } from './components/providers/posthog-provider';
+import { SubscriptionProvider } from '@/lib/subscription-context';
 
 export const metadata: Metadata = {
   title: 'WeightLoss',
@@ -17,8 +18,10 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-50 text-slate-900 antialiased">
         <PostHogProvider>
-          <NavBarWrapper />
-          {children}
+          <SubscriptionProvider>
+            <NavBarWrapper />
+            {children}
+          </SubscriptionProvider>
         </PostHogProvider>
       </body>
     </html>

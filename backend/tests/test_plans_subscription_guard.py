@@ -29,15 +29,17 @@ class PlansSubscriptionGuardTest(ApiTestCase):
             session.add(sub)
             session.commit()
 
-    def test_no_subscription_returns_402(self) -> None:
+    def test_no_subscription_returns_403(self) -> None:
         resp = self.client.get("/api/v1/plans/today")
-        self.assertEqual(resp.status_code, 402)
+        self.assertEqual(resp.status_code, 403)
+        self.assertIn("FEATURE_GATED", str(resp.json()))
 
-    def test_free_tier_returns_402(self) -> None:
+    def test_free_tier_returns_403(self) -> None:
         # free tier shouldn't normally exist in UserSubscription, but guard against it
         self._add_subscription(tier="free", status="active")
         resp = self.client.get("/api/v1/plans/today")
-        self.assertEqual(resp.status_code, 402)
+        self.assertEqual(resp.status_code, 403)
+        self.assertIn("FEATURE_GATED", str(resp.json()))
 
     def test_pro_trialing_allows_access(self) -> None:
         self._add_subscription(tier="pro", status="trialing", trial_days=7)
@@ -50,7 +52,8 @@ class PlansSubscriptionGuardTest(ApiTestCase):
         resp = self.client.get("/api/v1/plans/today")
         self.assertEqual(resp.status_code, 404)
 
-    def test_pro_cancelled_returns_402(self) -> None:
+    def test_pro_cancelled_returns_403(self) -> None:
         self._add_subscription(tier="pro", status="canceled")
         resp = self.client.get("/api/v1/plans/today")
-        self.assertEqual(resp.status_code, 402)
+        self.assertEqual(resp.status_code, 403)
+        self.assertIn("FEATURE_GATED", str(resp.json()))
