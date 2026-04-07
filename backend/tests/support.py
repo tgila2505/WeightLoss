@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -35,6 +35,7 @@ import app.models.refresh_token  # noqa: F401
 import app.models.referral  # noqa: F401
 import app.models.reminder  # noqa: F401
 import app.models.shared_plan  # noqa: F401
+import app.models.seo  # noqa: F401
 
 
 def sqlite_compatible_tables() -> list:
@@ -47,7 +48,7 @@ def sqlite_compatible_tables() -> list:
     for table in Base.metadata.sorted_tables:
         skip = False
         for col in table.columns:
-            if isinstance(col.type, JSONB):
+            if isinstance(col.type, (JSONB, ARRAY)):
                 skip = True
                 break
         if not skip:

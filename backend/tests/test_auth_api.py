@@ -1,6 +1,6 @@
 import unittest
 
-from backend.tests.support import ApiTestCase
+from tests.support import ApiTestCase
 
 
 class AuthApiTest(ApiTestCase):
