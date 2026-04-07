@@ -42,6 +42,7 @@ class PlanApiTest(ApiTestCase):
 
     def test_plan_validation_rejects_missing_title(self) -> None:
         user = self.create_user()
+        self.give_user_pro_subscription(user)
         headers = self.auth_headers_for_user(user)
 
         response = self.client.post(

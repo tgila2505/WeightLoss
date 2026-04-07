@@ -12,6 +12,7 @@ import app.models.referral  # noqa: F401
 import app.models.shared_plan  # noqa: F401
 import app.models.user  # noqa: F401
 from app.db.base import Base
+from tests.support import sqlite_compatible_tables
 from app.models.user import User
 
 
@@ -21,7 +22,7 @@ def _make_session() -> Session:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine, tables=sqlite_compatible_tables())
     factory = sessionmaker(bind=engine, class_=Session)
     return factory()
 

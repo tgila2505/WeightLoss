@@ -3,6 +3,7 @@
 from app.db.base import Base
 from app.models.adherence import AdherenceRecord
 from app.models.analytics import AnalyticsEvent
+from app.models.billing import BillingEvent, CoachingSession, PricingPlan, UsageTracking, WeeklyReport
 from app.models.behavior_tracking import BehaviorTracking
 from app.models.experiment import ExperimentAssignment
 from app.models.funnel import AnonymousSession, ConversionEvent, UserSubscription
@@ -23,12 +24,15 @@ __all__ = [
     "AnalyticsEvent",
     "AnonymousSession",
     "BehaviorTracking",
+    "BillingEvent",
+    "CoachingSession",
     "ConversionEvent",
     "ExperimentAssignment",
     "HealthMetrics",
     "LabRecord",
     "MasterUserProfile",
     "Plan",
+    "PricingPlan",
     "Profile",
     "QuestionnaireResponse",
     "Referral",
@@ -37,6 +41,8 @@ __all__ = [
     "Reminder",
     "RewardLog",
     "SharedPlan",
+    "UsageTracking",
     "User",
     "UserSubscription",
+    "WeeklyReport",
 ]

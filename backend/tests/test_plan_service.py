@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.db.base import Base
+from tests.support import sqlite_compatible_tables
 from app.models.user import User
 from app.schemas.plan import PlanCreate, PlanPayload
 from app.services.plan_service import PlanService
@@ -27,11 +28,11 @@ class PlanServiceTest(unittest.TestCase):
             autocommit=False,
             class_=Session,
         )
-        Base.metadata.create_all(self.engine)
+        Base.metadata.create_all(self.engine, tables=sqlite_compatible_tables())
         self.service = PlanService()
 
     def tearDown(self) -> None:
-        Base.metadata.drop_all(self.engine)
+        Base.metadata.drop_all(self.engine, tables=sqlite_compatible_tables())
         self.engine.dispose()
 
     def test_create_plan_clears_plan_refresh_flag(self) -> None:
