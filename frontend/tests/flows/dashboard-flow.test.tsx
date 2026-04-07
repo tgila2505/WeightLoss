@@ -10,7 +10,11 @@ const { apiClient } = vi.hoisted(() => ({
     fetchHealthMetrics: vi.fn(),
     fetchLabs: vi.fn(),
     fetchProfile: vi.fn(),
-    getLatestPlan: vi.fn()
+    getLatestPlan: vi.fn(),
+    fetchTodayCheckIn: vi.fn(),
+    fetchGamificationStatus: vi.fn(),
+    fetchProgressSummary: vi.fn(),
+    fetchWeeklyReport: vi.fn(),
   }
 }));
 
@@ -25,6 +29,12 @@ vi.mock('@/lib/api-client', () => apiClient);
 describe('Dashboard usage flow', () => {
   beforeEach(() => {
     Object.values(apiClient).forEach((mockFn) => mockFn.mockReset());
+    // Phase 13 functions are called with .catch(() => null) — default to resolved null
+    // so they don't interfere with tests that don't exercise them explicitly.
+    apiClient.fetchTodayCheckIn.mockResolvedValue(null);
+    apiClient.fetchGamificationStatus.mockResolvedValue(null);
+    apiClient.fetchProgressSummary.mockResolvedValue(null);
+    apiClient.fetchWeeklyReport.mockResolvedValue(null);
   });
 
   it('loads dashboard data and falls back to session plan when backend plan is missing', async () => {
