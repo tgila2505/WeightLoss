@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { PlanView } from '../components/plan';
 import { fetchTodayPlan, getLatestPlan, type PlanSnapshot } from '@/lib/api-client';
+import { ShareButton } from '@/components/viral/ShareButton';
 
 export default function PlanPage() {
   const [plan, setPlan] = useState<PlanSnapshot | null>(null);
@@ -33,5 +34,14 @@ export default function PlanPage() {
     };
   }, []);
 
-  return <PlanView plan={plan} />;
+  return (
+    <div>
+      <PlanView plan={plan} />
+      {plan && (
+        <div className="flex justify-center pb-8">
+          <ShareButton planData={plan as unknown as Record<string, unknown>} />
+        </div>
+      )}
+    </div>
+  );
 }

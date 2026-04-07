@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/card';
 
 import { login, register, REF_CODE_KEY } from '../../lib/auth';
+import { captureEvent } from '@/lib/posthog';
 import { LogoMark } from '../components/logo';
 
 export default function RegisterPage() {
@@ -55,6 +56,9 @@ export default function RegisterPage() {
     try {
       await register(email, password, refCode);
       localStorage.removeItem(REF_CODE_KEY);
+      if (refCode) {
+        captureEvent('referral_signup', { ref_code: refCode });
+      }
       await login(email, password);
       router.push('/onboarding');
     } catch (err) {
