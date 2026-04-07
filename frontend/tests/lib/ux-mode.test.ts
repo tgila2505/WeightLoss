@@ -13,6 +13,8 @@ const defaultFlags = {
   mindmapEnabled: true,
   abTestingEnabled: true,
   wizardRolloutPct: 100, // everyone gets wizard in A/B
+  landingAbEnabled: false,
+  landingAbRollout: 50,
 }
 
 beforeEach(() => {

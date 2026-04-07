@@ -12,6 +12,17 @@ export type AnalyticsEventName =
   | 'ux_mode_preference_set'
   | 'ux_mode_resolved'
   | 'ux_mode_switched'
+  // funnel events
+  | 'landing_viewed'
+  | 'landing_variant_viewed'
+  | 'onboarding_started'
+  | 'onboarding_step_completed'
+  | 'onboarding_abandoned'
+  | 'preview_viewed'
+  | 'upgrade_clicked'
+  | 'checkout_started'
+  | 'conversion_completed'
+  | 'trial_expired'
 
 export interface AnalyticsEventProperties {
   userId?: number
@@ -65,6 +76,26 @@ export function trackEvent(
   }).catch((err) => {
     if (process.env.NODE_ENV === 'development') {
       console.warn('[analytics] Event dropped:', event, err)
+    }
+  })
+}
+
+/**
+ * Fire-and-forget funnel event. Sends to /funnel/events — no auth required.
+ * Never throws.
+ */
+export function trackFunnelEvent(
+  eventName: AnalyticsEventName,
+  properties: Record<string, unknown> = {},
+): void {
+  fetch(`${apiBaseUrl}/api/v1/funnel/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ event_name: eventName, properties }),
+  }).catch((err) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[funnel-analytics] Event dropped:', eventName, err)
     }
   })
 }
