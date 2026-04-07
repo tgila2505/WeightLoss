@@ -1,8 +1,10 @@
 import { getAccessToken } from './auth'
+import { captureEvent } from './posthog'
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 
 export type AnalyticsEventName =
+  // Onboarding
   | 'profile_questionnaire_started'
   | 'wizard_step_completed'
   | 'wizard_step_dropped'
@@ -12,7 +14,12 @@ export type AnalyticsEventName =
   | 'ux_mode_preference_set'
   | 'ux_mode_resolved'
   | 'ux_mode_switched'
-  // funnel events
+  // Core product
+  | 'onboarding_completed'
+  | 'plan_generated'
+  | 'paywall_viewed'
+  | 'subscription_started'
+  // Funnel
   | 'landing_viewed'
   | 'landing_variant_viewed'
   | 'onboarding_started'
@@ -49,23 +56,28 @@ function sessionId(): string {
 }
 
 /**
- * Fire-and-forget analytics event. Never throws — analytics failures must never break UX.
+ * Fire-and-forget analytics event to backend + PostHog.
+ * Never throws — analytics failures must never break UX.
  */
 export function trackEvent(
   event: AnalyticsEventName,
   properties: AnalyticsEventProperties,
 ): void {
+  const sid = sessionId()
   const payload = {
     event,
     userId: properties.userId ?? null,
-    sessionId: sessionId(),
+    sessionId: sid,
     uxMode: properties.uxMode,
     timestamp: new Date().toISOString(),
     properties,
   }
 
-  const token = typeof window !== 'undefined' ? getAccessToken() : null
+  // 1. Fire to PostHog (primary analytics platform)
+  captureEvent(event, { ...properties, session_id: sid })
 
+  // 2. Fire to backend (source-of-truth + fallback)
+  const token = typeof window !== 'undefined' ? getAccessToken() : null
   fetch(`${apiBaseUrl}/api/v1/analytics/events`, {
     method: 'POST',
     headers: {
@@ -81,13 +93,19 @@ export function trackEvent(
 }
 
 /**
- * Fire-and-forget funnel event. Sends to /funnel/events — no auth required.
- * Never throws.
+ * Fire-and-forget funnel event to backend + PostHog.
+ * No auth required (anonymous visitors).
  */
 export function trackFunnelEvent(
   eventName: AnalyticsEventName,
   properties: Record<string, unknown> = {},
 ): void {
+  const sid = sessionId()
+
+  // 1. Fire to PostHog
+  captureEvent(eventName, { ...properties, session_id: sid, funnel: true })
+
+  // 2. Fire to backend funnel endpoint
   fetch(`${apiBaseUrl}/api/v1/funnel/events`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
