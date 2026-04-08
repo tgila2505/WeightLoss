@@ -78,7 +78,7 @@ export function ReferralWidget({ className }: ReferralWidgetProps) {
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            No referral code yet — visit your profile to generate one.
+            Loading your referral link…
           </p>
         )}
       </CardContent>

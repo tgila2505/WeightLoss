@@ -6,7 +6,7 @@ import type { CSSProperties } from "react"
 import { useRouter } from "next/navigation"
 
 import { PageShell } from "@/app/components/page-shell"
-import { generateMasterProfile, fetchMasterProfile } from "@/lib/api-client"
+import { generateMasterProfile, fetchMasterProfile, fetchReferralCode, fetchReferralStats, type ReferralStats } from "@/lib/api-client"
 
 interface ProfileState {
   profileText: string
@@ -156,6 +156,11 @@ export default function UserProfilePage() {
           </div>
         )}
 
+        {/* Referral code */}
+        <div className="no-print">
+          <ReferralCard />
+        </div>
+
         {/* Print-only styles */}
         <style>{`
           @media print {
@@ -200,6 +205,130 @@ function MarkdownRenderer({ text }: { text: string }) {
   }
 
   return <div>{elements}</div>
+}
+
+function ReferralCard() {
+  const [referralLink, setReferralLink] = useState<string | null>(null)
+  const [stats, setStats] = useState<ReferralStats | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    fetchReferralCode()
+      .then((ref) => {
+        if (!isMounted) return
+        const origin = typeof window !== "undefined" ? window.location.origin : ""
+        setReferralLink(`${origin}/referral/${ref.code}`)
+        return fetchReferralStats()
+      })
+      .then((s) => { if (isMounted && s) setStats(s) })
+      .catch(() => { if (isMounted) setLoadError(true) })
+    return () => { isMounted = false }
+  }, [])
+
+  async function handleCopy() {
+    if (!referralLink) return
+    await navigator.clipboard.writeText(referralLink)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (loadError) return null
+
+  return (
+    <div style={referralCardStyle}>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>
+        Refer a friend
+      </h2>
+      <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 16px" }}>
+        Share your link and earn rewards when friends sign up.
+      </p>
+
+      {referralLink ? (
+        <>
+          <div style={referralLinkRowStyle}>
+            <span style={{ fontSize: 13, color: "#475569", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {referralLink}
+            </span>
+            <button type="button" onClick={handleCopy} style={copyButtonStyle}>
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+
+          {stats && (
+            <div style={referralStatsRowStyle}>
+              <div style={referralStatStyle}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{stats.clicks}</span>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Clicks</span>
+              </div>
+              <div style={referralStatStyle}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{stats.signups}</span>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Signups</span>
+              </div>
+              <div style={referralStatStyle}>
+                <span style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{stats.rewards_earned}</span>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>Rewards</span>
+              </div>
+            </div>
+          )}
+
+          {stats?.premium_until && (
+            <p style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>
+              Premium until{" "}
+              {new Date(stats.premium_until).toLocaleDateString(undefined, {
+                month: "short", day: "numeric", year: "numeric",
+              })}
+            </p>
+          )}
+        </>
+      ) : (
+        <div style={{ height: 40, borderRadius: 8, backgroundColor: "#f1f5f9" }} />
+      )}
+    </div>
+  )
+}
+
+const referralCardStyle: CSSProperties = {
+  borderRadius: 12,
+  border: "1px solid #e2e8f0",
+  backgroundColor: "#ffffff",
+  padding: "20px 24px",
+}
+
+const referralLinkRowStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  borderRadius: 8,
+  border: "1px solid #e2e8f0",
+  backgroundColor: "#f8fafc",
+  padding: "8px 12px",
+  marginBottom: 12,
+}
+
+const copyButtonStyle: CSSProperties = {
+  flexShrink: 0,
+  padding: "4px 12px",
+  borderRadius: 6,
+  border: "1px solid #cbd5e1",
+  backgroundColor: "#ffffff",
+  color: "#475569",
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: "pointer",
+}
+
+const referralStatsRowStyle: CSSProperties = {
+  display: "flex",
+  gap: 24,
+}
+
+const referralStatStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 2,
 }
 
 const containerStyle: CSSProperties = {

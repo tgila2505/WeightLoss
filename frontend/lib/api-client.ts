@@ -669,11 +669,16 @@ async function request<T>(url: string): Promise<T> {
     throw new Error('You must be logged in before viewing this data.');
   }
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  } catch {
+    throw new Error('Unable to reach the server. Please check your connection and try again.');
+  }
 
   if (!response.ok) {
     throw new Error(await readError(response));
@@ -1025,6 +1030,31 @@ export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
   if (!res.ok) throw new Error(await readError(res));
   const data = await res.json();
   return data as WeeklyReport | null;
+}
+
+// ── Referrals ─────────────────────────────────────────────────────────────────
+
+export type ReferralCode = {
+  code: string;
+  is_active: boolean;
+};
+
+export type ReferralStats = {
+  code: string | null;
+  clicks: number;
+  signups: number;
+  conversions: number;
+  rewards_earned: number;
+  premium_until: string | null;
+};
+
+/** GET /referrals/me — auto-creates the code if the user doesn't have one yet. */
+export async function fetchReferralCode(): Promise<ReferralCode> {
+  return request<ReferralCode>(`${apiBaseUrl}/api/v1/referrals/me`);
+}
+
+export async function fetchReferralStats(): Promise<ReferralStats> {
+  return request<ReferralStats>(`${apiBaseUrl}/api/v1/referrals/me/stats`);
 }
 
 // ── Profile State ─────────────────────────────────────────────────────────────
