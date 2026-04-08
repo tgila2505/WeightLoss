@@ -40,6 +40,8 @@ class ConvertRequest(BaseModel):
     email: EmailStr
     password: str
     payment_method_id: str
+    tier: str = "pro"
+    interval: str = "monthly"
 
 
 class ConvertResponse(BaseModel):

@@ -34,7 +34,10 @@ def _get_stripe_service() -> StripeService:
     settings = get_settings()
     return StripeService(
         secret_key=settings.stripe_secret_key,
-        pro_price_id=settings.stripe_pro_price_id,
+        pro_monthly_price_id=settings.stripe_pro_monthly_price_id,
+        pro_annual_price_id=settings.stripe_pro_annual_price_id,
+        pro_plus_monthly_price_id=settings.stripe_pro_plus_monthly_price_id,
+        pro_plus_annual_price_id=settings.stripe_pro_plus_annual_price_id,
     )
 
 
@@ -127,9 +130,12 @@ def convert(
 
     # Create Stripe subscription
     try:
-        customer_id, subscription_id = stripe_svc.create_subscription(
+        customer_id, subscription_id, price_id = stripe_svc.create_subscription(
             email=payload.email,
             payment_method_id=payload.payment_method_id,
+            tier=payload.tier,
+            interval=payload.interval,
+            trial_period_days=7,
         )
     except Exception as exc:
         raise HTTPException(
@@ -152,7 +158,9 @@ def convert(
         user_id=user.id,
         stripe_customer_id=customer_id,
         stripe_subscription_id=subscription_id,
-        tier="pro",
+        tier=payload.tier,
+        interval=payload.interval,
+        stripe_price_id=price_id,
         status="trialing",
         trial_started_at=now,
         trial_expires_at=now + timedelta(days=7),

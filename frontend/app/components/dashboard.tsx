@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
+import { ReferralWidget } from '@/components/viral/ReferralWidget';
 import { PageShell } from './page-shell';
 import type {
   HealthMetricResponse,
@@ -180,6 +181,9 @@ export function DashboardView({
         </div>
 
       </div>
+
+      <ReferralWidget className="mt-6" />
+
     </PageShell>
   );
 }

@@ -7,7 +7,7 @@ class AuthApiTest(ApiTestCase):
     def test_register_login_and_me_flow(self) -> None:
         register_response = self.client.post(
             "/api/v1/auth/register",
-            json={"email": "person@example.com", "password": "password123"},
+            json={"email": "person@example.com", "password": "Password123"},
         )
 
         self.assertEqual(register_response.status_code, 201)
@@ -15,7 +15,7 @@ class AuthApiTest(ApiTestCase):
 
         login_response = self.client.post(
             "/api/v1/auth/login",
-            json={"email": "person@example.com", "password": "password123"},
+            json={"email": "person@example.com", "password": "Password123"},
         )
 
         self.assertEqual(login_response.status_code, 200)

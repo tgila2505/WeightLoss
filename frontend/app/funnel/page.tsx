@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { trackFunnelEvent } from '@/lib/analytics';
 import { CostAnchor } from './components/cost-anchor';
+import { FeaturedPlans } from './components/featured-plans';
 import { FunnelHero } from './components/funnel-hero';
 import { FunnelShell } from './components/funnel-shell';
 import { HowItWorks } from './components/how-it-works';
@@ -129,6 +130,8 @@ export default function FunnelLandingPage() {
           </div>
         </div>
       </section>
+
+      <FeaturedPlans />
 
       <section className="px-4 py-14">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-600 to-indigo-600 px-6 py-10 text-center shadow-lg shadow-blue-200/60 sm:px-10">

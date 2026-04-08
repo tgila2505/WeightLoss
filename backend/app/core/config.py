@@ -40,6 +40,11 @@ class Settings:
     stripe_secret_key: str
     stripe_webhook_secret: str
     stripe_pro_price_id: str
+    stripe_pro_monthly_price_id: str
+    stripe_pro_annual_price_id: str
+    stripe_pro_plus_monthly_price_id: str
+    stripe_pro_plus_annual_price_id: str
+    cron_secret: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -68,6 +73,11 @@ class Settings:
             stripe_secret_key=os.environ.get("STRIPE_SECRET_KEY", ""),
             stripe_webhook_secret=os.environ.get("STRIPE_WEBHOOK_SECRET", ""),
             stripe_pro_price_id=os.environ.get("STRIPE_PRO_PRICE_ID", ""),
+            stripe_pro_monthly_price_id=os.environ.get("STRIPE_PRO_MONTHLY_PRICE_ID", ""),
+            stripe_pro_annual_price_id=os.environ.get("STRIPE_PRO_ANNUAL_PRICE_ID", ""),
+            stripe_pro_plus_monthly_price_id=os.environ.get("STRIPE_PRO_PLUS_MONTHLY_PRICE_ID", ""),
+            stripe_pro_plus_annual_price_id=os.environ.get("STRIPE_PRO_PLUS_ANNUAL_PRICE_ID", ""),
+            cron_secret=os.environ.get("CRON_SECRET", ""),
         )
 
 
