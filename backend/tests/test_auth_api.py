@@ -1,6 +1,6 @@
 import unittest
 
-from backend.tests.support import ApiTestCase
+from tests.support import ApiTestCase
 
 
 class AuthApiTest(ApiTestCase):
@@ -32,7 +32,7 @@ class AuthApiTest(ApiTestCase):
     def test_login_rejects_invalid_password(self) -> None:
         self.client.post(
             "/api/v1/auth/register",
-            json={"email": "person@example.com", "password": "password123"},
+            json={"email": "person@example.com", "password": "Password123"},
         )
 
         response = self.client.post(
