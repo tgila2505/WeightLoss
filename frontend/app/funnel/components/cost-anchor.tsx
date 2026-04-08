@@ -1,13 +1,17 @@
 export function CostAnchor() {
   return (
-    <section className="px-4 py-8 max-w-xl mx-auto text-center">
-      <p className="text-zinc-300 text-lg">
-        Less than a coffee.{' '}
-        <span className="text-zinc-500">A nutritionist charges $150/session.</span>
-      </p>
-      <p className="text-zinc-500 text-sm mt-2">
-        $9/month · Cancel anytime · 7-day free trial
-      </p>
+    <section className="px-4 py-8">
+      <div className="mx-auto max-w-2xl rounded-[2rem] border border-slate-200 bg-white px-6 py-8 text-center shadow-sm">
+        <p className="text-lg font-medium text-slate-900">
+          Less than a coffee.
+          <span className="ml-2 text-slate-500">
+            A nutritionist often charges $150 per session.
+          </span>
+        </p>
+        <p className="mt-2 text-sm text-slate-500">
+          $9 per month. Cancel anytime. 7-day free trial.
+        </p>
+      </div>
     </section>
-  )
+  );
 }
