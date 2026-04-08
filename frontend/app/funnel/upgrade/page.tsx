@@ -1,29 +1,35 @@
-'use client'
+'use client';
 
-import { trackFunnelEvent } from '@/lib/analytics'
-import { getFunnelProfile } from '@/lib/funnel-session'
-import { useEffect } from 'react'
-import { UpgradeForm } from './components/upgrade-form'
-import { ValueRecap } from './components/value-recap'
+import { useEffect } from 'react';
+
+import { Container } from '@/components/ui/container';
+import { trackFunnelEvent } from '@/lib/analytics';
+import { getFunnelProfile } from '@/lib/funnel-session';
+import { FunnelShell } from '../components/funnel-shell';
+import { UpgradeForm } from './components/upgrade-form';
+import { ValueRecap } from './components/value-recap';
 
 export default function FunnelUpgradePage() {
-  const profile = getFunnelProfile()
+  const profile = getFunnelProfile();
 
   useEffect(() => {
-    trackFunnelEvent('upgrade_clicked')
-  }, [])
+    trackFunnelEvent('upgrade_clicked');
+  }, []);
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-4 py-12">
-      <div className="max-w-3xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+    <FunnelShell>
+      <Container size="lg">
+        <div className="grid grid-cols-1 gap-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/70 sm:grid-cols-2 sm:p-8">
           <ValueRecap name={profile?.name} />
           <div>
-            <h2 className="text-xl font-semibold text-white mb-6">Create your account</h2>
+            <p className="text-sm font-medium text-blue-600">Checkout</p>
+            <h2 className="mb-6 mt-2 text-2xl font-semibold text-slate-900">
+              Create your account
+            </h2>
             <UpgradeForm />
           </div>
         </div>
-      </div>
-    </main>
-  )
+      </Container>
+    </FunnelShell>
+  );
 }

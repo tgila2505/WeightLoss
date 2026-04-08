@@ -38,7 +38,7 @@ export function clearFunnelSession(): void {
 }
 
 export async function createFunnelSession(profile: FunnelProfile): Promise<void> {
-  const resp = await fetch(`${apiBaseUrl}/api/v1/funnel/sessions`, {
+  const resp = await fetch(`${apiBaseUrl}/api/v1/funnel/session`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
