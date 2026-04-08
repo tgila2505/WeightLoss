@@ -33,6 +33,8 @@ export function useReferral() {
     setLoading(true);
     setError(null);
     try {
+      // Call /me first to ensure the code is created, then fetch full stats.
+      await authFetch('/api/v1/referrals/me');
       const res = await authFetch('/api/v1/referrals/me/stats');
       if (!res.ok) throw new Error('Failed to load referral stats');
       setStats(await res.json());
