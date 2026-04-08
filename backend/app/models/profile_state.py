@@ -1,8 +1,7 @@
 # backend/app/models/profile_state.py
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import DateTime, ForeignKey, JSON, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -18,7 +17,7 @@ class UserMindMapState(Base):
         unique=True,
         index=True,
     )
-    state: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    state: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -39,7 +38,7 @@ class UserWizardState(Base):
         unique=True,
         index=True,
     )
-    state: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    state: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

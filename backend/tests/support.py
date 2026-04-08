@@ -32,6 +32,7 @@ import app.models.plan  # noqa: F401
 import app.models.profile  # noqa: F401
 import app.models.questionnaire  # noqa: F401
 import app.models.refresh_token  # noqa: F401
+import app.models.profile_state  # noqa: F401
 import app.models.referral  # noqa: F401
 import app.models.reminder  # noqa: F401
 import app.models.shared_plan  # noqa: F401
