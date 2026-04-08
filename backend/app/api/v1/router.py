@@ -16,6 +16,7 @@ from app.api.v1.endpoints.profile import router as profile_router
 from app.api.v1.endpoints.questionnaire import router as questionnaire_router
 from app.api.v1.endpoints.experiments import router as experiments_router
 from app.api.v1.endpoints.leaderboard import router as leaderboard_router
+from app.api.v1.endpoints.profile_state import router as profile_state_router
 from app.api.v1.endpoints.referrals import router as referrals_router
 from app.api.v1.endpoints.reminders import router as reminders_router
 from app.api.v1.endpoints.gamification import router as gamification_router
@@ -48,5 +49,6 @@ router.include_router(questionnaire_router, tags=["questionnaire"])
 router.include_router(experiments_router, tags=["experiments"])
 router.include_router(referrals_router, tags=["referrals"])
 router.include_router(reminders_router, tags=["reminders"])
+router.include_router(profile_state_router, tags=["profile-state"])
 router.include_router(reports_router, tags=["reports"])
 router.include_router(shared_plans_router, tags=["shared-plans"])
