@@ -63,7 +63,7 @@ def upgrade() -> None:
         sa.Column("streak_freeze_used", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column("freeze_resets_at", sa.Date(), nullable=True),
         sa.Column("total_checkins", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("badges_earned", postgresql.JSONB(), nullable=False, server_default="'[]'"),
+        sa.Column("badges_earned", postgresql.JSONB(), nullable=False, server_default=sa.text("'[]'")),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
     )
 
