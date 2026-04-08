@@ -14,6 +14,7 @@ from app.models.profile import Profile
 from app.models.questionnaire import MasterUserProfile, QuestionnaireResponse
 from app.models.referral import Referral, ReferralEvent, RewardLog
 from app.models.refresh_token import RefreshToken
+from app.models.profile_state import UserMindMapState, UserWizardState
 from app.models.reminder import Reminder
 from app.models.habits import HabitLog, NotificationPreferences, ProgressEntry, StreakRecord
 from app.models.reports import AiReport, NotificationEvent
@@ -51,6 +52,8 @@ __all__ = [
     "StreakRecord",
     "UsageTracking",
     "User",
+    "UserMindMapState",
     "UserSubscription",
+    "UserWizardState",
     "WeeklyReport",
 ]
