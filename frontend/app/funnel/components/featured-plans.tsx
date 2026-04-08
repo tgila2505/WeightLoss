@@ -42,7 +42,7 @@ export function FeaturedPlans() {
         </div>
         <div className="mt-5 text-center">
           <Link href="/plan/lose-weight" className="text-xs text-slate-500 transition-colors hover:text-blue-600">
-            Browse all plans ->
+            Browse all plans →
           </Link>
         </div>
       </div>
