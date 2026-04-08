@@ -69,27 +69,35 @@ export function useGraphState(initialGraph: InitialGraph | PositionedGraph) {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const storedGraph = loadGraphState()
+    let isMounted = true
 
-    if (storedGraph) {
-      const normalizedStoredNodes = storedGraph.nodes.map(normalizeNode)
-      const storedSchemaVersion = getRootSchemaVersion(normalizedStoredNodes)
+    loadGraphState().then((storedGraph) => {
+      if (!isMounted) return
 
-      if (
-        initialSchemaVersion === null ||
-        storedSchemaVersion === initialSchemaVersion
-      ) {
-        setGraph({
-          nodes: mergeStoredNodesWithInitialLayout(
-            normalizedInitialNodes,
-            normalizedStoredNodes,
-          ),
-          edges: initialGraph.edges,
-        })
+      if (storedGraph) {
+        const normalizedStoredNodes = storedGraph.nodes.map(normalizeNode)
+        const storedSchemaVersion = getRootSchemaVersion(normalizedStoredNodes)
+
+        if (
+          initialSchemaVersion === null ||
+          storedSchemaVersion === initialSchemaVersion
+        ) {
+          setGraph({
+            nodes: mergeStoredNodesWithInitialLayout(
+              normalizedInitialNodes,
+              normalizedStoredNodes,
+            ),
+            edges: initialGraph.edges,
+          })
+        }
       }
-    }
 
-    setHasLoadedStorage(true)
+      setHasLoadedStorage(true)
+    }).catch(() => {
+      if (isMounted) setHasLoadedStorage(true)
+    })
+
+    return () => { isMounted = false }
   }, [initialSchemaVersion])
 
   // Debounced auto-save: coalesces rapid state changes into a single write,
