@@ -330,7 +330,7 @@ function Step3({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="flex min-h-[360px] flex-col gap-5">
       <div className="space-y-1">
         <h2 className={stepTitleClassName}>Your lifestyle</h2>
         <p className={stepCopyClassName}>
@@ -355,32 +355,34 @@ function Step3({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="diet" className="text-slate-700">
-          Diet pattern
-        </Label>
-        <Input
-          id="diet"
-          required
-          value={values.diet_pattern}
-          onChange={(e) => onChange({ diet_pattern: e.target.value })}
-          className={fieldClassName}
-          placeholder="e.g. balanced, vegetarian, low-carb"
-        />
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-          onClick={onBack}
-        >
-          Back
-        </Button>
-        <Button type="submit" className="flex-1" disabled={loading}>
-          {loading ? 'Calculating...' : 'See my plan'}
-        </Button>
+      <div className="mt-auto space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="diet" className="text-slate-700">
+            Diet pattern
+          </Label>
+          <Input
+            id="diet"
+            required
+            value={values.diet_pattern}
+            onChange={(e) => onChange({ diet_pattern: e.target.value })}
+            className={fieldClassName}
+            placeholder="e.g. balanced, vegetarian, low-carb"
+          />
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            onClick={onBack}
+          >
+            Back
+          </Button>
+          <Button type="submit" className="flex-1" disabled={loading}>
+            {loading ? 'Calculating...' : 'See my plan'}
+          </Button>
+        </div>
       </div>
     </form>
   );
