@@ -1026,3 +1026,47 @@ export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
   const data = await res.json();
   return data as WeeklyReport | null;
 }
+
+// ── Profile State ─────────────────────────────────────────────────────────────
+
+export async function fetchMindMapState(): Promise<Record<string, unknown> | null> {
+  const token = getAccessToken()
+  if (!token) return null
+  const res = await fetch(`${apiBaseUrl}/api/v1/mindmap/state`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return null
+  const data = await res.json() as { state: Record<string, unknown> }
+  return Object.keys(data.state).length === 0 ? null : data.state
+}
+
+export async function saveMindMapState(state: Record<string, unknown>): Promise<void> {
+  const token = getAccessToken()
+  if (!token) return
+  await fetch(`${apiBaseUrl}/api/v1/mindmap/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ state }),
+  })
+}
+
+export async function fetchWizardState(): Promise<Record<string, unknown> | null> {
+  const token = getAccessToken()
+  if (!token) return null
+  const res = await fetch(`${apiBaseUrl}/api/v1/wizard/state`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return null
+  const data = await res.json() as { state: Record<string, unknown> }
+  return Object.keys(data.state).length === 0 ? null : data.state
+}
+
+export async function saveWizardState(state: Record<string, unknown>): Promise<void> {
+  const token = getAccessToken()
+  if (!token) return
+  await fetch(`${apiBaseUrl}/api/v1/wizard/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ state }),
+  })
+}
