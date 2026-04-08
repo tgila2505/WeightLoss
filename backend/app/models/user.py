@@ -61,3 +61,5 @@ class User(Base):
     notification_preferences: Mapped["NotificationPreferences | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
     notification_events: Mapped[list["NotificationEvent"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     ai_reports: Mapped[list["AiReport"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    mindmap_state: Mapped["UserMindMapState | None"] = relationship(back_populates="user", uselist=False)
+    wizard_state: Mapped["UserWizardState | None"] = relationship(back_populates="user", uselist=False)
