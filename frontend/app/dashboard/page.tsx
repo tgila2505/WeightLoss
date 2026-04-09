@@ -22,6 +22,7 @@ import {
   type ProgressSummary,
   type WeeklyReport,
 } from '@/lib/api-client';
+import { PageShell } from '../components/page-shell';
 import { CheckInCard } from './components/checkin-card';
 import { GoalDeltaCard } from './components/goal-delta-card';
 import { ReportNotificationCard } from './components/report-notification-card';
@@ -84,6 +85,7 @@ export default function DashboardPage() {
   const showCheckIn = todayCheckIn !== null && !todayCheckIn.submitted;
 
   return (
+    <PageShell>
     <div className="space-y-4">
       {/* Phase 13: Daily check-in (shown first if not yet submitted) */}
       {showCheckIn && (
@@ -107,6 +109,7 @@ export default function DashboardPage() {
       {/* Existing dashboard */}
       <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} />
     </div>
+    </PageShell>
   );
 }
 

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InteractionView } from '@/app/components/interaction';
 
-const { apiClient, hasAiKeys } = vi.hoisted(() => ({
+const { apiClient } = vi.hoisted(() => ({
   apiClient: {
     appendInteractionHistory: vi.fn(),
     fetchAdherenceSummary: vi.fn(),
@@ -19,26 +19,13 @@ const { apiClient, hasAiKeys } = vi.hoisted(() => ({
     saveLatestPlan: vi.fn(),
     submitOrchestratorRequest: vi.fn()
   },
-  hasAiKeys: vi.fn()
-}));
-
-vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  )
 }));
 
 vi.mock('@/lib/api-client', () => apiClient);
-vi.mock('@/lib/ai-keys', () => ({
-  hasAiKeys: () => hasAiKeys(),
-  getGroqKey: () => null,
-  getMistralKey: () => null
-}));
 
 describe('Plan generation flow', () => {
   beforeEach(() => {
     Object.values(apiClient).forEach((mockFn) => mockFn.mockReset());
-    hasAiKeys.mockReset();
 
     apiClient.getInteractionHistory.mockReturnValue([]);
     apiClient.getLatestPlan.mockReturnValue(null);
@@ -71,7 +58,6 @@ describe('Plan generation flow', () => {
 
   it('submits a prompt and persists the generated plan', async () => {
     const user = userEvent.setup();
-    hasAiKeys.mockReturnValue(true);
 
     render(<InteractionView />);
 
@@ -96,11 +82,4 @@ describe('Plan generation flow', () => {
     expect(apiClient.getInteractionHistory).toHaveBeenCalledTimes(2);
   });
 
-  it('shows the AI configuration banner when keys are missing', async () => {
-    hasAiKeys.mockReturnValue(false);
-
-    render(<InteractionView />);
-
-    expect(await screen.findByText(/ai not configured/i)).toBeInTheDocument();
-  });
 });

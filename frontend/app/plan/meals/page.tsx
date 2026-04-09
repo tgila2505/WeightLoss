@@ -19,7 +19,6 @@ import {
   submitOrchestratorRequest,
   type PlanSnapshot,
 } from '@/lib/api-client';
-import { getGroqKey, getMistralKey } from '@/lib/ai-keys';
 import type { MealEntry } from '@/app/api/meal-plan/route';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -76,14 +75,6 @@ export default function MealsPage() {
   }, []);
 
   async function handleGenerate(customPrompt?: string) {
-    const groqKey = getGroqKey();
-    const mistralKey = getMistralKey();
-
-    if (!groqKey && !mistralKey) {
-      setGenerateError('No AI keys configured. Add your Groq or Mistral key in Settings.');
-      return;
-    }
-
     setIsGenerating(true);
     setGenerateError('');
 
@@ -116,7 +107,7 @@ export default function MealsPage() {
       const res = await fetch('/api/meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userPrompt, profileSummary, groqKey, mistralKey }),
+        body: JSON.stringify({ userPrompt, profileSummary }),
       });
 
       const data = await res.json() as { meals?: MealEntry[]; error?: string };

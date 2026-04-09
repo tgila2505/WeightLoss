@@ -1,4 +1,3 @@
-import { getGroqKey, getMistralKey } from './ai-keys';
 import { getAccessToken } from './auth';
 
 export type OnboardingPayload = {
@@ -349,8 +348,6 @@ export async function submitOrchestratorRequest(input: {
         master_profile: masterProfileText || null,
         consistency_level: input.consistencyLevel ?? null,
         adaptive_adjustment: input.adaptiveAdjustment ?? null,
-        groq_api_key: getGroqKey() ?? null,
-        mistral_api_key: getMistralKey() ?? null
       }
     })
   });
@@ -544,18 +541,11 @@ export async function generateMasterProfile(): Promise<{ profile_text: string; g
   if (!token) {
     throw new Error('You must be logged in before generating a master profile.');
   }
-  const groqKey = getGroqKey();
-  const mistralKey = getMistralKey();
-  const aiHeaders: Record<string, string> = {};
-  if (groqKey) aiHeaders['x-groq-key'] = groqKey;
-  if (mistralKey) aiHeaders['x-mistral-key'] = mistralKey;
-
   const response = await fetch(`${apiBaseUrl}/api/v1/user-profile/generate`, {
     method: 'POST',
     cache: 'no-store',
     headers: {
       Authorization: `Bearer ${token}`,
-      ...aiHeaders,
     },
   });
   if (!response.ok) {
@@ -669,16 +659,11 @@ async function request<T>(url: string): Promise<T> {
     throw new Error('You must be logged in before viewing this data.');
   }
 
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-  } catch {
-    throw new Error('Unable to reach the server. Please check your connection and try again.');
-  }
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 
   if (!response.ok) {
     throw new Error(await readError(response));
@@ -1030,73 +1015,4 @@ export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
   if (!res.ok) throw new Error(await readError(res));
   const data = await res.json();
   return data as WeeklyReport | null;
-}
-
-// ── Referrals ─────────────────────────────────────────────────────────────────
-
-export type ReferralCode = {
-  code: string;
-  is_active: boolean;
-};
-
-export type ReferralStats = {
-  code: string | null;
-  clicks: number;
-  signups: number;
-  conversions: number;
-  rewards_earned: number;
-  premium_until: string | null;
-};
-
-/** GET /referrals/me — auto-creates the code if the user doesn't have one yet. */
-export async function fetchReferralCode(): Promise<ReferralCode> {
-  return request<ReferralCode>(`${apiBaseUrl}/api/v1/referrals/me`);
-}
-
-export async function fetchReferralStats(): Promise<ReferralStats> {
-  return request<ReferralStats>(`${apiBaseUrl}/api/v1/referrals/me/stats`);
-}
-
-// ── Profile State ─────────────────────────────────────────────────────────────
-
-export async function fetchMindMapState(): Promise<Record<string, unknown> | null> {
-  const token = getAccessToken()
-  if (!token) return null
-  const res = await fetch(`${apiBaseUrl}/api/v1/mindmap/state`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!res.ok) return null
-  const data = await res.json() as { state: Record<string, unknown> }
-  return Object.keys(data.state).length === 0 ? null : data.state
-}
-
-export async function saveMindMapState(state: Record<string, unknown>): Promise<void> {
-  const token = getAccessToken()
-  if (!token) return
-  await fetch(`${apiBaseUrl}/api/v1/mindmap/state`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ state }),
-  })
-}
-
-export async function fetchWizardState(): Promise<Record<string, unknown> | null> {
-  const token = getAccessToken()
-  if (!token) return null
-  const res = await fetch(`${apiBaseUrl}/api/v1/wizard/state`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!res.ok) return null
-  const data = await res.json() as { state: Record<string, unknown> }
-  return Object.keys(data.state).length === 0 ? null : data.state
-}
-
-export async function saveWizardState(state: Record<string, unknown>): Promise<void> {
-  const token = getAccessToken()
-  if (!token) return
-  await fetch(`${apiBaseUrl}/api/v1/wizard/state`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ state }),
-  })
 }

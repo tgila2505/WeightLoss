@@ -195,14 +195,14 @@ async function callMistralText(text: string, apiKey: string): Promise<AIParseRes
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const start = Date.now();
-  const groqKey = request.headers.get('x-groq-key');
-  const mistralKey = request.headers.get('x-mistral-key');
+  const groqKey = process.env.GROQ_API_KEY ?? null;
+  const mistralKey = process.env.MISTRAL_API_KEY ?? null;
 
   if (!groqKey && !mistralKey) {
-    console.warn('[parse-lab] Rejected — no AI keys provided');
+    console.warn('[parse-lab] Rejected — no AI keys configured in environment');
     return NextResponse.json(
-      { error: 'No AI API key provided. Add your Groq or Mistral key in Settings.' },
-      { status: 422 },
+      { error: 'AI service is not configured. Please contact support.' },
+      { status: 503 },
     );
   }
 
