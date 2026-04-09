@@ -45,6 +45,12 @@ class Settings:
     stripe_pro_plus_monthly_price_id: str
     stripe_pro_plus_annual_price_id: str
     cron_secret: str
+    # Admin console
+    admin_email: str
+    internal_service_secret: str
+    # Paths for env-file sync (admin service writes updated AI keys here)
+    ai_services_env_path: str
+    frontend_env_path: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -78,6 +84,16 @@ class Settings:
             stripe_pro_plus_monthly_price_id=os.environ.get("STRIPE_PRO_PLUS_MONTHLY_PRICE_ID", ""),
             stripe_pro_plus_annual_price_id=os.environ.get("STRIPE_PRO_PLUS_ANNUAL_PRICE_ID", ""),
             cron_secret=os.environ.get("CRON_SECRET", ""),
+            admin_email=os.environ.get("ADMIN_EMAIL", ""),
+            internal_service_secret=os.environ.get("INTERNAL_SERVICE_SECRET", "change-me-internal-secret"),
+            ai_services_env_path=os.environ.get(
+                "AI_SERVICES_ENV_PATH",
+                str(BASE_DIR / "ai-services" / ".env"),
+            ),
+            frontend_env_path=os.environ.get(
+                "FRONTEND_ENV_PATH",
+                str(BASE_DIR / "frontend" / ".env.local"),
+            ),
         )
 
 

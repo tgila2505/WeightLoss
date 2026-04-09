@@ -62,3 +62,4 @@ class AuthenticatedUserResponse(BaseModel):
     id: int
     email: str
     full_name: str
+    is_admin: bool = False

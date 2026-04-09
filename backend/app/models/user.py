@@ -20,6 +20,7 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
     leaderboard_opt_in: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -61,5 +62,3 @@ class User(Base):
     notification_preferences: Mapped["NotificationPreferences | None"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
     notification_events: Mapped[list["NotificationEvent"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     ai_reports: Mapped[list["AiReport"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    mindmap_state: Mapped["UserMindMapState | None"] = relationship(back_populates="user", uselist=False)
-    wizard_state: Mapped["UserWizardState | None"] = relationship(back_populates="user", uselist=False)

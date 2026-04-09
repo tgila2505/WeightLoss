@@ -16,7 +16,6 @@ from app.api.v1.endpoints.profile import router as profile_router
 from app.api.v1.endpoints.questionnaire import router as questionnaire_router
 from app.api.v1.endpoints.experiments import router as experiments_router
 from app.api.v1.endpoints.leaderboard import router as leaderboard_router
-from app.api.v1.endpoints.profile_state import router as profile_state_router
 from app.api.v1.endpoints.referrals import router as referrals_router
 from app.api.v1.endpoints.reminders import router as reminders_router
 from app.api.v1.endpoints.gamification import router as gamification_router
@@ -24,9 +23,11 @@ from app.api.v1.endpoints.habits import router as habits_router
 from app.api.v1.endpoints.notifications import router as notifications_router
 from app.api.v1.endpoints.progress import router as progress_router
 from app.api.v1.endpoints.reports import router as reports_router
+from app.api.v1.endpoints.admin import router as admin_router
 from app.api.v1.endpoints.shared_plans import router as shared_plans_router
 
 router = APIRouter()
+router.include_router(admin_router, tags=["admin"])
 router.include_router(adherence_router, tags=["adherence"])
 router.include_router(billing_router, tags=["billing"])
 router.include_router(funnel_router, tags=["funnel"])
@@ -49,6 +50,5 @@ router.include_router(questionnaire_router, tags=["questionnaire"])
 router.include_router(experiments_router, tags=["experiments"])
 router.include_router(referrals_router, tags=["referrals"])
 router.include_router(reminders_router, tags=["reminders"])
-router.include_router(profile_state_router, tags=["profile-state"])
 router.include_router(reports_router, tags=["reports"])
 router.include_router(shared_plans_router, tags=["shared-plans"])

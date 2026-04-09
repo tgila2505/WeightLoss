@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAiKeysFromBackend } from '@/lib/ai-keys-server';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MISTRAL_URL = 'https://api.mistral.ai/v1/chat/completions';
@@ -130,8 +131,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const { userPrompt, profileSummary } = body;
-  const groqKey = process.env.GROQ_API_KEY ?? null;
-  const mistralKey = process.env.MISTRAL_API_KEY ?? null;
+  const { groq: groqKey, mistral: mistralKey } = await getAiKeysFromBackend();
 
   if (!userPrompt?.trim()) {
     return NextResponse.json({ error: 'userPrompt is required' }, { status: 400 });
