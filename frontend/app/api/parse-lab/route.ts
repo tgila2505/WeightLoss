@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAiKeysFromBackend } from '@/lib/ai-keys-server';
 import { PDFParse } from 'pdf-parse';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -195,8 +196,7 @@ async function callMistralText(text: string, apiKey: string): Promise<AIParseRes
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const start = Date.now();
-  const groqKey = process.env.GROQ_API_KEY ?? null;
-  const mistralKey = process.env.MISTRAL_API_KEY ?? null;
+  const { groq: groqKey, mistral: mistralKey } = await getAiKeysFromBackend();
 
   if (!groqKey && !mistralKey) {
     console.warn('[parse-lab] Rejected — no AI keys configured in environment');

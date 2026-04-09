@@ -11,6 +11,8 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 _GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
 _MISTRAL_API_KEY: str = os.environ.get("MISTRAL_API_KEY", "")
+
+# NOTE: these are module-level vars intentionally — _reload_env_keys() mutates them.
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -97,6 +99,16 @@ _rule_based_orchestrator = Orchestrator(
         "general": MealPlanAgent(),
     }
 )
+
+
+def _reload_env_keys() -> None:
+    """Re-read GROQ_API_KEY / MISTRAL_API_KEY from the .env file on disk.
+    Called by POST /internal/reload-config so the admin console can hot-update keys."""
+    global _GROQ_API_KEY, _MISTRAL_API_KEY  # noqa: PLW0603
+    env_path = Path(__file__).resolve().parents[2] / ".env"
+    load_dotenv(env_path, override=True)
+    _GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+    _MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
 
 
 def _get_orchestrator() -> Orchestrator:
@@ -685,3 +697,13 @@ Rules:
 
     profile_text = "\n\n".join(all_sections)
     return {"profile_text": profile_text}
+
+
+# ── Admin: hot-reload env keys ────────────────────────────────────────────────
+
+@app.post("/internal/reload-config", include_in_schema=False)
+def reload_config() -> dict[str, str]:
+    """Re-read GROQ_API_KEY / MISTRAL_API_KEY from the .env file.
+    Called by the backend admin service after the admin updates keys — no restart required."""
+    _reload_env_keys()
+    return {"status": "ok", "groq_set": str(bool(_GROQ_API_KEY)), "mistral_set": str(bool(_MISTRAL_API_KEY))}

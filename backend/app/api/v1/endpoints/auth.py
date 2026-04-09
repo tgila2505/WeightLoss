@@ -17,6 +17,7 @@ from app.schemas.auth import (
     RegisterResponse,
     TokenResponse,
 )
+from app.services.admin_service import admin_service
 from app.services.auth_service import AuthService
 from app.services.referral_service import assign_referral_to_user, get_referral_by_code
 from app.services.reward_service import apply_signup_reward
@@ -87,6 +88,8 @@ def login(
         )
 
     guard.record_success(ip, payload.email)
+    # Auto-promote to admin if email matches the ADMIN_EMAIL config
+    admin_service.maybe_promote_admin(session, user)
     access_token = _auth_service.create_token_for_user(user)
     refresh_token = _auth_service.create_refresh_token_for_user(session, user)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
@@ -140,4 +143,5 @@ def read_current_user(
         id=current_user.id,
         email=current_user.email,
         full_name=current_user.full_name,
+        is_admin=current_user.is_admin,
     )
