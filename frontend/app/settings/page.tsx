@@ -7,11 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
 import { PageShell } from '../components/page-shell';
 import { getGroqKey, getMistralKey, setAiKeys, clearAiKeys } from '../../lib/ai-keys';
-import { fetchProfile, fetchGamificationStatus, patchProfileGender } from '../../lib/api-client';
+import { fetchGamificationStatus } from '../../lib/api-client';
 import { BadgeGallery } from '@/components/gamification/badge-gallery';
 
 export default function SettingsPage() {
@@ -20,18 +21,11 @@ export default function SettingsPage() {
   const [showGroqKey, setShowGroqKey] = useState(false);
   const [showMistralKey, setShowMistralKey] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  // Profile — gender
-  const [gender, setGender] = useState<string>('');
-  const [genderSaving, setGenderSaving] = useState(false);
-  const [genderSaved, setGenderSaved] = useState(false);
-  const [genderError, setGenderError] = useState('');
   const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
 
   useEffect(() => {
     setGroqKey(getGroqKey() ?? '');
     setMistralKey(getMistralKey() ?? '');
-    fetchProfile().then((p) => { if (p?.gender) setGender(p.gender); });
     fetchGamificationStatus().then(g => setEarnedBadges(g.badges)).catch(() => {});
   }, []);
 
