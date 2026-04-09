@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import os
 from dataclasses import asdict
+from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
+_GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
+_MISTRAL_API_KEY: str = os.environ.get("MISTRAL_API_KEY", "")
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -66,8 +74,6 @@ class OrchestrationContextPayload(BaseModel):
     consistency_level: str | None = None
     adaptive_adjustment: dict[str, str] | None = None
     metadata: dict[str, object] = Field(default_factory=dict)
-    groq_api_key: str | None = None
-    mistral_api_key: str | None = None
 
 
 class OrchestratorRequestPayload(BaseModel):
@@ -93,9 +99,10 @@ _rule_based_orchestrator = Orchestrator(
 )
 
 
-def _build_orchestrator(groq_key: str | None, mistral_key: str | None) -> Orchestrator:
-    if groq_key and mistral_key:
-        provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+def _get_orchestrator() -> Orchestrator:
+    """Return an AI-powered orchestrator using centralized env keys, or fall back to rule-based."""
+    if _GROQ_API_KEY and _MISTRAL_API_KEY:
+        provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
         return Orchestrator(
             {
                 "meal": MealPlanAgent(provider=provider),
@@ -111,20 +118,14 @@ def _build_orchestrator(groq_key: str | None, mistral_key: str | None) -> Orches
 def run_orchestrator(payload: OrchestratorRequestPayload) -> dict[str, object]:
     context = payload.context
 
-    groq_key_preview = (context.groq_api_key or "")[:8] or "MISSING"
-    mistral_key_preview = (context.mistral_api_key or "")[:8] or "MISSING"
-    print(f"[DEBUG] groq_api_key={groq_key_preview}... mistral_api_key={mistral_key_preview}... prompt={context.prompt!r}", flush=True)
-
     try:
-        orchestrator = _build_orchestrator(context.groq_api_key, context.mistral_api_key)
+        orchestrator = _get_orchestrator()
         request = OrchestrationRequest(
             context=OrchestrationContext(
                 prompt=context.prompt,
                 intent=context.intent,
                 user_profile=(
-                    UserProfileContext(**context.user_profile.model_dump(
-                        exclude={"groq_api_key", "mistral_api_key"}
-                    ))
+                    UserProfileContext(**context.user_profile.model_dump())
                     if context.user_profile is not None
                     else None
                 ),
@@ -178,8 +179,6 @@ class MasterProfileRequest(BaseModel):
     questionnaire: dict[str, dict[str, object]] = Field(default_factory=dict)
     lab_records: list[LabRecordEntry] = Field(default_factory=list)
     health_metrics: list[HealthMetricEntry] = Field(default_factory=list)
-    groq_api_key: str | None = None
-    mistral_api_key: str | None = None
 
 
 def _build_data_context(
@@ -447,8 +446,6 @@ class DailyFeedbackRequest(BaseModel):
     habit_log_id: str
     recent_logs: list[HabitLogEntry] = Field(default_factory=list)
     streak_length: int = 0
-    groq_api_key: str | None = None
-    mistral_api_key: str | None = None
 
 
 @app.post("/internal/feedback/daily")
@@ -484,11 +481,9 @@ def generate_daily_feedback(payload: DailyFeedbackRequest) -> dict[str, object]:
 
     # Try AI generation; fall back to rule-based
     ai_insight: str | None = None
-    if payload.groq_api_key or payload.mistral_api_key:
+    if _GROQ_API_KEY or _MISTRAL_API_KEY:
         try:
-            groq_key = payload.groq_api_key or ""
-            mistral_key = payload.mistral_api_key or ""
-            provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+            provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
             prompt = f"""You are a personal weight-loss coach. Generate a brief, specific, encouraging daily check-in response.
 
 Data for the past {total_logs} days:
@@ -554,8 +549,6 @@ class MealSuggestionRequest(BaseModel):
     meal_period: str = "morning"  # morning | afternoon | evening
     macro_targets: dict[str, float] = Field(default_factory=dict)
     recent_adherence: str | None = None
-    groq_api_key: str | None = None
-    mistral_api_key: str | None = None
 
 
 @app.post("/internal/meal-suggestion")
@@ -571,11 +564,9 @@ def generate_meal_suggestion(payload: MealSuggestionRequest) -> dict[str, object
     }
     meal_type = period_map.get(payload.meal_period, "meal")
 
-    if payload.groq_api_key or payload.mistral_api_key:
+    if _GROQ_API_KEY or _MISTRAL_API_KEY:
         try:
-            groq_key = payload.groq_api_key or ""
-            mistral_key = payload.mistral_api_key or ""
-            provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+            provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
 
             targets = payload.macro_targets
             target_str = ", ".join(f"{k}: {v}g" for k, v in targets.items()) if targets else "balanced macros"
@@ -644,11 +635,9 @@ def generate_master_profile(payload: MasterProfileRequest) -> dict[str, object]:
 
     # If API keys are available, use the LLM to generate an AI assessment
     ai_assessment: str | None = None
-    if payload.groq_api_key or payload.mistral_api_key:
+    if _GROQ_API_KEY or _MISTRAL_API_KEY:
         try:
-            groq_key = payload.groq_api_key or ""
-            mistral_key = payload.mistral_api_key or ""
-            provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+            provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
 
             data_context = _build_data_context(
                 demographics, questionnaire, lab_records, health_metrics
