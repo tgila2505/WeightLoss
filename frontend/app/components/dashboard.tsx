@@ -17,12 +17,14 @@ export function DashboardView({
   profile,
   metrics,
   labs,
-  plan
+  plan,
+  planGated = false,
 }: Readonly<{
   profile: ProfileResponse | null;
   metrics: HealthMetricResponse[];
   labs: LabRecordResponse[];
   plan: PlanSnapshot | null;
+  planGated?: boolean;
 }>) {
   const latestMetric = metrics[0] ?? null;
 
@@ -106,6 +108,12 @@ export function DashboardView({
                   items={plan.behavioral_actions.slice(0, 3)}
                 />
               </div>
+            ) : planGated ? (
+              <EmptyState
+                text="Daily plans are available on the Pro plan."
+                actionHref="/funnel/upgrade"
+                actionLabel="Upgrade to Pro"
+              />
             ) : (
               <EmptyState
                 text="No plan generated in this session yet."

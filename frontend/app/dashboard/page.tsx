@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState<HealthMetricResponse[]>([]);
   const [labs, setLabs] = useState<LabRecordResponse[]>([]);
   const [plan, setPlan] = useState<PlanSnapshot | null>(null);
+  const [planGated, setPlanGated] = useState(false);
   const [todayCheckIn, setTodayCheckIn] = useState<CheckInTodayResponse | null>(null);
   const [gamification, setGamification] = useState<GamificationStatus | null>(null);
   const [progressSummary, setProgressSummary] = useState<ProgressSummary | null>(null);
@@ -53,14 +54,11 @@ export default function DashboardPage() {
             fetchProgressSummary().catch(() => null),
             fetchWeeklyReport().catch(() => null),
           ]);
-        const nextPlan = await fetchTodayPlan();
 
         if (!isMounted) return;
-
         setProfile(nextProfile);
         setMetrics(nextMetrics);
         setLabs(nextLabs);
-        setPlan(nextPlan ?? getLatestPlan());
         setTodayCheckIn(nextCheckIn);
         setGamification(nextGamification);
         setProgressSummary(nextProgress);
@@ -68,6 +66,17 @@ export default function DashboardPage() {
       } catch (loadError) {
         if (!isMounted) return;
         setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard.');
+        return;
+      }
+
+      // Fetch plan separately — a 402 (feature gate) should not block the whole dashboard
+      try {
+        const nextPlan = await fetchTodayPlan();
+        if (!isMounted) return;
+        setPlan(nextPlan ?? getLatestPlan());
+      } catch {
+        if (!isMounted) return;
+        setPlanGated(true);
       }
     }
 
@@ -107,7 +116,7 @@ export default function DashboardPage() {
       <GoalDeltaCard summary={progressSummary} />
 
       {/* Existing dashboard */}
-      <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} />
+      <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} planGated={planGated} />
     </div>
     </PageShell>
   );

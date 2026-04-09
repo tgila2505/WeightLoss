@@ -31,6 +31,7 @@ export function setAccessToken(token: string): void {
 
 export function clearAccessToken(): void {
   window.localStorage.removeItem(TOKEN_KEY)
+  window.localStorage.removeItem('mindmap-graph-state')
   resetUser()
 }
 

@@ -256,6 +256,9 @@ export async function patchProfileGender(gender: string): Promise<void> {
     body: JSON.stringify({ gender }),
   });
   if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Profile not found. Please complete your onboarding before updating this setting.');
+    }
     const text = await res.text().catch(() => res.statusText);
     throw new Error(text || 'Failed to update profile');
   }
