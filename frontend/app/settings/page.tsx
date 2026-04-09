@@ -8,12 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 import { PageShell } from '../components/page-shell';
 import { getGroqKey, getMistralKey, setAiKeys, clearAiKeys } from '../../lib/ai-keys';
-import { fetchProfile, patchProfileGender } from '../../lib/api-client';
 
 export default function SettingsPage() {
   const [groqKey, setGroqKey] = useState('');
@@ -22,32 +20,10 @@ export default function SettingsPage() {
   const [showMistralKey, setShowMistralKey] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Profile — gender
-  const [gender, setGender] = useState<string>('');
-  const [genderSaving, setGenderSaving] = useState(false);
-  const [genderSaved, setGenderSaved] = useState(false);
-  const [genderError, setGenderError] = useState('');
-
   useEffect(() => {
     setGroqKey(getGroqKey() ?? '');
     setMistralKey(getMistralKey() ?? '');
-    fetchProfile().then((p) => { if (p?.gender) setGender(p.gender); });
   }, []);
-
-  async function handleGenderChange(value: string) {
-    setGender(value);
-    setGenderSaving(true);
-    setGenderError('');
-    try {
-      await patchProfileGender(value);
-      setGenderSaved(true);
-      setTimeout(() => setGenderSaved(false), 2500);
-    } catch {
-      setGenderError('Failed to save. Please try again.');
-    } finally {
-      setGenderSaving(false);
-    }
-  }
 
   function handleSave() {
     if (groqKey.trim() && mistralKey.trim()) {
@@ -83,35 +59,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="max-w-xl space-y-4">
-        {/* Profile */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="gender-select">Biological sex</Label>
-              <p className="text-xs text-slate-500">
-                Used to apply sex-specific reference ranges on your lab requisition.
-              </p>
-              <div className="flex items-center gap-3">
-                <Select value={gender} onValueChange={handleGenderChange} disabled={genderSaving}>
-                  <SelectTrigger id="gender-select" className="w-48">
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                {genderSaving && <span className="text-xs text-slate-400">Saving…</span>}
-                {genderSaved && !genderSaving && <span className="text-xs font-semibold text-emerald-600">Saved.</span>}
-              </div>
-              {genderError && <p className="text-xs text-red-500">{genderError}</p>}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* API keys */}
         <Card>
           <CardHeader className="pb-3">
