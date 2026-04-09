@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db_session
 from app.dependencies.auth import get_current_user
+from app.dependencies.billing import SubscriptionAccess, require_capability
 from app.models.user import User
 from app.schemas.profile import ProfileCreate, ProfileResponse, ProfileUpdate
 from app.services.profile_service import ProfileService
@@ -35,6 +36,7 @@ def update_profile(
     payload: ProfileUpdate,
     session: Session = Depends(get_db_session),
     current_user: User = Depends(get_current_user),
+    _access: SubscriptionAccess = Depends(require_capability("profile_edit")),
 ) -> ProfileResponse:
     profile = profile_service.update_profile(session, current_user, payload)
     return ProfileResponse.model_validate(profile)

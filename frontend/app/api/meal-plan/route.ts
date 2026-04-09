@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAiKeysFromBackend } from '@/lib/ai-keys-server';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MISTRAL_URL = 'https://api.mistral.ai/v1/chat/completions';
@@ -6,8 +7,6 @@ const MISTRAL_URL = 'https://api.mistral.ai/v1/chat/completions';
 export interface MealPlanRequest {
   userPrompt: string;
   profileSummary: string;
-  groqKey: string | null;
-  mistralKey: string | null;
 }
 
 export interface MealEntry {
@@ -131,17 +130,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { userPrompt, profileSummary, groqKey, mistralKey } = body;
+  const { userPrompt, profileSummary } = body;
+  const { groq: groqKey, mistral: mistralKey } = await getAiKeysFromBackend();
 
   if (!userPrompt?.trim()) {
     return NextResponse.json({ error: 'userPrompt is required' }, { status: 400 });
   }
 
   if (!groqKey && !mistralKey) {
-    console.warn('[meal-plan] Request rejected — no AI keys provided');
+    console.warn('[meal-plan] Request rejected — no AI keys configured in environment');
     return NextResponse.json(
-      { error: 'No AI API key configured. Add your Groq or Mistral key in Settings.' },
-      { status: 422 },
+      { error: 'AI service is not configured. Please contact support.' },
+      { status: 503 },
     );
   }
 

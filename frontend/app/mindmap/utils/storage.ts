@@ -1,8 +1,8 @@
 "use client"
 
+import { fetchMindMapState, saveMindMapState } from '@/lib/api-client'
 import type { MindMapEdge, MindMapNode } from "../types/graph"
 
-const GRAPH_STORAGE_KEY = "mindmap-graph-state"
 const GRAPH_STORAGE_VERSION = 2
 
 interface StoredGraphState {
@@ -11,22 +11,12 @@ interface StoredGraphState {
   edges: MindMapEdge[]
 }
 
-export function loadGraphState(): {
-  nodes: MindMapNode[]
-  edges: MindMapEdge[]
-} | null {
-  if (typeof window === "undefined") {
-    return null
-  }
-
-  const raw = window.localStorage.getItem(GRAPH_STORAGE_KEY)
-  if (!raw) {
-    return null
-  }
+export async function loadGraphState(): Promise<{ nodes: MindMapNode[]; edges: MindMapEdge[] } | null> {
+  const raw = await fetchMindMapState()
+  if (!raw) return null
 
   try {
-    const parsed = JSON.parse(raw) as Partial<StoredGraphState>
-
+    const parsed = raw as Partial<StoredGraphState>
     if (
       parsed.version !== GRAPH_STORAGE_VERSION ||
       !Array.isArray(parsed.nodes) ||
@@ -34,29 +24,17 @@ export function loadGraphState(): {
     ) {
       return null
     }
-
-    return {
-      nodes: parsed.nodes as MindMapNode[],
-      edges: parsed.edges as MindMapEdge[],
-    }
+    return { nodes: parsed.nodes as MindMapNode[], edges: parsed.edges as MindMapEdge[] }
   } catch {
     return null
   }
 }
 
-export function saveGraphState(input: {
-  nodes: MindMapNode[]
-  edges: MindMapEdge[]
-}): void {
-  if (typeof window === "undefined") {
-    return
-  }
-
+export async function saveGraphState(input: { nodes: MindMapNode[]; edges: MindMapEdge[] }): Promise<void> {
   const payload: StoredGraphState = {
     version: GRAPH_STORAGE_VERSION,
     nodes: input.nodes,
     edges: input.edges,
   }
-
-  window.localStorage.setItem(GRAPH_STORAGE_KEY, JSON.stringify(payload))
+  await saveMindMapState(payload as unknown as Record<string, unknown>)
 }

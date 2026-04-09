@@ -22,7 +22,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-import { fetchProfile, type ProfileResponse } from '@/lib/api-client';
+import { fetchProfile, patchProfileGender, type ProfileResponse } from '@/lib/api-client';
 
 const steps = [
   {
@@ -39,11 +39,6 @@ const steps = [
     id: 'lifestyle',
     title: 'Lifestyle habits',
     description: 'Daily patterns that shape your plan.',
-  },
-  {
-    id: 'ai_setup',
-    title: 'AI setup',
-    description: 'Connect AI providers for personalised plans.',
   },
 ] as const;
 
@@ -89,8 +84,26 @@ export function OnboardingViewForm() {
   const [form, setForm] = useState(emptyForm);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [genderSaving, setGenderSaving] = useState(false);
+  const [genderSaved, setGenderSaved] = useState(false);
+  const [genderError, setGenderError] = useState('');
 
   const currentStep = steps[stepIndex];
+
+  async function handleGenderChange(value: string) {
+    setForm((f) => ({ ...f, gender: value }));
+    setGenderSaving(true);
+    setGenderError('');
+    try {
+      await patchProfileGender(value);
+      setGenderSaved(true);
+      setTimeout(() => setGenderSaved(false), 2500);
+    } catch {
+      setGenderError('Failed to save gender. Please try again.');
+    } finally {
+      setGenderSaving(false);
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -133,7 +146,7 @@ export function OnboardingViewForm() {
               Step {stepIndex + 1} of {steps.length} — {currentStep.title}
             </p>
             <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-              Read only
+              {stepIndex === 0 ? 'Gender editable' : 'Read only'}
             </span>
           </div>
           <Progress
@@ -166,19 +179,18 @@ export function OnboardingViewForm() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
-                <Select value={form.gender} disabled>
+                <Select value={form.gender} onValueChange={handleGenderChange} disabled={genderSaving}>
                   <SelectTrigger id="gender">
                     <SelectValue placeholder="—" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="male">Male</SelectItem>
                     <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="non_binary">Non-binary</SelectItem>
-                    <SelectItem value="prefer_not_to_say">
-                      Prefer not to say
-                    </SelectItem>
                   </SelectContent>
                 </Select>
+                {genderSaving && <p className="text-xs text-slate-400">Saving…</p>}
+                {genderSaved && !genderSaving && <p className="text-xs text-emerald-600 font-semibold">Saved.</p>}
+                {genderError && <p className="text-xs text-red-500">{genderError}</p>}
               </div>
             </div>
 
@@ -266,19 +278,6 @@ export function OnboardingViewForm() {
               </div>
             </div>
           </>
-        ) : null}
-
-        {stepIndex === 3 ? (
-          <div className="rounded-xl bg-slate-50 border border-slate-200 p-5 space-y-2">
-            <p className="text-sm font-semibold text-slate-900">AI API keys</p>
-            <p className="text-sm text-slate-600">
-              API keys are stored only in your browser and are never sent to
-              servers. They cannot be displayed here for security.
-            </p>
-            <p className="text-xs text-slate-400">
-              You can update your keys at any time from Settings.
-            </p>
-          </div>
         ) : null}
 
         <div className="flex items-center justify-between gap-3 pt-2">

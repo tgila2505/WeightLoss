@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-import { PageShell } from './page-shell';
+import { ReferralWidget } from '@/components/viral/ReferralWidget';
 import type {
   HealthMetricResponse,
   LabRecordResponse,
@@ -50,7 +50,7 @@ export function DashboardView({
   ];
 
   return (
-    <PageShell>
+    <>
       {/* Header */}
       <div className="mb-6 md:mb-8">
         <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
@@ -188,7 +188,10 @@ export function DashboardView({
         </div>
 
       </div>
-    </PageShell>
+
+      <ReferralWidget className="mt-6" />
+
+    </>
   );
 }
 

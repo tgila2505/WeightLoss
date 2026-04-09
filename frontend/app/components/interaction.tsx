@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +22,6 @@ import {
   type OrchestratorResponse,
   type PlanSnapshot
 } from '@/lib/api-client';
-import { getGroqKey, getMistralKey, hasAiKeys } from '@/lib/ai-keys';
 import { InputBox } from './input-box';
 import type { MealEntry } from '@/app/api/meal-plan/route';
 
@@ -35,11 +33,6 @@ export function InteractionView() {
   const [planRefreshNeeded, setPlanRefreshNeeded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [aiKeysConfigured, setAiKeysConfigured] = useState(false);
-
-  useEffect(() => {
-    setAiKeysConfigured(hasAiKeys());
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -166,11 +159,6 @@ export function InteractionView() {
     userPrompt: string,
     profile: Awaited<ReturnType<typeof fetchProfile>>,
   ): Promise<MealEntry[]> {
-    const groqKey = getGroqKey();
-    const mistralKey = getMistralKey();
-
-    if (!groqKey && !mistralKey) return [];
-
     const profileSummary = profile
       ? [
           profile.name ? `Name: ${profile.name}` : '',
@@ -190,7 +178,7 @@ export function InteractionView() {
       const res = await fetch('/api/meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userPrompt, profileSummary, groqKey, mistralKey }),
+        body: JSON.stringify({ userPrompt, profileSummary }),
       });
 
       if (!res.ok) return [];
@@ -213,16 +201,6 @@ export function InteractionView() {
           </div>
         ) : null}
 
-        {/* No keys banner */}
-        {!aiKeysConfigured ? (
-          <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-            <strong>AI not configured.</strong> You are using built-in rules which ignore your
-            prompt. To get personalised responses, add your API keys on the{' '}
-            <Link href="/settings" className="underline font-medium">
-              AI settings page
-            </Link>.
-          </div>
-        ) : null}
 
         {/* Header */}
         <div className="mb-6">

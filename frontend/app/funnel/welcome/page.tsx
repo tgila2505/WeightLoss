@@ -1,34 +1,44 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { trackFunnelEvent } from '@/lib/analytics'
-import { clearFunnelSession, getFunnelProfile } from '@/lib/funnel-session'
+import Link from 'next/link';
+import { CheckCircle2 } from 'lucide-react';
+import { useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Container } from '@/components/ui/container';
+import { trackFunnelEvent } from '@/lib/analytics';
+import { clearFunnelSession, getFunnelProfile } from '@/lib/funnel-session';
+import { FunnelShell } from '../components/funnel-shell';
 
 export default function FunnelWelcomePage() {
-  const profile = getFunnelProfile()
+  const profile = getFunnelProfile();
 
   useEffect(() => {
-    trackFunnelEvent('conversion_completed')
-    clearFunnelSession()
-  }, [])
+    trackFunnelEvent('conversion_completed');
+    clearFunnelSession();
+  }, []);
 
   return (
-    <main className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4 text-center gap-8">
-      <div className="space-y-3">
-        <p className="text-5xl">🎉</p>
-        <h1 className="text-3xl font-bold text-white">
-          {profile?.name ? `You're in, ${profile.name}.` : "You're in."}
-        </h1>
-        <p className="text-zinc-400">Your full plan is ready.</p>
-      </div>
-      <Button asChild size="lg" className="text-base px-8 py-4 h-auto">
-        <Link href="/dashboard">Go to your dashboard →</Link>
-      </Button>
-      <p className="text-zinc-600 text-xs">
-        Your 7-day free trial has started · You&apos;ll be charged $9 after 7 days
-      </p>
-    </main>
-  )
+    <FunnelShell>
+      <Container size="sm">
+        <div className="flex flex-col items-center gap-8 rounded-[2rem] border border-slate-200 bg-white px-6 py-12 text-center shadow-xl shadow-slate-200/70">
+          <div className="space-y-3">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              {profile?.name ? `You're in, ${profile.name}.` : "You're in."}
+            </h1>
+            <p className="text-slate-500">Your full plan is ready.</p>
+          </div>
+          <Button asChild size="lg" className="h-auto px-8 py-4 text-base">
+            <Link href="/dashboard">Go to your dashboard</Link>
+          </Button>
+          <p className="text-xs text-slate-500">
+            Your 7-day free trial has started. You will be charged $9 after 7 days.
+          </p>
+        </div>
+      </Container>
+    </FunnelShell>
+  );
 }

@@ -16,7 +16,6 @@ import {
   type LabRecordResponse,
   type ProfileResponse,
 } from '@/lib/api-client';
-import { getGroqKey, getMistralKey } from '@/lib/ai-keys';
 import type { ParsedLabEntry } from '@/app/api/parse-lab/route';
 
 // ---------------------------------------------------------------------------
@@ -461,13 +460,6 @@ export default function LabTestPage() {
 
   async function handleParse() {
     if (!file) return;
-    const groqKey = getGroqKey();
-    const mistralKey = getMistralKey();
-    if (!groqKey && !mistralKey) {
-      setParseError('No AI keys configured. Add your Groq or Mistral key in Settings.');
-      return;
-    }
-
     setIsParsing(true);
     setParseError('');
     setParsedRecords(null);
@@ -478,11 +470,7 @@ export default function LabTestPage() {
       form.append('file', file);
       if (serviceDate) form.append('service_date', serviceDate);
 
-      const headers: Record<string, string> = {};
-      if (groqKey) headers['x-groq-key'] = groqKey;
-      if (mistralKey) headers['x-mistral-key'] = mistralKey;
-
-      const res = await fetch('/api/parse-lab', { method: 'POST', headers, body: form });
+      const res = await fetch('/api/parse-lab', { method: 'POST', body: form });
 
       const contentType = res.headers.get('content-type') ?? '';
       if (!contentType.includes('application/json')) {

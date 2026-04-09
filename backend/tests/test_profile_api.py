@@ -1,11 +1,12 @@
 import unittest
 
-from backend.tests.support import ApiTestCase
+from tests.support import ApiTestCase
 
 
 class ProfileApiTest(ApiTestCase):
     def test_profile_crud_flow(self) -> None:
         user = self.create_user()
+        self.give_user_pro_subscription(user)
         headers = self.auth_headers_for_user(user)
 
         create_response = self.client.post(

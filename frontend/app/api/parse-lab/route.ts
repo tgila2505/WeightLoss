@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAiKeysFromBackend } from '@/lib/ai-keys-server';
 import { PDFParse } from 'pdf-parse';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -195,14 +196,13 @@ async function callMistralText(text: string, apiKey: string): Promise<AIParseRes
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const start = Date.now();
-  const groqKey = request.headers.get('x-groq-key');
-  const mistralKey = request.headers.get('x-mistral-key');
+  const { groq: groqKey, mistral: mistralKey } = await getAiKeysFromBackend();
 
   if (!groqKey && !mistralKey) {
-    console.warn('[parse-lab] Rejected — no AI keys provided');
+    console.warn('[parse-lab] Rejected — no AI keys configured in environment');
     return NextResponse.json(
-      { error: 'No AI API key provided. Add your Groq or Mistral key in Settings.' },
-      { status: 422 },
+      { error: 'AI service is not configured. Please contact support.' },
+      { status: 503 },
     );
   }
 

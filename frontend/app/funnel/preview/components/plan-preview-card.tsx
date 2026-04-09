@@ -1,43 +1,50 @@
-import type { FunnelPreview } from '@/lib/funnel-session'
+import type { FunnelPreview } from '@/lib/funnel-session';
 
 export function PlanPreviewCard({ preview }: { preview: FunnelPreview }) {
   const macros = [
     { label: 'Protein', grams: preview.protein_g, pct: 30, color: 'bg-blue-500' },
     { label: 'Carbs', grams: preview.carbs_g, pct: 40, color: 'bg-amber-500' },
-    { label: 'Fat', grams: preview.fat_g, pct: 30, color: 'bg-rose-500' },
-  ]
+    { label: 'Fat', grams: preview.fat_g, pct: 30, color: 'bg-rose-500' }
+  ];
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6">
+    <div className="space-y-6 rounded-3xl border border-slate-200 bg-slate-50 p-6">
       <div className="text-center">
-        <p className="text-zinc-400 text-sm mb-1">Daily calorie target</p>
-        <p className="text-5xl font-bold text-white">{preview.calories.toLocaleString()}</p>
-        <p className="text-zinc-500 text-xs mt-1">kcal/day · {preview.deficit_rate} kcal deficit</p>
+        <p className="mb-1 text-sm text-slate-500">Daily calorie target</p>
+        <p className="text-5xl font-bold text-slate-900">{preview.calories.toLocaleString()}</p>
+        <p className="mt-1 text-xs text-slate-500">
+          kcal/day. {preview.deficit_rate} kcal deficit.
+        </p>
       </div>
 
       <div className="space-y-3">
-        <p className="text-zinc-400 text-xs font-medium uppercase tracking-wide">Macro split</p>
-        <div className="flex gap-1 h-2 rounded-full overflow-hidden">
-          {macros.map((m) => (
-            <div key={m.label} className={`${m.color}`} style={{ width: `${m.pct}%` }} />
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Macro split
+        </p>
+        <div className="flex h-2 gap-1 overflow-hidden rounded-full">
+          {macros.map((macro) => (
+            <div key={macro.label} className={macro.color} style={{ width: `${macro.pct}%` }} />
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {macros.map((m) => (
-            <div key={m.label} className="text-center">
-              <p className="text-white font-semibold text-lg">{m.grams}g</p>
-              <p className="text-zinc-500 text-xs">{m.label}</p>
+        <div className="grid grid-cols-3 gap-3">
+          {macros.map((macro) => (
+            <div
+              key={macro.label}
+              className="rounded-2xl border border-slate-200 bg-white p-3 text-center"
+            >
+              <p className="text-lg font-semibold text-slate-900">{macro.grams}g</p>
+              <p className="text-xs text-slate-500">{macro.label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-zinc-800 rounded-xl p-4 text-center">
-        <p className="text-zinc-400 text-xs">Estimated weekly loss</p>
-        <p className="text-emerald-400 font-bold text-xl mt-1">
+      <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-center">
+        <p className="text-xs text-emerald-700">Estimated weekly loss</p>
+        <p className="mt-1 text-xl font-bold text-emerald-700">
           ~{preview.weekly_loss_kg_estimate} kg/week
         </p>
       </div>
     </div>
-  )
+  );
 }

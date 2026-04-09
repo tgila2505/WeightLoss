@@ -13,8 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.core.security import create_access_token, get_password_hash
 from app.db.base import Base
 from app.db.session import get_db_session
+from app.models.funnel import UserSubscription
 from app.dependencies.auth import get_current_user
 from app.main import create_app
+from app.models.funnel import UserSubscription
 from app.models.user import User
 
 # Import all models so their tables are registered in Base.metadata
@@ -30,10 +32,13 @@ import app.models.plan  # noqa: F401
 import app.models.profile  # noqa: F401
 import app.models.questionnaire  # noqa: F401
 import app.models.refresh_token  # noqa: F401
+import app.models.profile_state  # noqa: F401
+import app.models.referral  # noqa: F401
 import app.models.reminder  # noqa: F401
+import app.models.shared_plan  # noqa: F401
 
 
-def _sqlite_compatible_tables() -> list:
+def sqlite_compatible_tables() -> list:
     """Return tables from Base.metadata that can be created in SQLite.
 
     Tables with PostgreSQL-specific column types (e.g. JSONB) are excluded
@@ -64,7 +69,7 @@ class ApiTestCase(unittest.TestCase):
             autocommit=False,
             class_=Session,
         )
-        Base.metadata.create_all(self.engine, tables=_sqlite_compatible_tables())
+        Base.metadata.create_all(self.engine, tables=sqlite_compatible_tables())
 
         self.app = create_app()
 
@@ -81,7 +86,7 @@ class ApiTestCase(unittest.TestCase):
     def tearDown(self) -> None:
         self.client.close()
         self.app.dependency_overrides.clear()
-        Base.metadata.drop_all(self.engine, tables=_sqlite_compatible_tables())
+        Base.metadata.drop_all(self.engine, tables=sqlite_compatible_tables())
         self.engine.dispose()
 
     def create_user(
@@ -101,6 +106,18 @@ class ApiTestCase(unittest.TestCase):
             session.refresh(user)
             session.expunge(user)
             return user
+
+    def give_user_pro_subscription(self, user: User) -> None:
+        with self.session_factory() as session:
+            sub = UserSubscription(
+                user_id=user.id,
+                stripe_customer_id="cus_test",
+                stripe_subscription_id="sub_test",
+                tier="pro",
+                status="active",
+            )
+            session.add(sub)
+            session.commit()
 
     def auth_headers_for_user(self, user: User) -> dict[str, str]:
         token = create_access_token(str(user.id))

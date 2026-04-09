@@ -17,7 +17,10 @@ from app.schemas.auth import (
     RegisterResponse,
     TokenResponse,
 )
+from app.services.admin_service import admin_service
 from app.services.auth_service import AuthService
+from app.services.referral_service import assign_referral_to_user, get_referral_by_code
+from app.services.reward_service import apply_signup_reward
 
 router = APIRouter(prefix="/auth")
 
@@ -39,6 +42,17 @@ def register(
         email=payload.email,
         password=payload.password,
     )
+
+    referral_event_id: int | None = None
+    if payload.ref_code:
+        referral = get_referral_by_code(session, payload.ref_code)
+        if referral:
+            event = assign_referral_to_user(session, referral, user.id)
+            if event:
+                referral_event_id = event.id
+
+    apply_signup_reward(session, user.id, referral_event_id)
+
     return RegisterResponse(id=user.id, email=user.email)
 
 
@@ -74,6 +88,8 @@ def login(
         )
 
     guard.record_success(ip, payload.email)
+    # Auto-promote to admin if email matches the ADMIN_EMAIL config
+    admin_service.maybe_promote_admin(session, user)
     access_token = _auth_service.create_token_for_user(user)
     refresh_token = _auth_service.create_refresh_token_for_user(session, user)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
@@ -127,4 +143,5 @@ def read_current_user(
         id=current_user.id,
         email=current_user.email,
         full_name=current_user.full_name,
+        is_admin=current_user.is_admin,
     )

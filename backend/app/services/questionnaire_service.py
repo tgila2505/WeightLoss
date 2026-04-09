@@ -76,8 +76,6 @@ class QuestionnaireService:
         self,
         session: Session,
         user: User,
-        groq_key: str | None = None,
-        mistral_key: str | None = None,
     ) -> tuple[str, datetime]:
         questionnaire = self.get_all_answers(session, user)
         profile = session.scalar(select(Profile).where(Profile.user_id == user.id))
@@ -147,8 +145,6 @@ class QuestionnaireService:
                     "questionnaire": questionnaire,
                     "lab_records": lab_records,
                     "health_metrics": health_metrics,
-                    "groq_api_key": groq_key,
-                    "mistral_api_key": mistral_key,
                 },
                 timeout=120.0,
             )

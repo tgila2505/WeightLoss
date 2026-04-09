@@ -1,82 +1,90 @@
-'use client'
+'use client';
 
-import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { trackFunnelEvent } from '@/lib/analytics'
-import { convertFunnelSession } from '@/lib/funnel-session'
-import { getStripe } from '@/lib/stripe-client'
-import { setAccessToken } from '@/lib/auth'
+import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { setAccessToken } from '@/lib/auth';
+import { trackFunnelEvent } from '@/lib/analytics';
+import { convertFunnelSession } from '@/lib/funnel-session';
+import { getStripe } from '@/lib/stripe-client';
+
+const fieldClassName =
+  'border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-blue-500';
 
 function CheckoutForm() {
-  const stripe = useStripe()
-  const elements = useElements()
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!stripe || !elements) return
+    e.preventDefault();
+    if (!stripe || !elements) return;
 
-    setLoading(true)
-    setError('')
-    trackFunnelEvent('checkout_started')
+    setLoading(true);
+    setError('');
+    trackFunnelEvent('checkout_started');
 
-    const cardElement = elements.getElement(CardElement)
+    const cardElement = elements.getElement(CardElement);
     if (!cardElement) {
-      setError('Card input not ready')
-      setLoading(false)
-      return
+      setError('Card input not ready');
+      setLoading(false);
+      return;
     }
 
     const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
       card: cardElement,
-      billing_details: { email },
-    })
+      billing_details: { email }
+    });
 
     if (stripeError || !paymentMethod) {
-      setError(stripeError?.message ?? 'Card error')
-      setLoading(false)
-      return
+      setError(stripeError?.message ?? 'Card error');
+      setLoading(false);
+      return;
     }
 
     try {
       const accessToken = await convertFunnelSession({
         email,
         password,
-        paymentMethodId: paymentMethod.id,
-      })
-      setAccessToken(accessToken)
-      router.replace('/funnel/welcome')
+        paymentMethodId: paymentMethod.id
+      });
+      setAccessToken(accessToken);
+      router.replace('/funnel/welcome');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Checkout failed')
-      setLoading(false)
+      setError(err instanceof Error ? err.message : 'Checkout failed');
+      setLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-zinc-300">Email</Label>
+        <Label htmlFor="email" className="text-slate-700">
+          Email
+        </Label>
         <Input
           id="email"
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="bg-zinc-900 border-zinc-700 text-white"
+          className={fieldClassName}
           placeholder="you@example.com"
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-zinc-300">Password</Label>
+        <Label htmlFor="password" className="text-slate-700">
+          Password
+        </Label>
         <Input
           id="password"
           type="password"
@@ -84,37 +92,37 @@ function CheckoutForm() {
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="bg-zinc-900 border-zinc-700 text-white"
+          className={fieldClassName}
           placeholder="At least 8 characters"
         />
       </div>
       <div className="space-y-2">
-        <Label className="text-zinc-300">Card details</Label>
-        <div className="bg-zinc-900 border border-zinc-700 rounded-md px-3 py-3">
+        <Label className="text-slate-700">Card details</Label>
+        <div className="rounded-md border border-slate-200 bg-white px-3 py-3">
           <CardElement
             options={{
               style: {
                 base: {
-                  color: '#ffffff',
+                  color: '#0f172a',
                   fontFamily: 'inherit',
                   fontSize: '15px',
-                  '::placeholder': { color: '#71717a' },
+                  '::placeholder': { color: '#94a3b8' }
                 },
-                invalid: { color: '#f87171' },
-              },
+                invalid: { color: '#dc2626' }
+              }
             }}
           />
         </div>
       </div>
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-      <Button type="submit" className="w-full text-base py-4 h-auto" disabled={loading || !stripe}>
-        {loading ? 'Processing…' : 'Start free week → $9/mo after'}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <Button type="submit" className="h-auto w-full py-4 text-base" disabled={loading || !stripe}>
+        {loading ? 'Processing...' : 'Start free week - $9/month after'}
       </Button>
-      <p className="text-center text-zinc-600 text-xs">
-        Card charged after 7-day trial · Cancel anytime
+      <p className="text-center text-xs text-slate-500">
+        Card charged after the 7-day trial. Cancel anytime.
       </p>
     </form>
-  )
+  );
 }
 
 export function UpgradeForm() {
@@ -122,5 +130,5 @@ export function UpgradeForm() {
     <Elements stripe={getStripe()}>
       <CheckoutForm />
     </Elements>
-  )
+  );
 }

@@ -76,7 +76,7 @@ class FunnelConvertApiTest(ApiTestCase):
 
     def test_convert_creates_user_and_returns_token(self) -> None:
         mock_svc = MagicMock()
-        mock_svc.create_subscription.return_value = ("cus_abc", "sub_xyz")
+        mock_svc.create_subscription.return_value = ("cus_abc", "sub_xyz", "price_pro_monthly")
         self.app.dependency_overrides[_get_stripe_service] = lambda: mock_svc
 
         self._create_session()
@@ -95,7 +95,7 @@ class FunnelConvertApiTest(ApiTestCase):
 
     def test_convert_duplicate_email_returns_400(self) -> None:
         mock_svc = MagicMock()
-        mock_svc.create_subscription.return_value = ("cus_abc", "sub_xyz")
+        mock_svc.create_subscription.return_value = ("cus_abc", "sub_xyz", "price_pro_monthly")
         self.app.dependency_overrides[_get_stripe_service] = lambda: mock_svc
 
         self.create_user(email="dup@example.com")

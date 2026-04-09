@@ -1,8 +1,18 @@
 from __future__ import annotations
 
+import os
 from dataclasses import asdict
+from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
+_GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
+_MISTRAL_API_KEY: str = os.environ.get("MISTRAL_API_KEY", "")
+
+# NOTE: these are module-level vars intentionally — _reload_env_keys() mutates them.
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -66,8 +76,6 @@ class OrchestrationContextPayload(BaseModel):
     consistency_level: str | None = None
     adaptive_adjustment: dict[str, str] | None = None
     metadata: dict[str, object] = Field(default_factory=dict)
-    groq_api_key: str | None = None
-    mistral_api_key: str | None = None
 
 
 class OrchestratorRequestPayload(BaseModel):
@@ -93,9 +101,20 @@ _rule_based_orchestrator = Orchestrator(
 )
 
 
-def _build_orchestrator(groq_key: str | None, mistral_key: str | None) -> Orchestrator:
-    if groq_key and mistral_key:
-        provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+def _reload_env_keys() -> None:
+    """Re-read GROQ_API_KEY / MISTRAL_API_KEY from the .env file on disk.
+    Called by POST /internal/reload-config so the admin console can hot-update keys."""
+    global _GROQ_API_KEY, _MISTRAL_API_KEY  # noqa: PLW0603
+    env_path = Path(__file__).resolve().parents[2] / ".env"
+    load_dotenv(env_path, override=True)
+    _GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+    _MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
+
+
+def _get_orchestrator() -> Orchestrator:
+    """Return an AI-powered orchestrator using centralized env keys, or fall back to rule-based."""
+    if _GROQ_API_KEY and _MISTRAL_API_KEY:
+        provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
         return Orchestrator(
             {
                 "meal": MealPlanAgent(provider=provider),
@@ -111,20 +130,14 @@ def _build_orchestrator(groq_key: str | None, mistral_key: str | None) -> Orches
 def run_orchestrator(payload: OrchestratorRequestPayload) -> dict[str, object]:
     context = payload.context
 
-    groq_key_preview = (context.groq_api_key or "")[:8] or "MISSING"
-    mistral_key_preview = (context.mistral_api_key or "")[:8] or "MISSING"
-    print(f"[DEBUG] groq_api_key={groq_key_preview}... mistral_api_key={mistral_key_preview}... prompt={context.prompt!r}", flush=True)
-
     try:
-        orchestrator = _build_orchestrator(context.groq_api_key, context.mistral_api_key)
+        orchestrator = _get_orchestrator()
         request = OrchestrationRequest(
             context=OrchestrationContext(
                 prompt=context.prompt,
                 intent=context.intent,
                 user_profile=(
-                    UserProfileContext(**context.user_profile.model_dump(
-                        exclude={"groq_api_key", "mistral_api_key"}
-                    ))
+                    UserProfileContext(**context.user_profile.model_dump())
                     if context.user_profile is not None
                     else None
                 ),
@@ -178,8 +191,6 @@ class MasterProfileRequest(BaseModel):
     questionnaire: dict[str, dict[str, object]] = Field(default_factory=dict)
     lab_records: list[LabRecordEntry] = Field(default_factory=list)
     health_metrics: list[HealthMetricEntry] = Field(default_factory=list)
-    groq_api_key: str | None = None
-    mistral_api_key: str | None = None
 
 
 def _build_data_context(
@@ -435,6 +446,193 @@ def _build_structured_sections(
     return sections
 
 
+class HabitLogEntry(BaseModel):
+    log_date: str
+    mood: int | None = None
+    adherence: str | None = None
+    weight_kg: float | None = None
+
+
+class DailyFeedbackRequest(BaseModel):
+    user_id: int
+    habit_log_id: str
+    recent_logs: list[HabitLogEntry] = Field(default_factory=list)
+    streak_length: int = 0
+
+
+@app.post("/internal/feedback/daily")
+def generate_daily_feedback(payload: DailyFeedbackRequest) -> dict[str, object]:
+    """Generate personalized AI feedback after a daily check-in."""
+    import json
+    from datetime import datetime, timezone
+
+    logs = payload.recent_logs
+    streak = payload.streak_length
+
+    # Build adherence summary
+    adherence_counts: dict[str, int] = {"on_track": 0, "partial": 0, "off_track": 0}
+    weights: list[float] = []
+    moods: list[int] = []
+
+    for log in logs:
+        if log.adherence in adherence_counts:
+            adherence_counts[log.adherence] += 1
+        if log.weight_kg is not None:
+            weights.append(log.weight_kg)
+        if log.mood is not None:
+            moods.append(log.mood)
+
+    total_logs = len(logs)
+    on_track_pct = round((adherence_counts["on_track"] / total_logs * 100) if total_logs else 0)
+    avg_mood = round(sum(moods) / len(moods), 1) if moods else None
+
+    weight_trend = None
+    if len(weights) >= 2:
+        delta = round(weights[0] - weights[-1], 2)
+        weight_trend = f"{abs(delta)} kg {'lost' if delta > 0 else 'gained'} over last {len(weights)} entries"
+
+    # Try AI generation; fall back to rule-based
+    ai_insight: str | None = None
+    if _GROQ_API_KEY or _MISTRAL_API_KEY:
+        try:
+            provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
+            prompt = f"""You are a personal weight-loss coach. Generate a brief, specific, encouraging daily check-in response.
+
+Data for the past {total_logs} days:
+- Adherence: {on_track_pct}% on track
+- Current streak: {streak} days
+- Average mood: {avg_mood}/5
+- Weight trend: {weight_trend or 'no weight data'}
+
+Respond with a JSON object with these keys (keep each value to 1-2 sentences max):
+- insight: a specific observation about their recent pattern
+- encouragement: motivational note tied to their actual data
+- meal_focus: one concrete nutrition focus for today (or null if no weight data)
+- adjustment: suggested behavior change if struggling, else null
+
+Return ONLY the JSON object, no other text."""
+
+            raw = provider.generate(prompt, max_tokens=300)
+            # Try to parse JSON from response
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start >= 0 and end > start:
+                ai_insight = raw[start:end]
+                parsed = json.loads(ai_insight)
+                parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
+                parsed["model"] = "groq/llama"
+                return parsed
+        except Exception:
+            pass
+
+    # Rule-based fallback
+    if on_track_pct >= 80:
+        insight = f"Your adherence rate over the past {total_logs} days is {on_track_pct}% — excellent consistency."
+    elif on_track_pct >= 50:
+        insight = f"You've been on track {on_track_pct}% of the time recently. Solid progress — aim for one more consistent day."
+    else:
+        insight = f"Your adherence has been {on_track_pct}% recently. Every small step counts — focus on just today."
+
+    if streak >= 14:
+        encouragement = f"A {streak}-day streak is real momentum. Keep protecting it."
+    elif streak >= 7:
+        encouragement = f"{streak} days in a row — you're building a habit now."
+    elif streak >= 3:
+        encouragement = f"{streak}-day streak started. Three days in a row is how habits form."
+    else:
+        encouragement = "Today's check-in is the most important one. Keep showing up."
+
+    meal_focus = None
+    if weight_trend:
+        meal_focus = f"Weight trend: {weight_trend}. Focus on protein at your first meal to sustain the momentum."
+
+    return {
+        "insight": insight,
+        "encouragement": encouragement,
+        "meal_focus": meal_focus,
+        "adjustment": None,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "model": "rule_based",
+    }
+
+
+class MealSuggestionRequest(BaseModel):
+    user_id: int
+    meal_period: str = "morning"  # morning | afternoon | evening
+    macro_targets: dict[str, float] = Field(default_factory=dict)
+    recent_adherence: str | None = None
+
+
+@app.post("/internal/meal-suggestion")
+def generate_meal_suggestion(payload: MealSuggestionRequest) -> dict[str, object]:
+    """Generate a meal suggestion for the current time of day."""
+    import json
+    from datetime import datetime, timezone
+
+    period_map = {
+        "morning": "breakfast",
+        "afternoon": "lunch",
+        "evening": "dinner",
+    }
+    meal_type = period_map.get(payload.meal_period, "meal")
+
+    if _GROQ_API_KEY or _MISTRAL_API_KEY:
+        try:
+            provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
+
+            targets = payload.macro_targets
+            target_str = ", ".join(f"{k}: {v}g" for k, v in targets.items()) if targets else "balanced macros"
+
+            prompt = f"""Suggest a specific {meal_type} for someone on a weight-loss programme.
+
+Macro targets: {target_str}
+Recent adherence: {payload.recent_adherence or 'not specified'}
+
+Respond with a JSON object:
+- meal_name: name of the meal
+- foods: array of 3-4 specific foods/ingredients
+- macros: object with protein_g, carbs_g, fat_g, calories
+- prep_note: one sentence preparation tip (or null)
+
+Return ONLY the JSON object."""
+
+            raw = provider.generate(prompt, max_tokens=200)
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start >= 0 and end > start:
+                parsed = json.loads(raw[start:end])
+                parsed["generated_at"] = datetime.now(timezone.utc).isoformat()
+                return parsed
+        except Exception:
+            pass
+
+    # Rule-based fallback
+    defaults = {
+        "morning": {
+            "meal_name": "High-Protein Breakfast Bowl",
+            "foods": ["3 eggs", "Greek yogurt (150g)", "Mixed berries", "Oats (40g)"],
+            "macros": {"protein_g": 35, "carbs_g": 45, "fat_g": 12, "calories": 430},
+            "prep_note": "Scramble the eggs while oats soak — total prep under 10 minutes.",
+        },
+        "afternoon": {
+            "meal_name": "Lean Protein Lunch",
+            "foods": ["Grilled chicken (150g)", "Brown rice (100g cooked)", "Steamed broccoli", "Olive oil drizzle"],
+            "macros": {"protein_g": 40, "carbs_g": 38, "fat_g": 8, "calories": 390},
+            "prep_note": "Batch-cook chicken on Sunday for quick weekday assembly.",
+        },
+        "evening": {
+            "meal_name": "Light Salmon Dinner",
+            "foods": ["Salmon fillet (130g)", "Roasted sweet potato (100g)", "Spinach salad", "Lemon-herb dressing"],
+            "macros": {"protein_g": 30, "carbs_g": 28, "fat_g": 14, "calories": 360},
+            "prep_note": "Season salmon simply — the goal is protein, not complexity.",
+        },
+    }
+    result = defaults.get(payload.meal_period, defaults["afternoon"]).copy()
+    from datetime import datetime, timezone
+    result["generated_at"] = datetime.now(timezone.utc).isoformat()
+    return result
+
+
 @app.post("/orchestrator/master-profile")
 def generate_master_profile(payload: MasterProfileRequest) -> dict[str, object]:
     demographics = payload.demographics
@@ -449,11 +647,9 @@ def generate_master_profile(payload: MasterProfileRequest) -> dict[str, object]:
 
     # If API keys are available, use the LLM to generate an AI assessment
     ai_assessment: str | None = None
-    if payload.groq_api_key or payload.mistral_api_key:
+    if _GROQ_API_KEY or _MISTRAL_API_KEY:
         try:
-            groq_key = payload.groq_api_key or ""
-            mistral_key = payload.mistral_api_key or ""
-            provider = FallbackProvider(groq_key=groq_key, mistral_key=mistral_key)
+            provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
 
             data_context = _build_data_context(
                 demographics, questionnaire, lab_records, health_metrics
@@ -501,3 +697,13 @@ Rules:
 
     profile_text = "\n\n".join(all_sections)
     return {"profile_text": profile_text}
+
+
+# ── Admin: hot-reload env keys ────────────────────────────────────────────────
+
+@app.post("/internal/reload-config", include_in_schema=False)
+def reload_config() -> dict[str, str]:
+    """Re-read GROQ_API_KEY / MISTRAL_API_KEY from the .env file.
+    Called by the backend admin service after the admin updates keys — no restart required."""
+    _reload_env_keys()
+    return {"status": "ok", "groq_set": str(bool(_GROQ_API_KEY)), "mistral_set": str(bool(_MISTRAL_API_KEY))}

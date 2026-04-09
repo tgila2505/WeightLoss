@@ -1,17 +1,17 @@
 interface TestimonialCardProps {
-  name: string
-  result: string
-  quote: string
+  name: string;
+  result: string;
+  quote: string;
 }
 
 export function TestimonialCard({ name, result, quote }: TestimonialCardProps) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-3">
-      <span className="text-xs font-semibold text-emerald-400 bg-emerald-400/10 rounded-full px-3 py-1 self-start">
+    <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <span className="self-start rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
         {result}
       </span>
-      <p className="text-zinc-300 text-sm leading-relaxed">&ldquo;{quote}&rdquo;</p>
-      <p className="text-zinc-500 text-xs font-medium">— {name}</p>
+      <p className="text-sm leading-relaxed text-slate-600">&ldquo;{quote}&rdquo;</p>
+      <p className="text-xs font-medium text-slate-500">- {name}</p>
     </div>
-  )
+  );
 }
