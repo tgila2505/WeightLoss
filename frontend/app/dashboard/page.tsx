@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState<HealthMetricResponse[]>([]);
   const [labs, setLabs] = useState<LabRecordResponse[]>([]);
   const [plan, setPlan] = useState<PlanSnapshot | null>(null);
+  const [planGated, setPlanGated] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -32,22 +33,25 @@ export default function DashboardPage() {
           fetchHealthMetrics(),
           fetchLabs()
         ]);
-        const nextPlan = await fetchTodayPlan();
 
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         setProfile(nextProfile);
         setMetrics(nextMetrics);
         setLabs(nextLabs);
-        setPlan(nextPlan ?? getLatestPlan());
       } catch (loadError) {
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard.');
+        return;
+      }
+
+      // Fetch plan separately — a 402 (feature gate) should not block the whole dashboard
+      try {
+        const nextPlan = await fetchTodayPlan();
+        if (!isMounted) return;
+        setPlan(nextPlan ?? getLatestPlan());
+      } catch {
+        if (!isMounted) return;
+        setPlanGated(true);
       }
     }
 
@@ -61,7 +65,7 @@ export default function DashboardPage() {
     return <ErrorState message={error} />;
   }
 
-  return <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} />;
+  return <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} planGated={planGated} />;
 }
 
 function ErrorState({ message }: Readonly<{ message: string }>) {

@@ -31,7 +31,9 @@ export default function SettingsPage() {
   useEffect(() => {
     setGroqKey(getGroqKey() ?? '');
     setMistralKey(getMistralKey() ?? '');
-    fetchProfile().then((p) => { if (p?.gender) setGender(p.gender); });
+    fetchProfile()
+      .then((p) => { if (p?.gender) setGender(p.gender); })
+      .catch(() => { /* no profile yet — select stays blank, user can set it */ });
   }, []);
 
   async function handleGenderChange(value: string) {
