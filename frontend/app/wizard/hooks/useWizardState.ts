@@ -1,9 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { fetchWizardState, saveWizardState } from '@/lib/api-client'
 import type { WizardState, WizardStepId, WizardStepState } from '../types/wizard'
-
-const STORAGE_KEY = 'wizard_progress'
 
 const STEP_IDS: WizardStepId[] = [
   'personal-info',
@@ -28,24 +27,29 @@ export function useWizardState() {
   const [state, setState] = useState<WizardState>(createInitialState)
   const [hydrated, setHydrated] = useState(false)
 
-  // Rehydrate from localStorage on mount
+  // Load from server on mount
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      try {
-        setState(JSON.parse(raw) as WizardState)
-      } catch {
-        // Corrupt storage — start fresh
-        localStorage.removeItem(STORAGE_KEY)
+    let isMounted = true
+    fetchWizardState().then((raw) => {
+      if (!isMounted) return
+      if (raw && Object.keys(raw).length > 0) {
+        try {
+          setState(raw as unknown as WizardState)
+        } catch {
+          // corrupt — start fresh
+        }
       }
-    }
-    setHydrated(true)
+      setHydrated(true)
+    }).catch(() => {
+      if (isMounted) setHydrated(true)
+    })
+    return () => { isMounted = false }
   }, [])
 
-  // Persist on every state change (after hydration)
+  // Save to server on every state change (after hydration)
   useEffect(() => {
     if (hydrated) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      saveWizardState(state as unknown as Record<string, unknown>)
     }
   }, [state, hydrated])
 
@@ -78,8 +82,9 @@ export function useWizardState() {
   }, [])
 
   const clearProgress = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY)
-    setState(createInitialState())
+    const fresh = createInitialState()
+    setState(fresh)
+    saveWizardState(fresh as unknown as Record<string, unknown>)
   }, [])
 
   return { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress }

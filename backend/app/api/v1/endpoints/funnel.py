@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.core.security import create_access_token, get_password_hash
 from app.db.session import get_db_session
 from app.models.funnel import AnonymousSession, UserSubscription
+from app.models.profile import Profile
 from app.models.user import User
 from app.schemas.funnel import (
     ConvertRequest,
@@ -34,7 +35,10 @@ def _get_stripe_service() -> StripeService:
     settings = get_settings()
     return StripeService(
         secret_key=settings.stripe_secret_key,
-        pro_price_id=settings.stripe_pro_price_id,
+        pro_monthly_price_id=settings.stripe_pro_monthly_price_id,
+        pro_annual_price_id=settings.stripe_pro_annual_price_id,
+        pro_plus_monthly_price_id=settings.stripe_pro_plus_monthly_price_id,
+        pro_plus_annual_price_id=settings.stripe_pro_plus_annual_price_id,
     )
 
 
@@ -111,9 +115,13 @@ def convert(
 ) -> ConvertResponse:
     # Resolve funnel session (optional — conversion can happen without it)
     session_token: uuid.UUID | None = None
+    anon_session: AnonymousSession | None = None
     if funnel_session is not None:
         try:
             session_token = uuid.UUID(funnel_session)
+            anon_session = session.scalar(
+                select(AnonymousSession).where(AnonymousSession.session_token == session_token)
+            )
         except ValueError:
             session_token = None
 
@@ -127,9 +135,12 @@ def convert(
 
     # Create Stripe subscription
     try:
-        customer_id, subscription_id = stripe_svc.create_subscription(
+        customer_id, subscription_id, price_id = stripe_svc.create_subscription(
             email=payload.email,
             payment_method_id=payload.payment_method_id,
+            tier=payload.tier,
+            interval=payload.interval,
+            trial_period_days=7,
         )
     except Exception as exc:
         raise HTTPException(
@@ -152,12 +163,32 @@ def convert(
         user_id=user.id,
         stripe_customer_id=customer_id,
         stripe_subscription_id=subscription_id,
-        tier="pro",
+        tier=payload.tier,
+        interval=payload.interval,
+        stripe_price_id=price_id,
         status="trialing",
         trial_started_at=now,
         trial_expires_at=now + timedelta(days=7),
     )
     session.add(sub)
+
+    # Create profile from funnel session data
+    if anon_session is not None:
+        pd = anon_session.profile_data or {}
+        profile = Profile(
+            user_id=user.id,
+            name=pd.get("name", ""),
+            age=int(pd.get("age", 0)),
+            gender=pd.get("gender") or None,
+            height_cm=float(pd["height_cm"]) if pd.get("height_cm") else None,
+            weight_kg=float(pd["weight_kg"]) if pd.get("weight_kg") else None,
+            goal_target_weight_kg=float(pd["goal_weight_kg"]) if pd.get("goal_weight_kg") else None,
+            goal_timeline_weeks=int(pd["timeline_weeks"]) if pd.get("timeline_weeks") else None,
+            health_conditions=pd.get("health_conditions") or None,
+            activity_level=pd.get("activity_level") or None,
+            diet_pattern=pd.get("diet_pattern") or None,
+        )
+        session.add(profile)
 
     # Track conversion event (fire-and-forget)
     _funnel_service.track_event(

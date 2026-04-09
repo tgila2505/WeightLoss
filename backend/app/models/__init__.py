@@ -3,6 +3,7 @@
 from app.db.base import Base
 from app.models.adherence import AdherenceRecord
 from app.models.analytics import AnalyticsEvent
+from app.models.billing import BillingEvent, CoachingSession, PricingPlan, UsageTracking, WeeklyReport
 from app.models.behavior_tracking import BehaviorTracking
 from app.models.experiment import ExperimentAssignment
 from app.models.funnel import AnonymousSession, ConversionEvent, UserSubscription
@@ -11,26 +12,48 @@ from app.models.lab import LabRecord
 from app.models.plan import Plan
 from app.models.profile import Profile
 from app.models.questionnaire import MasterUserProfile, QuestionnaireResponse
+from app.models.referral import Referral, ReferralEvent, RewardLog
 from app.models.refresh_token import RefreshToken
+from app.models.profile_state import UserMindMapState, UserWizardState
 from app.models.reminder import Reminder
+from app.models.habits import HabitLog, NotificationPreferences, ProgressEntry, StreakRecord
+from app.models.reports import AiReport, NotificationEvent
+from app.models.shared_plan import SharedPlan
 from app.models.user import User
 
 __all__ = [
     "Base",
     "AdherenceRecord",
+    "AiReport",
     "AnalyticsEvent",
     "AnonymousSession",
     "BehaviorTracking",
+    "BillingEvent",
+    "CoachingSession",
     "ConversionEvent",
     "ExperimentAssignment",
+    "HabitLog",
     "HealthMetrics",
     "LabRecord",
     "MasterUserProfile",
+    "NotificationEvent",
+    "NotificationPreferences",
     "Plan",
+    "PricingPlan",
     "Profile",
+    "ProgressEntry",
     "QuestionnaireResponse",
+    "Referral",
+    "ReferralEvent",
     "RefreshToken",
     "Reminder",
+    "RewardLog",
+    "SharedPlan",
+    "StreakRecord",
+    "UsageTracking",
     "User",
+    "UserMindMapState",
     "UserSubscription",
+    "UserWizardState",
+    "WeeklyReport",
 ]

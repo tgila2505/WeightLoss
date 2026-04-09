@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.db.base import Base
+from tests.support import sqlite_compatible_tables
 from app.models.user import User
 from app.services.auth_service import AuthService
 
@@ -27,11 +28,11 @@ class AuthServiceTest(unittest.TestCase):
             autocommit=False,
             class_=Session,
         )
-        Base.metadata.create_all(self.engine)
+        Base.metadata.create_all(self.engine, tables=sqlite_compatible_tables())
         self.service = AuthService()
 
     def tearDown(self) -> None:
-        Base.metadata.drop_all(self.engine)
+        Base.metadata.drop_all(self.engine, tables=sqlite_compatible_tables())
         self.engine.dispose()
 
     def test_create_user_persists_hashed_password(self) -> None:

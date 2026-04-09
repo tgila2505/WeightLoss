@@ -12,6 +12,8 @@ import { Separator } from '@/components/ui/separator';
 
 import { PageShell } from '../components/page-shell';
 import { getGroqKey, getMistralKey, setAiKeys, clearAiKeys } from '../../lib/ai-keys';
+import { fetchGamificationStatus } from '../../lib/api-client';
+import { BadgeGallery } from '@/components/gamification/badge-gallery';
 
 export default function SettingsPage() {
   const [groqKey, setGroqKey] = useState('');
@@ -19,10 +21,12 @@ export default function SettingsPage() {
   const [showGroqKey, setShowGroqKey] = useState(false);
   const [showMistralKey, setShowMistralKey] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
 
   useEffect(() => {
     setGroqKey(getGroqKey() ?? '');
     setMistralKey(getMistralKey() ?? '');
+    fetchGamificationStatus().then(g => setEarnedBadges(g.badges)).catch(() => {});
   }, []);
 
   function handleSave() {
@@ -166,6 +170,9 @@ export default function SettingsPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Phase 13: Badge gallery */}
+        <BadgeGallery earnedBadges={earnedBadges} />
       </div>
     </PageShell>
   );

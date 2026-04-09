@@ -8,18 +8,33 @@ import {
   fetchHealthMetrics,
   fetchLabs,
   fetchProfile,
+  fetchTodayCheckIn,
+  fetchGamificationStatus,
+  fetchProgressSummary,
+  fetchWeeklyReport,
   getLatestPlan,
   type HealthMetricResponse,
   type LabRecordResponse,
   type PlanSnapshot,
-  type ProfileResponse
+  type ProfileResponse,
+  type CheckInTodayResponse,
+  type GamificationStatus,
+  type ProgressSummary,
+  type WeeklyReport,
 } from '@/lib/api-client';
+import { CheckInCard } from './components/checkin-card';
+import { GoalDeltaCard } from './components/goal-delta-card';
+import { ReportNotificationCard } from './components/report-notification-card';
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [metrics, setMetrics] = useState<HealthMetricResponse[]>([]);
   const [labs, setLabs] = useState<LabRecordResponse[]>([]);
   const [plan, setPlan] = useState<PlanSnapshot | null>(null);
+  const [todayCheckIn, setTodayCheckIn] = useState<CheckInTodayResponse | null>(null);
+  const [gamification, setGamification] = useState<GamificationStatus | null>(null);
+  const [progressSummary, setProgressSummary] = useState<ProgressSummary | null>(null);
+  const [weeklyReport, setWeeklyReport] = useState<WeeklyReport | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -27,26 +42,30 @@ export default function DashboardPage() {
 
     async function load() {
       try {
-        const [nextProfile, nextMetrics, nextLabs] = await Promise.all([
-          fetchProfile(),
-          fetchHealthMetrics(),
-          fetchLabs()
-        ]);
+        const [nextProfile, nextMetrics, nextLabs, nextCheckIn, nextGamification, nextProgress, nextReport] =
+          await Promise.all([
+            fetchProfile(),
+            fetchHealthMetrics(),
+            fetchLabs(),
+            fetchTodayCheckIn().catch(() => null),
+            fetchGamificationStatus().catch(() => null),
+            fetchProgressSummary().catch(() => null),
+            fetchWeeklyReport().catch(() => null),
+          ]);
         const nextPlan = await fetchTodayPlan();
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         setProfile(nextProfile);
         setMetrics(nextMetrics);
         setLabs(nextLabs);
         setPlan(nextPlan ?? getLatestPlan());
+        setTodayCheckIn(nextCheckIn);
+        setGamification(nextGamification);
+        setProgressSummary(nextProgress);
+        setWeeklyReport(nextReport);
       } catch (loadError) {
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard.');
       }
     }
@@ -61,7 +80,34 @@ export default function DashboardPage() {
     return <ErrorState message={error} />;
   }
 
-  return <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} />;
+  const currentStreak = gamification?.streak.current ?? 0;
+  const showCheckIn = todayCheckIn !== null && !todayCheckIn.submitted;
+
+  return (
+    <div className="space-y-4">
+      {/* Phase 13: Daily check-in (shown first if not yet submitted) */}
+      {showCheckIn && (
+        <CheckInCard
+          currentStreak={currentStreak}
+          onSubmitted={(newStreak) => {
+            setGamification(prev =>
+              prev ? { ...prev, streak: { ...prev.streak, current: newStreak } } : prev
+            );
+            setTodayCheckIn({ submitted: true });
+          }}
+        />
+      )}
+
+      {/* Phase 13: Weekly report notification */}
+      <ReportNotificationCard report={weeklyReport} />
+
+      {/* Phase 13: Goal progress */}
+      <GoalDeltaCard summary={progressSummary} />
+
+      {/* Existing dashboard */}
+      <DashboardView profile={profile} metrics={metrics} labs={labs} plan={plan} />
+    </div>
+  );
 }
 
 function ErrorState({ message }: Readonly<{ message: string }>) {

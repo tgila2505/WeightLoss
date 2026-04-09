@@ -10,7 +10,13 @@ from app.services.stripe_service import StripeService
 
 class StripeServiceTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.svc = StripeService(secret_key="sk_test_fake", pro_price_id="price_test")
+        self.svc = StripeService(
+            secret_key="sk_test_fake",
+            pro_monthly_price_id="price_pro_monthly",
+            pro_annual_price_id="price_pro_annual",
+            pro_plus_monthly_price_id="price_pro_plus_monthly",
+            pro_plus_annual_price_id="price_pro_plus_annual",
+        )
 
     @patch("app.services.stripe_service.stripe")
     def test_create_subscription(self, mock_stripe: MagicMock) -> None:
@@ -19,13 +25,16 @@ class StripeServiceTest(unittest.TestCase):
             id="sub_def456", status="trialing"
         )
 
-        customer_id, subscription_id = self.svc.create_subscription(
+        customer_id, subscription_id, price_id = self.svc.create_subscription(
             email="test@example.com",
             payment_method_id="pm_test123",
+            tier="pro",
+            interval="monthly",
         )
 
         self.assertEqual(customer_id, "cus_abc123")
         self.assertEqual(subscription_id, "sub_def456")
+        self.assertEqual(price_id, "price_pro_monthly")
         mock_stripe.Customer.create.assert_called_once_with(
             email="test@example.com",
             payment_method="pm_test123",
@@ -33,9 +42,10 @@ class StripeServiceTest(unittest.TestCase):
         )
         mock_stripe.Subscription.create.assert_called_once_with(
             customer="cus_abc123",
-            items=[{"price": "price_test"}],
+            items=[{"price": "price_pro_monthly"}],
             trial_period_days=7,
             payment_settings={"save_default_payment_method": "on_subscription"},
+            expand=["latest_invoice.payment_intent"],
         )
 
     @patch("app.services.stripe_service.stripe")

@@ -669,11 +669,16 @@ async function request<T>(url: string): Promise<T> {
     throw new Error('You must be logged in before viewing this data.');
   }
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  } catch {
+    throw new Error('Unable to reach the server. Please check your connection and try again.');
+  }
 
   if (!response.ok) {
     throw new Error(await readError(response));
@@ -850,4 +855,248 @@ export async function logBehaviorSignal(payload: BehaviorSignalPayload): Promise
     },
     body: JSON.stringify({ ...payload, properties: payload.properties ?? {} }),
   }).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13: Habits & Check-In
+// ---------------------------------------------------------------------------
+
+export type CheckInPayload = {
+  mood: number;
+  adherence: 'on_track' | 'partial' | 'off_track';
+  weight_kg?: number | null;
+  notes?: string | null;
+};
+
+export type StreakSummary = {
+  current: number;
+  longest: number;
+  milestone_earned: string | null;
+};
+
+export type AiFeedback = {
+  insight: string;
+  encouragement: string;
+  meal_focus: string | null;
+  adjustment: string | null;
+  generated_at: string;
+  model: string;
+};
+
+export type CheckInResponse = {
+  log_date: string;
+  streak: StreakSummary;
+  ai_feedback_status: 'generating' | 'ready';
+  ai_feedback: AiFeedback | null;
+};
+
+export type CheckInTodayResponse = {
+  submitted: boolean;
+  log_date?: string;
+  mood?: number;
+  adherence?: string;
+  weight_kg?: number | null;
+  ai_feedback?: AiFeedback | null;
+};
+
+export type MealSuggestion = {
+  meal_name: string;
+  foods: string[];
+  macros: Record<string, number>;
+  prep_note: string | null;
+  cached: boolean;
+  generated_at: string;
+};
+
+export async function submitCheckIn(payload: CheckInPayload): Promise<CheckInResponse> {
+  return requestWithBody<CheckInResponse>(`${apiBaseUrl}/api/v1/habits/checkin`, payload);
+}
+
+export async function fetchTodayCheckIn(): Promise<CheckInTodayResponse> {
+  return request<CheckInTodayResponse>(`${apiBaseUrl}/api/v1/habits/checkin/today`);
+}
+
+export async function fetchFeedbackStatus(): Promise<{ status: string; ai_feedback?: AiFeedback }> {
+  return request(`${apiBaseUrl}/api/v1/habits/feedback/status`);
+}
+
+export async function fetchMealSuggestion(): Promise<MealSuggestion> {
+  return requestWithBody<MealSuggestion>(`${apiBaseUrl}/api/v1/habits/meal-suggestion`, {});
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13: Progress
+// ---------------------------------------------------------------------------
+
+export type ProgressSummary = {
+  goal_weight_kg: number | null;
+  start_weight_kg: number | null;
+  current_weight_kg: number | null;
+  total_lost_kg: number | null;
+  goal_delta_kg: number | null;
+  goal_pct: number | null;
+  trend_slope_14d: number | null;
+  plateau_detected: boolean;
+  estimated_weeks_remaining: number | null;
+  chart_data: { date: string; weight_kg: number | null; rolling_avg: number | null }[];
+};
+
+export async function fetchProgressSummary(days = 30): Promise<ProgressSummary> {
+  return request<ProgressSummary>(`${apiBaseUrl}/api/v1/progress/summary?days=${days}`);
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13: Gamification
+// ---------------------------------------------------------------------------
+
+export type GamificationStatus = {
+  streak: {
+    current: number;
+    longest: number;
+    last_checkin_date: string | null;
+    freeze_available: boolean;
+    freeze_resets_at: string | null;
+  };
+  total_checkins: number;
+  badges: string[];
+  next_milestone: { type: string; days_remaining: number | null } | null;
+};
+
+export async function fetchGamificationStatus(): Promise<GamificationStatus> {
+  return request<GamificationStatus>(`${apiBaseUrl}/api/v1/gamification/status`);
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13: Notifications
+// ---------------------------------------------------------------------------
+
+export type NotificationPreferences = {
+  push_enabled: boolean;
+  email_enabled: boolean;
+  preferred_push_time: string;
+  user_timezone: string;
+  daily_reminder_enabled: boolean;
+  streak_alerts_enabled: boolean;
+  goal_nudges_enabled: boolean;
+  marketing_emails: boolean;
+};
+
+export type InboxNotification = {
+  id: string;
+  type: string;
+  channel: string;
+  title: string;
+  body: string | null;
+  payload: Record<string, unknown> | null;
+  status: string;
+  created_at: string;
+};
+
+export async function fetchNotificationInbox(): Promise<{ unread_count: number; notifications: InboxNotification[] }> {
+  return request(`${apiBaseUrl}/api/v1/notifications/inbox`);
+}
+
+export async function dismissNotification(id: string): Promise<void> {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
+  await fetch(`${apiBaseUrl}/api/v1/notifications/inbox/${id}/dismiss`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Phase 13: Reports
+// ---------------------------------------------------------------------------
+
+export type WeeklyReport = {
+  id: string;
+  report_type: string;
+  period_key: string;
+  content: Record<string, unknown>;
+  adjustments: Record<string, unknown> | null;
+  adjustment_accepted_at: string | null;
+  status: string;
+  generated_at: string | null;
+};
+
+export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
+  const res = await fetch(`${apiBaseUrl}/api/v1/reports/weekly`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status === 404 || res.status === 204) return null;
+  if (!res.ok) throw new Error(await readError(res));
+  const data = await res.json();
+  return data as WeeklyReport | null;
+}
+
+// ── Referrals ─────────────────────────────────────────────────────────────────
+
+export type ReferralCode = {
+  code: string;
+  is_active: boolean;
+};
+
+export type ReferralStats = {
+  code: string | null;
+  clicks: number;
+  signups: number;
+  conversions: number;
+  rewards_earned: number;
+  premium_until: string | null;
+};
+
+/** GET /referrals/me — auto-creates the code if the user doesn't have one yet. */
+export async function fetchReferralCode(): Promise<ReferralCode> {
+  return request<ReferralCode>(`${apiBaseUrl}/api/v1/referrals/me`);
+}
+
+export async function fetchReferralStats(): Promise<ReferralStats> {
+  return request<ReferralStats>(`${apiBaseUrl}/api/v1/referrals/me/stats`);
+}
+
+// ── Profile State ─────────────────────────────────────────────────────────────
+
+export async function fetchMindMapState(): Promise<Record<string, unknown> | null> {
+  const token = getAccessToken()
+  if (!token) return null
+  const res = await fetch(`${apiBaseUrl}/api/v1/mindmap/state`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return null
+  const data = await res.json() as { state: Record<string, unknown> }
+  return Object.keys(data.state).length === 0 ? null : data.state
+}
+
+export async function saveMindMapState(state: Record<string, unknown>): Promise<void> {
+  const token = getAccessToken()
+  if (!token) return
+  await fetch(`${apiBaseUrl}/api/v1/mindmap/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ state }),
+  })
+}
+
+export async function fetchWizardState(): Promise<Record<string, unknown> | null> {
+  const token = getAccessToken()
+  if (!token) return null
+  const res = await fetch(`${apiBaseUrl}/api/v1/wizard/state`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) return null
+  const data = await res.json() as { state: Record<string, unknown> }
+  return Object.keys(data.state).length === 0 ? null : data.state
+}
+
+export async function saveWizardState(state: Record<string, unknown>): Promise<void> {
+  const token = getAccessToken()
+  if (!token) return
+  await fetch(`${apiBaseUrl}/api/v1/wizard/state`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ state }),
+  })
 }
