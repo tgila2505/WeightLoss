@@ -26,14 +26,14 @@ export function AiInsightsCard({ report }: Props) {
         <CardTitle className="text-base">Weekly Insights — {report.period_key}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-slate-700">
-        {c.trend_narrative && <p>{String(c.trend_narrative)}</p>}
-        {c.top_insight && (
+        {!!c.trend_narrative && <p>{String(c.trend_narrative)}</p>}
+        {!!c.top_insight && (
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="font-medium text-blue-800 mb-1">Top Insight</p>
             <p>{String(c.top_insight)}</p>
           </div>
         )}
-        {c.next_week_focus && (
+        {!!c.next_week_focus && (
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="font-medium text-green-800 mb-1">Next Week Focus</p>
             <p>{String(c.next_week_focus)}</p>

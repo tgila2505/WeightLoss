@@ -91,7 +91,7 @@ export function WeightChart({ summary }: Props) {
             />
             <Tooltip
               contentStyle={{ fontSize: 12 }}
-              formatter={(value: number) => [`${value} kg`]}
+              formatter={(value) => [value != null ? `${value} kg` : '']}
               labelFormatter={l => `Date: ${l}`}
             />
             {summary.goal_weight_kg !== null && (

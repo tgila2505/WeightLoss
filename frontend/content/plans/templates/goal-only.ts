@@ -11,6 +11,8 @@ const GOAL_INTRO: Record<GoalType, string> = {
     'A 20 kg transformation requires patience and a structured approach. This plan phases your calorie targets across three stages — aggressive deficit, maintenance recalibration, and final push — to prevent metabolic adaptation and keep progress consistent.',
   'get-lean':
     'Getting lean means reducing body fat while preserving (or building) muscle. This plan combines a moderate calorie deficit with high protein intake and resistance training support to shift your body composition without the metabolic cost of aggressive restriction.',
+  'lose-5kg':
+    'Losing 5 kg is an achievable short-term goal that can be reached in 5–8 weeks with a consistent calorie deficit. This plan focuses on simple, repeatable food choices and a protein-forward approach to drop fat quickly without muscle loss.',
 };
 
 const GOAL_FOODS: Record<GoalType, string[]> = {
@@ -19,6 +21,7 @@ const GOAL_FOODS: Record<GoalType, string[]> = {
   'lose-10kg': ['Turkey mince', 'Cottage cheese', 'Brown rice', 'Asparagus', 'Tuna', 'Chickpeas', 'Banana'],
   'lose-20kg': ['Tofu', 'Quinoa', 'Kale', 'Lean beef', 'Black beans', 'Cauliflower', 'Berries'],
   'get-lean': ['Whey protein', 'Lean chicken', 'Broccoli', 'Brown rice', 'Eggs', 'Almonds', 'Cottage cheese'],
+  'lose-5kg': ['Chicken breast', 'Greek yoghurt', 'Oats', 'Eggs', 'Berries', 'Leafy greens', 'Sweet potato'],
 };
 
 const GOAL_MISTAKES: Record<GoalType, string[]> = {
@@ -46,6 +49,11 @@ const GOAL_MISTAKES: Record<GoalType, string[]> = {
     'Cutting calories too aggressively — muscle loss will stall the lean look.',
     'Neglecting resistance training while in a deficit.',
     'Confusing "light and flat" with lean — depleted glycogen stores look flat, not lean.',
+  ],
+  'lose-5kg': [
+    'Treating 5 kg as "easy" and underestimating the need for a consistent deficit.',
+    'Skipping tracking because the goal feels small — accuracy matters even for modest targets.',
+    'Losing mostly water weight in week one and expecting the same rate to continue.',
   ],
 };
 
@@ -79,6 +87,12 @@ const GOAL_FAQ: Record<GoalType, Array<{ q: string; a: string }>> = {
     { q: 'How do I get lean without losing muscle?', a: 'A moderate deficit (300–500 kcal/day), high protein (2.0–2.4 g/kg), and progressive resistance training are the three pillars. You cannot "get lean" without all three.' },
     { q: 'Is cardio necessary to get lean?', a: 'Cardio accelerates the deficit and improves cardiovascular health but is not strictly necessary. Structured resistance training alone can produce lean results if diet is controlled.' },
     { q: 'How long does it take to get lean?', a: 'Starting from 20–25% body fat, reaching 12–15% body fat takes 16–24 weeks. Expect 0.5–1.0% body fat loss per week as the sustainable target.' },
+  ],
+  'lose-5kg': [
+    { q: 'How long does it take to lose 5 kg?', a: 'At a safe rate of 0.5–1.0 kg/week, losing 5 kg takes 5–10 weeks. A deficit of 500 kcal/day is a sustainable and achievable target for most people.' },
+    { q: 'Is 5 kg noticeable?', a: 'Yes — 5 kg of fat loss is visually significant, especially around the waist, face, and upper body. Combined with higher protein and training, body composition improves noticeably.' },
+    { q: 'Can I lose 5 kg without exercise?', a: 'Diet accounts for the majority of fat loss. You can lose 5 kg through diet alone, but adding 2–3 sessions of moderate cardio or resistance training per week significantly improves results and preserves muscle.' },
+    { q: 'What if I regain the weight after losing 5 kg?', a: 'Regain is common when returning to old habits. Maintaining a slight deficit (100–200 kcal/day below TDEE) after reaching your goal, alongside a high-protein diet, is the most effective strategy to keep it off.' },
   ],
 };
 

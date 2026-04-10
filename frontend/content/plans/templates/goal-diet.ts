@@ -14,6 +14,7 @@ const DIET_INTRO: Record<DietType, string> = {
   'plant-based': 'A whole-food plant-based diet eliminates animal products and focuses on vegetables, legumes, whole grains, and nuts. When protein intake is managed carefully, it supports fat loss while improving cardiovascular and metabolic markers.',
   paleo: 'The paleo diet eliminates processed foods, grains, and dairy in favour of lean meats, fish, vegetables, nuts, and fruits. It naturally reduces calorie density while keeping protein high — making it effective for fat loss without counting calories.',
   'calorie-deficit': 'A structured calorie deficit without dietary restrictions is the most flexible approach to fat loss. You eat what you enjoy within your calorie and protein targets. Tracking is essential — this approach only works with accurate measurement.',
+  vegan: 'A vegan diet eliminates all animal products — meat, fish, dairy, and eggs — in favour of plant-based whole foods. When planned carefully around protein completeness, it supports fat loss while providing a high volume of fibre-rich, low-calorie-density foods.',
 };
 
 const COMBO_FOODS: Partial<Record<ComboKey, string[]>> = {
