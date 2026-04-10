@@ -15,7 +15,7 @@ const HEADLINES = {
 };
 
 const CTAS = {
-  A: 'Get your plan for free',
+  A: 'See my calorie target',
   B: 'Calculate my calories now'
 };
 
@@ -58,7 +58,7 @@ export function FunnelHero() {
                 </Link>
               </Button>
               <p className="text-sm text-slate-500">
-                No credit card required. Free forever for calorie tracking.
+                Free preview first. Upgrade only if you want the full plan.
               </p>
             </div>
           </div>

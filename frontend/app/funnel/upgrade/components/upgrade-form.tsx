@@ -116,10 +116,10 @@ function CheckoutForm() {
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button type="submit" className="h-auto w-full py-4 text-base" disabled={loading || !stripe}>
-        {loading ? 'Processing...' : 'Start free week - $9/month after'}
+        {loading ? 'Processing...' : 'Start 7-day trial - then $9/month'}
       </Button>
-      <p className="text-center text-xs text-slate-500">
-        Card charged after the 7-day trial. Cancel anytime.
+      <p className="text-center text-xs text-slate-600">
+        Your card is charged only after the 7-day trial unless you cancel first.
       </p>
     </form>
   );

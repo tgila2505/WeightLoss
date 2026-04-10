@@ -4,6 +4,30 @@ const TOKEN_KEY = 'access_token';
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
+type JwtPayload = {
+  sub?: string;
+  exp?: number;
+};
+
+function decodeBase64Url(value: string): string {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+  return atob(padded);
+}
+
+function readTokenPayload(token: string): JwtPayload | null {
+  try {
+    const [, payloadSegment] = token.split('.');
+    if (!payloadSegment) {
+      return null;
+    }
+
+    return JSON.parse(decodeBase64Url(payloadSegment)) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') {
     return null;
@@ -14,18 +38,12 @@ export function getAccessToken(): string | null {
 
 export function setAccessToken(token: string): void {
   window.localStorage.setItem(TOKEN_KEY, token)
-  // Clear any session data from a previous user
   window.sessionStorage.clear()
 
-  // Identify in PostHog — decode userId from JWT payload (middle segment)
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1])) as { sub?: string }
-    const userId = parseInt(payload.sub ?? '', 10)
-    if (!isNaN(userId)) {
-      identifyUser(userId)
-    }
-  } catch {
-    // Non-fatal — PostHog identification is best-effort
+  const payload = readTokenPayload(token)
+  const userId = parseInt(payload?.sub ?? '', 10)
+  if (!isNaN(userId)) {
+    identifyUser(userId)
   }
 }
 
@@ -36,7 +54,23 @@ export function clearAccessToken(): void {
 }
 
 export function isLoggedIn(): boolean {
-  return getAccessToken() !== null;
+  const token = getAccessToken();
+  if (!token) {
+    return false;
+  }
+
+  const payload = readTokenPayload(token);
+  if (!payload?.exp) {
+    clearAccessToken();
+    return false;
+  }
+
+  if (Date.now() >= payload.exp * 1000) {
+    clearAccessToken();
+    return false;
+  }
+
+  return true;
 }
 
 async function apiFetch(path: string, init: RequestInit): Promise<Response> {

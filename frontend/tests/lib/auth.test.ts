@@ -9,15 +9,26 @@ import {
   setAccessToken
 } from '@/lib/auth';
 
+function createToken(expiresAtSeconds: number): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({ sub: '123', exp: expiresAtSeconds }))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+
+  return `${header}.${payload}.signature`;
+}
+
 describe('auth helpers', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
   });
 
   it('stores and clears the access token', () => {
-    setAccessToken('token-123');
+    const token = createToken(Math.floor(Date.now() / 1000) + 3600);
+    setAccessToken(token);
 
-    expect(getAccessToken()).toBe('token-123');
+    expect(getAccessToken()).toBe(token);
     expect(isLoggedIn()).toBe(true);
 
     clearAccessToken();

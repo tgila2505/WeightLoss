@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getAccessToken } from '@/lib/auth';
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
@@ -28,25 +28,38 @@ export function useReferral() {
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
   const fetchStats = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    if (isMountedRef.current) {
+      setLoading(true);
+      setError(null);
+    }
+
     try {
       // Call /me first to ensure the code is created, then fetch full stats.
       await authFetch('/api/v1/referrals/me');
       const res = await authFetch('/api/v1/referrals/me/stats');
       if (!res.ok) throw new Error('Failed to load referral stats');
-      setStats(await res.json());
+      if (isMountedRef.current) {
+        setStats(await res.json());
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Unknown error');
+      if (isMountedRef.current) {
+        setError(e instanceof Error ? e.message : 'Unknown error');
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     fetchStats();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [fetchStats]);
 
   const getReferralLink = useCallback(() => {

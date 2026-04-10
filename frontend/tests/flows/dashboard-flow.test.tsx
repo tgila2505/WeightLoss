@@ -10,6 +10,10 @@ const { apiClient } = vi.hoisted(() => ({
     fetchHealthMetrics: vi.fn(),
     fetchLabs: vi.fn(),
     fetchProfile: vi.fn(),
+    fetchTodayCheckIn: vi.fn(),
+    fetchGamificationStatus: vi.fn(),
+    fetchProgressSummary: vi.fn(),
+    fetchWeeklyReport: vi.fn(),
     getLatestPlan: vi.fn()
   }
 }));
@@ -38,6 +42,10 @@ describe('Dashboard usage flow', () => {
     });
     apiClient.fetchHealthMetrics.mockResolvedValue([]);
     apiClient.fetchLabs.mockResolvedValue([]);
+    apiClient.fetchTodayCheckIn.mockResolvedValue(null);
+    apiClient.fetchGamificationStatus.mockResolvedValue(null);
+    apiClient.fetchProgressSummary.mockResolvedValue(null);
+    apiClient.fetchWeeklyReport.mockResolvedValue(null);
     apiClient.fetchTodayPlan.mockResolvedValue(null);
     apiClient.getLatestPlan.mockReturnValue({
       intent: 'meal_plan',
@@ -65,6 +73,10 @@ describe('Dashboard usage flow', () => {
     apiClient.fetchProfile.mockRejectedValue(new Error('Unable to load dashboard.'));
     apiClient.fetchHealthMetrics.mockResolvedValue([]);
     apiClient.fetchLabs.mockResolvedValue([]);
+    apiClient.fetchTodayCheckIn.mockResolvedValue(null);
+    apiClient.fetchGamificationStatus.mockResolvedValue(null);
+    apiClient.fetchProgressSummary.mockResolvedValue(null);
+    apiClient.fetchWeeklyReport.mockResolvedValue(null);
     apiClient.fetchTodayPlan.mockResolvedValue(null);
     apiClient.getLatestPlan.mockReturnValue(null);
 

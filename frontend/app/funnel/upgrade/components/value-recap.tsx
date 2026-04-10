@@ -35,9 +35,9 @@ export function ValueRecap({ name }: { name?: string }) {
       />
 
       <div className="rounded-3xl border border-blue-100 bg-blue-50 p-4">
-        <p className="text-lg font-semibold text-slate-900">$9 / month</p>
-        <p className="mt-1 text-xs text-slate-500">
-          Cancel anytime. 7-day free trial included.
+        <p className="text-lg font-semibold text-slate-900">7-day free trial, then $9/month</p>
+        <p className="mt-1 text-xs text-slate-600">
+          Cancel before the trial ends and you will not be charged.
         </p>
       </div>
     </div>

@@ -151,7 +151,7 @@ export default function FunnelLandingPage() {
             className="mt-8 h-auto bg-white px-8 py-4 text-base font-semibold text-blue-700 hover:bg-blue-50"
           >
             <Link href="/funnel/start">
-              Get your plan for free
+              See my calorie target
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

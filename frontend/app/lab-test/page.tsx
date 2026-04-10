@@ -877,21 +877,27 @@ export default function LabTestPage() {
 
 function LabResultCard({ record }: Readonly<{ record: LabRecordResponse }>) {
   const isAbnormal = record.evaluation.is_abnormal;
-  const status = record.evaluation.status;
+  const status =
+    record.evaluation.status === 'unknown'
+      ? 'Unknown'
+      : isAbnormal
+      ? 'Abnormal'
+      : 'Normal';
+  const badgeClassName =
+    record.evaluation.status === 'unknown'
+      ? 'border-slate-300 bg-slate-50 text-slate-600'
+      : isAbnormal
+      ? 'border-amber-300 bg-amber-50 text-amber-700'
+      : 'border-emerald-300 bg-emerald-50 text-emerald-700';
 
   return (
     <Card className={`overflow-hidden ${isAbnormal ? 'border-amber-200' : 'border-slate-200'}`}>
       <CardContent className="pt-4 pb-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <p className="text-sm font-semibold text-slate-800 leading-tight">{record.test_name}</p>
-          {isAbnormal && (
-            <Badge
-              variant="outline"
-              className="text-amber-700 border-amber-300 bg-amber-50 text-xs flex-shrink-0"
-            >
-              {status}
-            </Badge>
-          )}
+          <Badge variant="outline" className={`text-xs flex-shrink-0 ${badgeClassName}`}>
+            {status}
+          </Badge>
         </div>
         <div className="flex items-baseline gap-1.5">
           <span className={`text-2xl font-bold font-mono ${isAbnormal ? 'text-amber-700' : 'text-slate-900'}`}>
