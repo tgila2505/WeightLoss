@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/ui/container';
 import { trackFunnelEvent } from '@/lib/analytics';
+import { isLoggedIn } from '@/lib/auth';
 import { CostAnchor } from './components/cost-anchor';
 import { FeaturedPlans } from './components/featured-plans';
 import { FunnelHero } from './components/funnel-hero';
@@ -38,9 +40,15 @@ const TESTIMONIALS = [
 ];
 
 export default function FunnelLandingPage() {
+  const router = useRouter();
+
   useEffect(() => {
+    if (isLoggedIn()) {
+      router.replace('/dashboard');
+      return;
+    }
     trackFunnelEvent('landing_viewed');
-  }, []);
+  }, [router]);
 
   return (
     <FunnelShell
