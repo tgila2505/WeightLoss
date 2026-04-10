@@ -3,8 +3,13 @@
 import { memo } from "react"
 import type { MouseEvent } from "react"
 
-import { getCompletionState, getNodeMetadata } from "../utils/metadata"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+
 import type { MindMapNode } from "../types/graph"
+import { getCompletionState, getNodeMetadata } from "../utils/metadata"
 
 interface NodeCardProps {
   node: MindMapNode
@@ -13,7 +18,6 @@ interface NodeCardProps {
   isExpanded: boolean
   onSelect: (nodeId: string) => void
   onToggleExpand: (nodeId: string) => void
-  onLabelChange: (nodeId: string, value: string) => void
   onDragStart: (event: MouseEvent<HTMLDivElement>, nodeId: string) => void
 }
 
@@ -74,14 +78,12 @@ function NodeCardComponent({
   isExpanded,
   onSelect,
   onToggleExpand,
-  onLabelChange,
   onDragStart,
 }: Readonly<NodeCardProps>) {
   const metadataEntries = getMetadataEntries(node)
   const completionState = getCompletionState(node)
   const isCompleted = completionState === "completed"
   const isPartial = completionState === "partial"
-  const isReadOnlyLabel = true
   const showTypeLabel = node.type !== "category" && node.type !== "attribute"
   const toggleSymbol = hasChildren
     ? isExpanded
@@ -90,78 +92,43 @@ function NodeCardComponent({
     : "\u25a1"
 
   return (
-    <div
-      className="mindmap-node-card"
+    <Card
+      className={cn(
+        "w-[240px] cursor-grab border-2 bg-white p-3 shadow-[0_8px_20px_rgba(15,23,42,0.08)] outline-offset-2 transition-colors",
+        isSelected
+          ? "border-blue-600 bg-blue-50/40 shadow-[0_10px_30px_rgba(37,99,235,0.18)] outline outline-2 outline-blue-200"
+          : "border-slate-300"
+      )}
       onMouseDown={(event) => onDragStart(event, node.id)}
       onClick={() => onSelect(node.id)}
       tabIndex={0}
-      style={{
-        width: 240,
-        border: `2px solid ${isSelected ? "#2563eb" : "#cbd5e1"}`,
-        borderRadius: 12,
-        backgroundColor: isSelected ? "#f8fbff" : "#ffffff",
-        boxShadow: isSelected
-          ? "0 10px 30px rgba(37, 99, 235, 0.18)"
-          : "0 8px 20px rgba(15, 23, 42, 0.08)",
-        padding: 12,
-        cursor: "grab",
-        outline: isSelected ? "2px solid rgba(37, 99, 235, 0.16)" : "none",
-        outlineOffset: 2,
-      }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
-          marginBottom: 10,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span
             aria-hidden
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              backgroundColor: getStatusColor(node),
-              flexShrink: 0,
-            }}
+            className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+            style={{ backgroundColor: getStatusColor(node) }}
           />
           {showTypeLabel ? (
-            <span style={{ fontSize: 12, color: "#475569", textTransform: "capitalize" }}>
+            <span className="text-xs capitalize text-slate-600">
               {node.type ?? "node"}
             </span>
           ) : null}
           {isCompleted ? (
-            <span
-              style={{
-                fontSize: 11,
-                color: "#166534",
-                backgroundColor: "#dcfce7",
-                borderRadius: 999,
-                padding: "2px 8px",
-              }}
-            >
+            <Badge className="bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 hover:bg-emerald-100">
               Completed
-            </span>
+            </Badge>
           ) : isPartial ? (
-            <span
-              style={{
-                fontSize: 11,
-                color: "#92400e",
-                backgroundColor: "#fef3c7",
-                borderRadius: 999,
-                padding: "2px 8px",
-              }}
-            >
+            <Badge className="bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 hover:bg-amber-100">
               Partial
-            </span>
+            </Badge>
           ) : null}
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onMouseDown={(event) => event.stopPropagation()}
           onClick={(event) => {
             event.stopPropagation()
@@ -172,97 +139,38 @@ function NodeCardComponent({
           }}
           aria-label={hasChildren ? (isExpanded ? "Collapse branch" : "Expand branch") : "No child nodes"}
           disabled={!hasChildren}
-          style={{
-            border: "none",
-            backgroundColor: "transparent",
-            color: hasChildren ? "#0f172a" : "#94a3b8",
-            padding: "0 2px",
-            fontSize: 16,
-            lineHeight: 1,
-            cursor: hasChildren ? "pointer" : "default",
-          }}
+          className="h-7 min-w-7 px-1 text-base text-slate-900 disabled:text-slate-400"
         >
           {toggleSymbol}
-        </button>
+        </Button>
       </div>
 
-      {isReadOnlyLabel ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div
-            style={{
-              flex: 1,
-              border: "1px solid #cbd5e1",
-              borderRadius: 8,
-              padding: "8px 10px",
-              fontSize: 15,
-              fontWeight: 600,
-              color: "#0f172a",
-              backgroundColor: "#ffffff",
-            }}
-          >
-            {node.label}
-          </div>
-          {isCompleted ? (
-            <span
-              title="Answers saved"
-              style={{
-                display: "inline-block",
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                backgroundColor: "#16a34a",
-                flexShrink: 0,
-              }}
-            />
-          ) : null}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-[15px] font-semibold text-slate-900">
+          {node.label}
         </div>
-      ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <input
-            value={node.label}
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-            onChange={(event) => onLabelChange(node.id, event.target.value)}
-            style={{
-              flex: 1,
-              border: "1px solid #cbd5e1",
-              borderRadius: 8,
-              padding: "8px 10px",
-              fontSize: 15,
-              fontWeight: 600,
-              color: "#0f172a",
-            }}
+        {isCompleted ? (
+          <span
+            title="Answers saved"
+            className="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-600"
           />
-          {isCompleted ? (
-            <span
-              title="Answers saved"
-              style={{
-                display: "inline-block",
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                backgroundColor: "#16a34a",
-                flexShrink: 0,
-              }}
-            />
-          ) : null}
-        </div>
-      )}
+        ) : null}
+      </div>
 
       {metadataEntries.length > 0 ? (
-        <div style={{ marginTop: 10, display: "grid", gap: 4 }}>
+        <div className="mt-2.5 grid gap-1">
           {metadataEntries.map(([key, value]) => (
             <div
               key={`${node.id}-${key}`}
-              style={{ fontSize: 12, color: "#475569", display: "flex", gap: 4 }}
+              className="flex gap-1 text-xs text-slate-600"
             >
-              <span style={{ fontWeight: 600 }}>{key}:</span>
+              <span className="font-semibold">{key}:</span>
               <span>{value}</span>
             </div>
           ))}
         </div>
       ) : null}
-    </div>
+    </Card>
   )
 }
 

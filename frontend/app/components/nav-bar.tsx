@@ -89,8 +89,8 @@ export function NavBar() {
       </nav>
 
       {/* Mobile bottom nav — horizontally scrollable so all items have adequate tap targets */}
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 flex md:hidden">
-        <div className="flex items-center h-16 w-full overflow-x-auto">
+      <nav className="fixed bottom-0 inset-x-0 z-50 flex border-t border-slate-200 bg-white/95 md:hidden">
+        <div className="flex h-20 w-full items-center gap-1 overflow-x-auto px-2">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
@@ -98,22 +98,24 @@ export function NavBar() {
                 key={href}
                 href={href}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-medium rounded-lg transition-colors flex-shrink-0',
-                  active ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                  'flex min-w-[76px] flex-shrink-0 flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-medium transition-colors',
+                  active
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                 )}
               >
                 <Icon className="h-5 w-5" />
-                <span className="max-w-[52px] truncate">{label}</span>
+                <span className="max-w-[64px] truncate leading-none">{label}</span>
               </Link>
             );
           })}
           {/* Logout in mobile nav */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-medium text-slate-400 hover:text-red-500 transition-colors flex-shrink-0"
+            className="flex min-w-[76px] flex-shrink-0 flex-col items-center gap-1 rounded-xl px-3 py-2 text-[11px] font-medium text-slate-500 transition-colors hover:bg-red-50 hover:text-red-500"
           >
             <LogOut className="h-5 w-5" />
-            <span>Log out</span>
+            <span className="leading-none">Log out</span>
           </button>
         </div>
       </nav>

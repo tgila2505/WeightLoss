@@ -49,11 +49,11 @@ export function FeedbackWidget({ context }: FeedbackWidgetProps) {
         context,
       });
       setStatus('sent');
-      setTimeout(() => setOpen(false), 1200);
+      setTimeout(() => setOpen(false), 3000);
     } catch {
       // Never crash the UX on feedback failure
       setStatus('sent');
-      setTimeout(() => setOpen(false), 1200);
+      setTimeout(() => setOpen(false), 3000);
     }
   }
 

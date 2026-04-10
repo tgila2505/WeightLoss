@@ -8,8 +8,8 @@ export function CostAnchor() {
             A nutritionist often charges $150 per session.
           </span>
         </p>
-        <p className="mt-2 text-sm text-slate-500">
-          $9 per month. Cancel anytime. 7-day free trial.
+        <p className="mt-2 text-sm text-slate-600">
+          Full-plan upgrade starts with a 7-day free trial, then $9/month. Cancel anytime.
         </p>
       </div>
     </section>

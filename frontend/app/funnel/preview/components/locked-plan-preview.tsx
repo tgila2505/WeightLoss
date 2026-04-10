@@ -30,8 +30,8 @@ export function LockedPlanPreview() {
       <Button asChild className="mt-2 w-full">
         <Link href="/funnel/upgrade">Unlock your full plan</Link>
       </Button>
-      <p className="text-center text-xs text-slate-500">
-        7-day free trial. $9/month after. Cancel anytime.
+      <p className="text-center text-xs text-slate-600">
+        7-day free trial for the full plan, then $9/month. Cancel anytime.
       </p>
     </div>
   );

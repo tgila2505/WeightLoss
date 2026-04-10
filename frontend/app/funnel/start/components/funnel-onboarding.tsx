@@ -44,6 +44,15 @@ const fieldClassName =
 const stepTitleClassName = 'text-2xl font-semibold text-slate-900';
 const stepCopyClassName = 'text-sm text-slate-500';
 
+function toPositiveNumber(value: string): number {
+  if (value.trim() === '') {
+    return 0;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
 export function FunnelOnboarding() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -91,7 +100,12 @@ export function FunnelOnboarding() {
       </div>
 
       {step === 1 && (
-        <Step1 values={profile} onChange={update} onNext={() => handleStepComplete(2)} />
+        <Step1
+          values={profile}
+          onChange={update}
+          onBack={() => router.push('/funnel')}
+          onNext={() => handleStepComplete(2)}
+        />
       )}
       {step === 2 && (
         <Step2
@@ -118,10 +132,12 @@ export function FunnelOnboarding() {
 function Step1({
   values,
   onChange,
+  onBack,
   onNext
 }: {
   values: Step1Fields;
   onChange: (fields: Partial<FunnelProfile>) => void;
+  onBack: () => void;
   onNext: () => void;
 }) {
   function handleSubmit(e: React.FormEvent) {
@@ -161,8 +177,9 @@ function Step1({
             required
             min={16}
             max={100}
+            step="1"
             value={values.age || ''}
-            onChange={(e) => onChange({ age: Number(e.target.value) })}
+            onChange={(e) => onChange({ age: toPositiveNumber(e.target.value) })}
             className={fieldClassName}
             placeholder="30"
           />
@@ -192,8 +209,9 @@ function Step1({
             required
             min={100}
             max={250}
+            step="1"
             value={values.height_cm || ''}
-            onChange={(e) => onChange({ height_cm: Number(e.target.value) })}
+            onChange={(e) => onChange({ height_cm: toPositiveNumber(e.target.value) })}
             className={fieldClassName}
             placeholder="175"
           />
@@ -208,16 +226,31 @@ function Step1({
             required
             min={30}
             max={300}
+            step="0.1"
             value={values.weight_kg || ''}
-            onChange={(e) => onChange({ weight_kg: Number(e.target.value) })}
+            onChange={(e) => onChange({ weight_kg: toPositiveNumber(e.target.value) })}
             className={fieldClassName}
             placeholder="90"
           />
         </div>
       </div>
-      <Button type="submit" className="w-full">
-        Next
-      </Button>
+      <div className="flex gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1 border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+          onClick={onBack}
+        >
+          Back
+        </Button>
+        <Button
+          type="submit"
+          className="flex-1"
+          disabled={!values.name.trim() || values.age <= 0 || values.height_cm <= 0 || values.weight_kg <= 0}
+        >
+          Next
+        </Button>
+      </div>
     </form>
   );
 }

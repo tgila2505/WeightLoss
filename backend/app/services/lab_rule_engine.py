@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import re
 
 from app.models.lab import LabRecord
 from app.schemas.lab import LabEvaluation
@@ -43,6 +44,10 @@ class LabRuleEngine:
         normalized_test_name = self._normalize_test_name(record.test_name)
         rule = self._RULES.get(normalized_test_name)
         if rule is None:
+            range_evaluation = self._evaluate_reference_range(record)
+            if range_evaluation is not None:
+                return range_evaluation
+
             return LabEvaluation(
                 normalized_test_name=normalized_test_name,
                 status="unknown",
@@ -68,3 +73,32 @@ class LabRuleEngine:
     def _normalize_test_name(self, test_name: str) -> str | None:
         normalized = " ".join(test_name.strip().lower().split())
         return self._ALIASES.get(normalized)
+
+    def _evaluate_reference_range(self, record: LabRecord) -> LabEvaluation | None:
+        reference_range = (record.reference_range or "").strip().lower()
+        if not reference_range:
+            return None
+
+        numbers = [float(match) for match in re.findall(r"-?\d+(?:\.\d+)?", reference_range)]
+        value = float(record.value)
+
+        if reference_range.startswith(">=") and len(numbers) >= 1:
+            is_normal = value >= numbers[0]
+        elif reference_range.startswith("<=") and len(numbers) >= 1:
+            is_normal = value <= numbers[0]
+        elif reference_range.startswith(">") and len(numbers) >= 1:
+            is_normal = value > numbers[0]
+        elif reference_range.startswith("<") and len(numbers) >= 1:
+            is_normal = value < numbers[0]
+        elif len(numbers) >= 2:
+            low, high = numbers[0], numbers[1]
+            is_normal = low <= value <= high
+        else:
+            return None
+
+        return LabEvaluation(
+            normalized_test_name=normalized_test_name if (normalized_test_name := self._normalize_test_name(record.test_name)) else None,
+            status="normal" if is_normal else "abnormal",
+            is_abnormal=not is_normal,
+            rule_applied=True,
+        )

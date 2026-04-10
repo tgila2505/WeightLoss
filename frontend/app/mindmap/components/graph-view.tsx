@@ -487,24 +487,12 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
 
     const timeoutId = window.setTimeout(() => {
       setCompletionMessage("")
-    }, 1800)
+    }, 3200)
 
     return () => {
       window.clearTimeout(timeoutId)
     }
   }, [completionMessage])
-
-  const handleLabelChange = useCallback((nodeId: string, label: string) => {
-    updateNode(nodeId, (node) => {
-      const nextNode = {
-        ...node,
-        label,
-      }
-
-      emitNodeUpdate(events, nextNode)
-      return nextNode
-    })
-  }, [events, updateNode])
 
   const handleNodeSelect = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId)
@@ -782,7 +770,6 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
                           isExpanded={expandedNodeIds.has(node.id)}
                           onSelect={handleNodeSelect}
                           onToggleExpand={handleToggleExpand}
-                          onLabelChange={handleLabelChange}
                           onDragStart={handleDragStart}
                         />
                       </div>

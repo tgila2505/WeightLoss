@@ -29,13 +29,13 @@ export default function FunnelWelcomePage() {
             <h1 className="text-3xl font-bold text-slate-900">
               {profile?.name ? `You're in, ${profile.name}.` : "You're in."}
             </h1>
-            <p className="text-slate-500">Your full plan is ready.</p>
+            <p className="text-slate-600">Your full plan is ready.</p>
           </div>
           <Button asChild size="lg" className="h-auto px-8 py-4 text-base">
             <Link href="/dashboard">Go to your dashboard</Link>
           </Button>
-          <p className="text-xs text-slate-500">
-            Your 7-day free trial has started. You will be charged $9 after 7 days.
+          <p className="text-sm text-slate-700">
+            Your 7-day free trial has started. Unless you cancel first, billing begins at $9/month after the trial.
           </p>
         </div>
       </Container>
