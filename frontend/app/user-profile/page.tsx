@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import type { CSSProperties } from "react"
-
 import { useRouter } from "next/navigation"
+import { Loader2, RefreshCw, Printer, Copy, Check } from "lucide-react"
 
 import { PageShell } from "@/app/components/page-shell"
-import { generateMasterProfile, fetchMasterProfile, fetchReferralCode, fetchReferralStats, type ReferralStats } from "@/lib/api-client"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { generateMasterProfile, fetchMasterProfile } from "@/lib/api-client"
+import { useReferral } from "@/hooks/use-referral"
 
 interface ProfileState {
   profileText: string
@@ -72,64 +74,66 @@ export default function UserProfilePage() {
 
   return (
     <PageShell>
-      <div style={containerStyle} className="print-container">
+      <div className="mx-auto grid max-w-3xl gap-4 px-5 pb-20 pt-6 print-container">
+
         {/* Header */}
-        <div style={headerStyle} className="no-print">
+        <div className="flex items-center justify-between no-print">
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0 }}>
-              User Profile
-            </h1>
+            <h1 className="text-xl font-bold text-slate-900">User Profile</h1>
             {formattedDate && (
-              <p style={{ fontSize: 13, color: "#64748b", margin: "4px 0 0" }}>
-                Last generated: {formattedDate}
-              </p>
+              <p className="mt-1 text-sm text-slate-500">Last generated: {formattedDate}</p>
             )}
           </div>
-          <button
-            type="button"
+          <Button
+            variant={profile ? "outline" : "default"}
+            size="sm"
             onClick={handleGenerate}
             disabled={isGenerating}
-            style={profile ? regenerateButtonStyle : generateButtonStyle}
           >
-            {isGenerating
-              ? (profile ? "Re-generating…" : "Generating…")
-              : (profile ? "Re-generate" : "Generate")}
-          </button>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {profile ? "Re-generating…" : "Generating…"}
+              </>
+            ) : (
+              <>
+                {profile && <RefreshCw className="mr-2 h-4 w-4" />}
+                {profile ? "Re-generate" : "Generate"}
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Session expired banner */}
         {sessionExpired && (
-          <div style={sessionBannerStyle} className="no-print">
+          <div className="no-print flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             <span>Your session has expired. Please log in again to continue.</span>
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-amber-400 text-amber-800 hover:bg-amber-100"
               onClick={() => router.push("/login")}
-              style={sessionLoginButtonStyle}
             >
               Log in
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <p style={{ fontSize: 14, color: "#dc2626" }} className="no-print">
-            {error}
-          </p>
+          <p className="no-print text-sm text-red-600">{error}</p>
         )}
 
         {/* Loading */}
         {isLoading && (
-          <p style={{ fontSize: 14, color: "#64748b" }}>Loading…</p>
+          <p className="text-sm text-slate-500">Loading…</p>
         )}
 
         {/* Empty state */}
         {!isLoading && !profile && !error && (
-          <div style={emptyStateStyle}>
-            <p style={{ fontSize: 15, color: "#475569", margin: 0 }}>
-              No profile generated yet.
-            </p>
-            <p style={{ fontSize: 14, color: "#94a3b8", marginTop: 8 }}>
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-10 text-center">
+            <p className="text-sm font-medium text-slate-600">No profile generated yet.</p>
+            <p className="mt-2 text-sm text-slate-400">
               Complete questionnaire sections in Profile Questions, then click Generate.
             </p>
           </div>
@@ -137,26 +141,32 @@ export default function UserProfilePage() {
 
         {/* Profile content */}
         {profile && (
-          <div style={{ ...profileContentStyle, opacity: isGenerating ? 0.45 : 1, transition: "opacity 0.3s" }} className="profile-text">
-            {isGenerating && (
-              <p style={{ fontSize: 13, color: "#2563eb", marginBottom: 16, fontStyle: "italic" }}>
-                Re-generating with your latest lab results, weight trends, and health data…
-              </p>
-            )}
-            <MarkdownRenderer text={profile.profileText} />
-          </div>
+          <Card
+            className="transition-opacity duration-300"
+            style={{ opacity: isGenerating ? 0.45 : 1 }}
+          >
+            <CardContent className="p-7 profile-text">
+              {isGenerating && (
+                <p className="mb-4 text-sm italic text-blue-600">
+                  Re-generating with your latest lab results, weight trends, and health data…
+                </p>
+              )}
+              <MarkdownRenderer text={profile.profileText} />
+            </CardContent>
+          </Card>
         )}
 
         {/* Print footer */}
         {profile && (
-          <div style={footerStyle} className="no-print">
-            <button type="button" onClick={handlePrint} style={printButtonStyle}>
+          <div className="no-print sticky bottom-4 flex justify-end">
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" />
               Print / Export PDF
-            </button>
+            </Button>
           </div>
         )}
 
-        {/* Referral code */}
+        {/* Referral card */}
         <div className="no-print">
           <ReferralCard />
         </div>
@@ -183,21 +193,21 @@ function MarkdownRenderer({ text }: { text: string }) {
   for (const line of lines) {
     if (line.startsWith("## ")) {
       elements.push(
-        <h2 key={key++} style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", marginTop: 20, marginBottom: 6 }}>
+        <h2 key={key++} className="mb-1.5 mt-5 text-base font-bold text-slate-900">
           {line.slice(3)}
         </h2>
       )
     } else if (line.startsWith("- ")) {
       elements.push(
-        <li key={key++} style={{ fontSize: 14, color: "#334155", marginLeft: 16, marginBottom: 4 }}>
+        <li key={key++} className="ml-4 mb-1 text-sm text-slate-700">
           {line.slice(2).replace(/\*\*(.+?)\*\*/g, "$1")}
         </li>
       )
     } else if (line.trim() === "") {
-      elements.push(<div key={key++} style={{ height: 8 }} />)
+      elements.push(<div key={key++} className="h-2" />)
     } else {
       elements.push(
-        <p key={key++} style={{ fontSize: 14, color: "#334155", margin: "4px 0" }}>
+        <p key={key++} className="my-1 text-sm text-slate-700">
           {line}
         </p>
       )
@@ -208,24 +218,9 @@ function MarkdownRenderer({ text }: { text: string }) {
 }
 
 function ReferralCard() {
-  const [referralLink, setReferralLink] = useState<string | null>(null)
-  const [stats, setStats] = useState<ReferralStats | null>(null)
+  const { stats, error: loadError, getReferralLink } = useReferral()
+  const referralLink = getReferralLink()
   const [copied, setCopied] = useState(false)
-  const [loadError, setLoadError] = useState(false)
-
-  useEffect(() => {
-    let isMounted = true
-    fetchReferralCode()
-      .then((ref) => {
-        if (!isMounted) return
-        const origin = typeof window !== "undefined" ? window.location.origin : ""
-        setReferralLink(`${origin}/referral/${ref.code}`)
-        return fetchReferralStats()
-      })
-      .then((s) => { if (isMounted && s) setStats(s) })
-      .catch(() => { if (isMounted) setLoadError(true) })
-    return () => { isMounted = false }
-  }, [])
 
   async function handleCopy() {
     if (!referralLink) return
@@ -237,185 +232,57 @@ function ReferralCard() {
   if (loadError) return null
 
   return (
-    <div style={referralCardStyle}>
-      <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>
-        Refer a friend
-      </h2>
-      <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 16px" }}>
-        Share your link and earn rewards when friends sign up.
-      </p>
-
-      {referralLink ? (
-        <>
-          <div style={referralLinkRowStyle}>
-            <span style={{ fontSize: 13, color: "#475569", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {referralLink}
-            </span>
-            <button type="button" onClick={handleCopy} style={copyButtonStyle}>
-              {copied ? "Copied!" : "Copy"}
-            </button>
-          </div>
-
-          {stats && (
-            <div style={referralStatsRowStyle}>
-              <div style={referralStatStyle}>
-                <span style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{stats.clicks}</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Clicks</span>
-              </div>
-              <div style={referralStatStyle}>
-                <span style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{stats.signups}</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Signups</span>
-              </div>
-              <div style={referralStatStyle}>
-                <span style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{stats.rewards_earned}</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>Rewards</span>
-              </div>
+    <Card>
+      <CardHeader className="pb-1">
+        <CardTitle className="text-base">Refer a friend</CardTitle>
+        <p className="text-sm text-slate-500">
+          Share your link and earn rewards when friends sign up.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {referralLink ? (
+          <>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-slate-600">
+                {referralLink}
+              </span>
+              <Button variant="outline" size="sm" className="shrink-0" onClick={handleCopy}>
+                {copied ? (
+                  <><Check className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />Copied!</>
+                ) : (
+                  <><Copy className="mr-1.5 h-3.5 w-3.5" />Copy</>
+                )}
+              </Button>
             </div>
-          )}
 
-          {stats?.premium_until && (
-            <p style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>
-              Premium until{" "}
-              {new Date(stats.premium_until).toLocaleDateString(undefined, {
-                month: "short", day: "numeric", year: "numeric",
-              })}
-            </p>
-          )}
-        </>
-      ) : (
-        <div style={{ height: 40, borderRadius: 8, backgroundColor: "#f1f5f9" }} />
-      )}
-    </div>
+            {stats && (
+              <div className="flex gap-6">
+                {([
+                  { label: "Clicks", value: stats.clicks },
+                  { label: "Signups", value: stats.signups },
+                  { label: "Rewards", value: stats.rewards_earned },
+                ] as const).map(({ label, value }) => (
+                  <div key={label} className="flex flex-col items-center gap-0.5">
+                    <span className="text-xl font-bold text-slate-900">{value}</span>
+                    <span className="text-xs text-slate-400">{label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {stats?.premium_until && (
+              <p className="text-xs text-slate-500">
+                Premium until{" "}
+                {new Date(stats.premium_until).toLocaleDateString(undefined, {
+                  month: "short", day: "numeric", year: "numeric",
+                })}
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="h-10 rounded-lg bg-slate-100" />
+        )}
+      </CardContent>
+    </Card>
   )
-}
-
-const referralCardStyle: CSSProperties = {
-  borderRadius: 12,
-  border: "1px solid #e2e8f0",
-  backgroundColor: "#ffffff",
-  padding: "20px 24px",
-}
-
-const referralLinkRowStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  borderRadius: 8,
-  border: "1px solid #e2e8f0",
-  backgroundColor: "#f8fafc",
-  padding: "8px 12px",
-  marginBottom: 12,
-}
-
-const copyButtonStyle: CSSProperties = {
-  flexShrink: 0,
-  padding: "4px 12px",
-  borderRadius: 6,
-  border: "1px solid #cbd5e1",
-  backgroundColor: "#ffffff",
-  color: "#475569",
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: "pointer",
-}
-
-const referralStatsRowStyle: CSSProperties = {
-  display: "flex",
-  gap: 24,
-}
-
-const referralStatStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: 2,
-}
-
-const containerStyle: CSSProperties = {
-  maxWidth: 760,
-  margin: "0 auto",
-  padding: "24px 20px 80px",
-  display: "grid",
-  gap: 16,
-}
-
-const headerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-}
-
-const generateButtonStyle: CSSProperties = {
-  padding: "8px 20px",
-  borderRadius: 8,
-  border: "1px solid #2563eb",
-  backgroundColor: "#2563eb",
-  color: "#ffffff",
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: "pointer",
-}
-
-const regenerateButtonStyle: CSSProperties = {
-  ...generateButtonStyle,
-  backgroundColor: "#ffffff",
-  color: "#2563eb",
-}
-
-const emptyStateStyle: CSSProperties = {
-  padding: "40px 20px",
-  textAlign: "center",
-  borderRadius: 12,
-  border: "1px dashed #cbd5e1",
-  backgroundColor: "#f8fafc",
-}
-
-const profileContentStyle: CSSProperties = {
-  borderRadius: 12,
-  border: "1px solid #e2e8f0",
-  backgroundColor: "#ffffff",
-  padding: "24px 28px",
-}
-
-const footerStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "flex-end",
-  position: "sticky",
-  bottom: 16,
-}
-
-const printButtonStyle: CSSProperties = {
-  padding: "8px 20px",
-  borderRadius: 8,
-  border: "1px solid #475569",
-  backgroundColor: "#f8fafc",
-  color: "#475569",
-  fontSize: 14,
-  fontWeight: 500,
-  cursor: "pointer",
-}
-
-const sessionBannerStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 12,
-  padding: "10px 16px",
-  borderRadius: 8,
-  backgroundColor: "#fffbeb",
-  border: "1px solid #fbbf24",
-  fontSize: 14,
-  color: "#92400e",
-}
-
-const sessionLoginButtonStyle: CSSProperties = {
-  padding: "4px 14px",
-  borderRadius: 6,
-  border: "1px solid #d97706",
-  backgroundColor: "#ffffff",
-  color: "#b45309",
-  fontSize: 13,
-  fontWeight: 600,
-  cursor: "pointer",
-  whiteSpace: "nowrap",
 }
