@@ -15,6 +15,11 @@ const defaultFlags = {
   wizardRolloutPct: 100, // everyone gets wizard in A/B
   landingAbEnabled: false,
   landingAbRollout: 50,
+  pricingUrgencyEnabled: false,
+  abPricingIntervalEnabled: false,
+  abPricingIntervalRollout: 0,
+  abHeroPlanEnabled: false,
+  abHeroPlanRollout: 0,
 }
 
 beforeEach(() => {

@@ -5,7 +5,7 @@
  * ready to be passed into the pSEO page component.
  */
 
-import type { PseoDimensions } from '@/lib/seo/pseo-combinations';
+import type { PseoDimensions, GoalType, DietType } from '@/lib/seo/pseo-combinations';
 import { getGoalOnlyContent } from './goal-only';
 import { getGoalDietContent } from './goal-diet';
 
@@ -21,8 +21,8 @@ export interface PseoContentBlock {
 
 export function getPseoContent(dims: PseoDimensions): PseoContentBlock {
   if (dims.dietType) {
-    const goalDiet = getGoalDietContent(dims.goalType, dims.dietType);
-    const goalOnly = getGoalOnlyContent(dims.goalType);
+    const goalDiet = getGoalDietContent(dims.goalType as GoalType, dims.dietType as DietType);
+    const goalOnly = getGoalOnlyContent(dims.goalType as GoalType);
     return {
       intro: goalOnly.intro,
       dietIntro: goalDiet.dietIntro,
@@ -34,7 +34,7 @@ export function getPseoContent(dims: PseoDimensions): PseoContentBlock {
     };
   }
 
-  const goalOnly = getGoalOnlyContent(dims.goalType);
+  const goalOnly = getGoalOnlyContent(dims.goalType as GoalType);
   return {
     intro: goalOnly.intro,
     foodsToPrioritize: goalOnly.foodsToPrioritize,
