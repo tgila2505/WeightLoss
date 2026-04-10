@@ -270,7 +270,11 @@ function inferIntent(prompt: string): OrchestratorIntent {
     normalized.includes('meal') ||
     normalized.includes('diet') ||
     normalized.includes('food') ||
-    normalized.includes('plan')
+    normalized.includes('recipe') ||
+    normalized.includes('calorie') ||
+    normalized.includes('eat') ||
+    // Only treat "plan" as meal-plan intent when accompanied by a food keyword
+    (/\b(meal|food|diet|eating|calorie)\b/.test(normalized) && normalized.includes('plan'))
   ) {
     return 'meal_plan';
   }
