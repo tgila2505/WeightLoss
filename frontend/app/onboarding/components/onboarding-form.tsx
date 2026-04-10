@@ -167,11 +167,18 @@ export function OnboardingForm() {
       setSuccess('Onboarding saved. Redirecting…');
       setTimeout(() => router.push('/dashboard'), 800);
     } catch (submissionError) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : 'Failed to save onboarding data.'
-      );
+      if (submissionError instanceof Error && submissionError.message === 'FEATURE_GATED') {
+        // Profile was saved but advanced features require Pro — navigate forward with a notice.
+        markCompleted(form as unknown as Record<string, string>);
+        setSuccess('Your profile has been saved. Upgrade to Pro to unlock advanced features.');
+        setTimeout(() => router.push('/dashboard'), 1500);
+      } else {
+        setError(
+          submissionError instanceof Error
+            ? submissionError.message
+            : 'Failed to save onboarding data.'
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -252,8 +259,6 @@ export function OnboardingForm() {
                     <SelectContent>
                       <SelectItem value="male">Male</SelectItem>
                       <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="non_binary">Non-binary</SelectItem>
-                      <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

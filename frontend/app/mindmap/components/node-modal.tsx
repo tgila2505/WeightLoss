@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { CSSProperties, FormEvent } from "react"
 
 import type { MindMapAnswerValue } from "@/lib/api-client"
@@ -8,6 +8,9 @@ import type { MindMapAnswerValue } from "@/lib/api-client"
 import { DynamicForm, validateAnswers } from "./dynamic-form"
 import type { NodeQuestion } from "../schema/questions"
 import type { MindMapNode } from "../types/graph"
+
+const FOCUSABLE_SELECTORS =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 interface NodeModalProps {
   node: MindMapNode | null
@@ -32,6 +35,7 @@ export function NodeModal({
 }: Readonly<NodeModalProps>) {
   const [values, setValues] = useState<Record<string, MindMapAnswerValue | "">>({})
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const dialogRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!isOpen) {
@@ -47,6 +51,80 @@ export function NodeModal({
     setValues(nextValues)
     setValidationErrors({})
   }, [initialValues, isOpen, questions])
+
+  // Escape key → close modal
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault()
+        onClose()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
+  // Focus trap: auto-focus first focusable element; intercept Tab/Shift+Tab
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    const dialog = dialogRef.current
+
+    if (!dialog) {
+      return
+    }
+
+    const getFocusableElements = (): HTMLElement[] =>
+      Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS))
+
+    // Focus the first focusable element when modal opens
+    const focusables = getFocusableElements()
+    focusables[0]?.focus()
+
+    const handleTabKey = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") {
+        return
+      }
+
+      const elements = getFocusableElements()
+
+      if (elements.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const firstEl = elements[0]
+      const lastEl = elements[elements.length - 1]
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstEl) {
+          event.preventDefault()
+          lastEl.focus()
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          event.preventDefault()
+          firstEl.focus()
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleTabKey)
+
+    return () => {
+      document.removeEventListener("keydown", handleTabKey)
+    }
+  }, [isOpen])
 
   const title = useMemo(() => node?.label ?? "Node", [node])
 
@@ -81,6 +159,7 @@ export function NodeModal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby="node-modal-title"
       style={{
         position: "fixed",
         inset: 0,
@@ -94,6 +173,7 @@ export function NodeModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         onClick={(event) => event.stopPropagation()}
         style={{
           width: "100%",
@@ -109,7 +189,7 @@ export function NodeModal({
         }}
       >
         <div style={{ display: "grid", gap: 4 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{title}</h2>
+          <h2 id="node-modal-title" style={{ fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{title}</h2>
           <p style={{ fontSize: 14, color: "#475569" }}>
             Complete this node to save profile details.
           </p>

@@ -16,6 +16,7 @@ class UserProfileContext:
     conditions: list[str] = field(default_factory=list)
     dietary_restrictions: list[str] = field(default_factory=list)
     dietary_preferences: list[str] = field(default_factory=list)
+    activity_level: str | None = None
 
 
 @dataclass(frozen=True)

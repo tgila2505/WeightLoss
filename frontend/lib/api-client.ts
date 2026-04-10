@@ -237,6 +237,10 @@ export async function upsertProfile(payload: OnboardingPayload): Promise<void> {
       return;
     }
 
+    if (updateResponse.status === 403) {
+      throw new Error('FEATURE_GATED');
+    }
+
     throw new Error(await readError(updateResponse));
   }
 
@@ -327,7 +331,8 @@ export async function submitOrchestratorRequest(input: {
               weight_kg: input.profile.weight_kg,
               conditions: splitCommaSeparated(input.profile.health_conditions),
               dietary_restrictions: splitCommaSeparated(input.profile.diet_pattern),
-              dietary_preferences: splitCommaSeparated(input.profile.activity_level)
+              dietary_preferences: splitCommaSeparated(input.profile.diet_pattern),
+              activity_level: input.profile.activity_level ?? null
             }
           : null,
         health_metrics: input.metrics.map((metric) => ({

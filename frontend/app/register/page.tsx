@@ -34,7 +34,8 @@ export default function RegisterPage() {
     }
   }, [router]);
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
     setError('');
 
     if (password !== confirmPassword) {
@@ -56,8 +57,16 @@ export default function RegisterPage() {
       if (refCode) {
         captureEvent('referral_signup', { ref_code: refCode });
       }
-      await login(email, password);
-      router.push('/onboarding');
+      // Attempt auto-login after registration. If it fails for any reason
+      // (e.g. a race condition or server hiccup), the account was already
+      // created successfully — redirect the user to /login instead of
+      // showing a confusing error or leaving them stuck.
+      try {
+        await login(email, password);
+        router.push('/onboarding');
+      } catch {
+        router.push('/login?registered=1');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
     } finally {
@@ -73,78 +82,80 @@ export default function RegisterPage() {
       title="Create account"
       description="Create your account to unlock the full WeightLoss experience."
     >
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          autoFocus
-        />
-      </div>
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            autoFocus
+          />
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
-          autoComplete="new-password"
-        />
-      </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+          />
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm password</Label>
-        <Input
-          id="confirm-password"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Repeat your password"
-          autoComplete="new-password"
-          aria-invalid={confirmMismatch}
-          aria-describedby={confirmMismatch ? 'confirm-error' : undefined}
-          className={confirmMismatch ? 'border-red-500' : ''}
-        />
-        {confirmMismatch ? (
-          <p id="confirm-error" className="text-xs text-red-600">
-            Passwords do not match
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password">Confirm password</Label>
+          <Input
+            id="confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat your password"
+            autoComplete="new-password"
+            aria-invalid={confirmMismatch}
+            aria-describedby={confirmMismatch ? 'confirm-error' : undefined}
+            className={confirmMismatch ? 'border-red-500' : ''}
+          />
+          {confirmMismatch ? (
+            <p id="confirm-error" className="text-xs text-red-600">
+              Passwords do not match
+            </p>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
           </p>
         ) : null}
-      </div>
 
-      {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || !email || !password || !confirmPassword}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating account...
+            </>
+          ) : (
+            'Create account'
+          )}
+        </Button>
+
+        <p className="text-center text-sm text-slate-600">
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-blue-600 hover:underline">
+            Log in
+          </Link>
         </p>
-      ) : null}
-
-      <Button
-        className="w-full"
-        onClick={handleSubmit}
-        disabled={isSubmitting || !email || !password || !confirmPassword}
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating account...
-          </>
-        ) : (
-          'Create account'
-        )}
-      </Button>
-
-      <p className="text-center text-sm text-slate-600">
-        Already have an account?{' '}
-        <Link href="/login" className="font-medium text-blue-600 hover:underline">
-          Log in
-        </Link>
-      </p>
+      </form>
     </AuthCardShell>
   );
 }

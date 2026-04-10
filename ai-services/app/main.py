@@ -38,6 +38,7 @@ class UserProfilePayload(BaseModel):
     conditions: list[str] = Field(default_factory=list)
     dietary_restrictions: list[str] = Field(default_factory=list)
     dietary_preferences: list[str] = Field(default_factory=list)
+    activity_level: str | None = None
 
 
 class HealthMetricPayload(BaseModel):

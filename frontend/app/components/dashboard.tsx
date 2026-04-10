@@ -75,12 +75,14 @@ export function DashboardView({
                 </p>
                 <CardTitle className="text-base mt-0.5">Current plan</CardTitle>
               </div>
-              <Link
-                href="/plan"
-                className="text-xs text-blue-600 hover:underline font-medium flex-shrink-0 mt-0.5"
-              >
-                Today's breakdown →
-              </Link>
+              {plan && (
+                <Link
+                  href="/plan"
+                  className="text-xs text-blue-600 hover:underline font-medium flex-shrink-0 mt-0.5"
+                >
+                  Today's breakdown →
+                </Link>
+              )}
             </div>
           </CardHeader>
           <CardContent>

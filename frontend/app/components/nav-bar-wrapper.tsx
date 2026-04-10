@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 
 import { NavBar } from './nav-bar';
 
-const AUTH_PATHS = ['/', '/login', '/register', '/onboarding', '/funnel'];
+const AUTH_PATHS = ['/', '/login', '/register', '/onboarding', '/funnel', '/wizard'];
 
 export function NavBarWrapper() {
   const pathname = usePathname();
