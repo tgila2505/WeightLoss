@@ -88,8 +88,8 @@ function NodeCardComponent({
   const toggleSymbol = hasChildren
     ? isExpanded
       ? "\u2212"
-      : "\u25a1"
-    : "\u25a1"
+      : "\u002B"
+    : ""
 
   return (
     <Card
