@@ -65,7 +65,7 @@ export function NavBar() {
 
   function handleLogout() {
     clearAccessToken();
-    router.push('/');
+    router.push('/funnel');
   }
 
   return (
