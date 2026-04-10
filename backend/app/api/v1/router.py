@@ -25,6 +25,7 @@ from app.api.v1.endpoints.progress import router as progress_router
 from app.api.v1.endpoints.reports import router as reports_router
 from app.api.v1.endpoints.admin import router as admin_router
 from app.api.v1.endpoints.profile_state import router as profile_state_router
+from app.api.v1.endpoints.seo import router as seo_router
 from app.api.v1.endpoints.shared_plans import router as shared_plans_router
 
 router = APIRouter()
@@ -53,4 +54,5 @@ router.include_router(referrals_router, tags=["referrals"])
 router.include_router(reminders_router, tags=["reminders"])
 router.include_router(reports_router, tags=["reports"])
 router.include_router(profile_state_router, tags=["profile-state"])
+router.include_router(seo_router, tags=["seo"])
 router.include_router(shared_plans_router, tags=["shared-plans"])
