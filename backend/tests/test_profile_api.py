@@ -59,6 +59,40 @@ class ProfileApiTest(ApiTestCase):
             "Invalid authentication credentials",
         )
 
+    def test_free_user_can_update_gender(self) -> None:
+        """PATCH /api/v1/profile/gender succeeds for free users (no profile_edit gate)."""
+        user = self.create_user()
+        headers = self.auth_headers_for_user(user)
+
+        # Create a profile first (POST requires no capability gate)
+        self.client.post(
+            "/api/v1/profile",
+            headers=headers,
+            json={"name": "Free User", "age": 28, "weight_kg": 75, "height_cm": 170},
+        )
+
+        response = self.client.patch(
+            "/api/v1/profile/gender",
+            headers=headers,
+            json={"gender": "female"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["gender"], "female")
+
+    def test_gender_update_rejects_missing_field(self) -> None:
+        """PATCH /api/v1/profile/gender returns 422 when gender is absent."""
+        user = self.create_user()
+        headers = self.auth_headers_for_user(user)
+
+        response = self.client.patch(
+            "/api/v1/profile/gender",
+            headers=headers,
+            json={},
+        )
+
+        self.assertEqual(response.status_code, 422)
+
 
 if __name__ == "__main__":
     unittest.main()
