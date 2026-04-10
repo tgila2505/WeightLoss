@@ -1,10 +1,15 @@
 import type { FunnelPreview } from '@/lib/funnel-session';
 
 export function PlanPreviewCard({ preview }: { preview: FunnelPreview }) {
+  // Calorie density: protein=4 kcal/g, carbs=4 kcal/g, fat=9 kcal/g
+  const proteinKcal = preview.protein_g * 4;
+  const carbsKcal = preview.carbs_g * 4;
+  const fatKcal = preview.fat_g * 9;
+  const totalMacroKcal = proteinKcal + carbsKcal + fatKcal || 1; // guard divide-by-zero
   const macros = [
-    { label: 'Protein', grams: preview.protein_g, pct: 30, color: 'bg-blue-500' },
-    { label: 'Carbs', grams: preview.carbs_g, pct: 40, color: 'bg-amber-500' },
-    { label: 'Fat', grams: preview.fat_g, pct: 30, color: 'bg-rose-500' }
+    { label: 'Protein', grams: preview.protein_g, pct: Math.round(proteinKcal / totalMacroKcal * 100), color: 'bg-blue-500' },
+    { label: 'Carbs', grams: preview.carbs_g, pct: Math.round(carbsKcal / totalMacroKcal * 100), color: 'bg-amber-500' },
+    { label: 'Fat', grams: preview.fat_g, pct: Math.round(fatKcal / totalMacroKcal * 100), color: 'bg-rose-500' },
   ];
 
   return (

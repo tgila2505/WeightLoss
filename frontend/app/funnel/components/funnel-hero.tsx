@@ -20,18 +20,23 @@ const CTAS = {
 };
 
 export function FunnelHero() {
-  const [variants, setVariants] = useState({
-    headline: 'A' as 'A' | 'B',
-    cta: 'A' as 'A' | 'B'
-  });
+  // Initialize synchronously from sessionStorage so the correct variant is
+  // rendered on the first client paint — eliminating the visible text swap
+  // that occurred when useEffect set the variant after hydration.
+  // suppressHydrationWarning on the affected elements tells React to ignore
+  // the SSR('A') vs client(possibly 'B') mismatch, which is intentional.
+  const [variants] = useState(() =>
+    typeof window !== 'undefined'
+      ? getFunnelVariants()
+      : { headline: 'A' as const, cta: 'A' as const }
+  );
 
   useEffect(() => {
-    const nextVariants = getFunnelVariants();
-    setVariants(nextVariants);
     trackFunnelEvent('landing_variant_viewed', {
-      headline_variant: nextVariants.headline,
-      cta_variant: nextVariants.cta
+      headline_variant: variants.headline,
+      cta_variant: variants.cta
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -43,7 +48,7 @@ export function FunnelHero() {
               <CheckCircle2 className="h-4 w-4" />
               Personalised calorie target in 60 seconds
             </div>
-            <h1 className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+            <h1 suppressHydrationWarning className="mt-6 max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
               {HEADLINES[variants.headline]}
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600 lg:mx-0">
@@ -52,7 +57,7 @@ export function FunnelHero() {
             </p>
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:items-start">
               <Button asChild size="lg" className="h-auto px-8 py-4 text-base">
-                <Link href="/funnel/start">
+                <Link href="/funnel/start" suppressHydrationWarning>
                   {CTAS[variants.cta]}
                   <ArrowRight className="h-4 w-4" />
                 </Link>

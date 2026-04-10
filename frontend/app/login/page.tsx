@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotHelp, setShowForgotHelp] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn()) {
@@ -103,12 +104,32 @@ export default function LoginPage() {
           )}
         </Button>
 
-        <p className="text-center text-sm text-slate-600">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium text-blue-600 hover:underline">
-            Create one
-          </Link>
-        </p>
+        <div className="text-center space-y-2">
+          <p>
+            <button
+              type="button"
+              onClick={() => setShowForgotHelp((v) => !v)}
+              className="text-xs text-slate-400 hover:text-slate-600 hover:underline"
+            >
+              Forgot password?
+            </button>
+          </p>
+          {showForgotHelp ? (
+            <p className="text-xs text-slate-500 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+              Password reset is not yet available in-app. Please contact{' '}
+              <a href="mailto:support@weightloss.app" className="text-blue-600 hover:underline">
+                support@weightloss.app
+              </a>{' '}
+              to reset your password.
+            </p>
+          ) : null}
+          <p className="text-sm text-slate-600">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="font-medium text-blue-600 hover:underline">
+              Create one
+            </Link>
+          </p>
+        </div>
       </form>
     </AuthCardShell>
   );
