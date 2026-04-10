@@ -50,7 +50,10 @@ async function saveAiKeys(token: string, groq: string, mistral: string): Promise
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ groq_api_key: groq, mistral_api_key: mistral }),
+    body: JSON.stringify({
+      groq_api_key: groq || null,
+      mistral_api_key: mistral || null,
+    }),
   });
   if (!res.ok) throw new Error('save-failed');
   return res.json() as Promise<AiKeysStatus>;

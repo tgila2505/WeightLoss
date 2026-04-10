@@ -77,19 +77,27 @@ class AdminService:
     def update_ai_keys(
         self, session: Session, user: User, payload: AiKeysUpdate
     ) -> AiKeysPublicResponse:
-        self._upsert(session, "groq_api_key", payload.groq_api_key.strip(), user.id)
-        self._upsert(session, "mistral_api_key", payload.mistral_api_key.strip(), user.id)
+        # Treat None or blank as "leave existing key unchanged"
+        groq_val_new = (payload.groq_api_key or "").strip() or None
+        mistral_val_new = (payload.mistral_api_key or "").strip() or None
+
+        if groq_val_new is not None:
+            self._upsert(session, "groq_api_key", groq_val_new, user.id)
+        if mistral_val_new is not None:
+            self._upsert(session, "mistral_api_key", mistral_val_new, user.id)
         session.commit()
 
-        settings = get_settings()
-        groq_val = payload.groq_api_key.strip()
-        mistral_val = payload.mistral_api_key.strip()
+        # Read current values so the response reflects unchanged keys too
+        groq_row = self._get(session, "groq_api_key")
+        mistral_row = self._get(session, "mistral_api_key")
+        groq_val = groq_row.value if groq_row else ""
+        mistral_val = mistral_row.value if mistral_row else ""
 
-        # Sync to env files so services pick up the new keys on restart
-        self._write_env_files(groq_val, mistral_val, settings)
-
-        # Hot-reload ai-services (no restart needed)
-        self._reload_ai_services(settings.ai_services_url)
+        # Only sync env files when at least one key was actually updated
+        if groq_val_new is not None or mistral_val_new is not None:
+            settings = get_settings()
+            self._write_env_files(groq_val, mistral_val, settings)
+            self._reload_ai_services(settings.ai_services_url)
 
         return AiKeysPublicResponse(
             groq_key_set=bool(groq_val),

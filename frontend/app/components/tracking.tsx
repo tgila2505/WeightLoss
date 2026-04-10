@@ -288,8 +288,17 @@ export function TrackingView({
         </div>
 
         {adherenceRecords.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 py-10 text-center space-y-3">
             <p className="text-sm text-slate-500">No adherence signals yet.</p>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto">
+              Tell the AI coach what you ate, how you slept, or whether you stuck to your plan — it will log your adherence automatically.
+            </p>
+            <Link
+              href="/interaction"
+              className="inline-flex items-center text-xs text-blue-600 hover:underline font-medium"
+            >
+              Start tracking with the AI coach →
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -6,8 +6,8 @@ from pydantic import BaseModel
 
 
 class AiKeysUpdate(BaseModel):
-    groq_api_key: str
-    mistral_api_key: str
+    groq_api_key: str | None = None
+    mistral_api_key: str | None = None
 
 
 class AiKeysPublicResponse(BaseModel):

@@ -104,6 +104,7 @@ export function OnboardingForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiKeyWarning, setAiKeyWarning] = useState('');
 
   // Restore progress once loaded
   useEffect(() => {
@@ -147,8 +148,10 @@ export function OnboardingForm() {
   }
 
   function goToStep(next: number) {
-    if (next > stepIndex) {
-      track('drop_off', { from_step: stepIndex, to_step: next, direction: 'forward' });
+    // Only fire drop_off when the user navigates backward — forward navigation
+    // is progress, not abandonment, and was corrupting funnel drop-off metrics.
+    if (next < stepIndex) {
+      track('drop_off', { from_step: stepIndex, to_step: next, direction: 'back' });
     }
     setStepIndex(next);
     save({ currentStep: next, formData: form, completed: false });
@@ -160,8 +163,15 @@ export function OnboardingForm() {
     setIsSubmitting(true);
     try {
       await upsertProfile(form);
-      if (groqKey.trim() && mistralKey.trim()) {
-        setAiKeys(groqKey.trim(), mistralKey.trim());
+      const groq = groqKey.trim();
+      const mistral = mistralKey.trim();
+      if (groq || mistral) {
+        setAiKeys(groq, mistral);
+        if (!groq || !mistral) {
+          setAiKeyWarning(
+            `Only your ${groq ? 'Groq' : 'Mistral'} key was saved. Add the ${groq ? 'Mistral' : 'Groq'} key later from Settings for full reliability.`
+          );
+        }
       }
       markCompleted(form as unknown as Record<string, string>);
       setSuccess('Onboarding saved. Redirecting…');
@@ -513,6 +523,9 @@ export function OnboardingForm() {
 
           {error ? (
             <p className="text-sm text-red-600" role="alert">{error}</p>
+          ) : null}
+          {aiKeyWarning ? (
+            <p className="text-sm text-amber-600" role="status">{aiKeyWarning}</p>
           ) : null}
           {success ? (
             <p className="text-sm text-emerald-600">{success}</p>

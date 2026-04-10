@@ -22,16 +22,27 @@ export function PlanView({
           </p>
           <h1 className="text-2xl font-bold text-slate-900">Today's breakdown</h1>
         </div>
-        <div className="text-center py-12 space-y-3">
-          <p className="text-sm text-slate-500">
-            Generate a plan from the interaction page to see your meals and activities.
+        <div className="text-center py-12 space-y-4">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-semibold text-amber-700">
+            Pro feature
+          </div>
+          <p className="text-sm text-slate-600 max-w-sm mx-auto">
+            AI-generated meal and activity plans require a Pro subscription. Upgrade to unlock personalised daily plans.
           </p>
-          <Link
-            href="/interaction"
-            className="inline-flex items-center text-sm text-blue-600 hover:underline font-medium"
-          >
-            Go to interaction →
-          </Link>
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              href="/settings/billing"
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              Upgrade to Pro →
+            </Link>
+            <Link
+              href="/interaction"
+              className="text-xs text-slate-400 hover:text-slate-600 hover:underline"
+            >
+              Already Pro? Generate a plan from the interaction page
+            </Link>
+          </div>
         </div>
       </PageShell>
     );

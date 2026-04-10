@@ -45,6 +45,12 @@ export function setAccessToken(token: string): void {
   if (!isNaN(userId)) {
     identifyUser(userId)
   }
+
+  // Sync a routing cookie so middleware can guard protected routes without
+  // reading localStorage (which is unavailable in the Edge runtime).
+  const exp = payload?.exp
+  const maxAge = exp ? Math.max(0, exp - Math.floor(Date.now() / 1000)) : 60 * 60 * 24 * 7
+  document.cookie = `has_session=1; path=/; max-age=${maxAge}; SameSite=Lax`
 }
 
 export function clearAccessToken(): void {
@@ -52,6 +58,7 @@ export function clearAccessToken(): void {
   window.localStorage.removeItem('mindmap-graph-state')
   window.localStorage.removeItem('_funnel_profile')
   window.localStorage.removeItem('_funnel_ab')
+  document.cookie = 'has_session=; path=/; max-age=0; SameSite=Lax'
   resetUser()
 }
 
