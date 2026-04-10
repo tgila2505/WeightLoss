@@ -17,12 +17,12 @@ const FUNNEL_PROFILE_KEY = '_funnel_profile'
 
 export function saveFunnelProfile(profile: FunnelProfile): void {
   if (typeof window === 'undefined') return
-  sessionStorage.setItem(FUNNEL_PROFILE_KEY, JSON.stringify(profile))
+  localStorage.setItem(FUNNEL_PROFILE_KEY, JSON.stringify(profile))
 }
 
 export function getFunnelProfile(): FunnelProfile | null {
   if (typeof window === 'undefined') return null
-  const stored = sessionStorage.getItem(FUNNEL_PROFILE_KEY)
+  const stored = localStorage.getItem(FUNNEL_PROFILE_KEY)
   if (!stored) return null
   try {
     return JSON.parse(stored) as FunnelProfile
@@ -33,8 +33,8 @@ export function getFunnelProfile(): FunnelProfile | null {
 
 export function clearFunnelSession(): void {
   if (typeof window === 'undefined') return
-  sessionStorage.removeItem(FUNNEL_PROFILE_KEY)
-  sessionStorage.removeItem('_funnel_ab')
+  localStorage.removeItem(FUNNEL_PROFILE_KEY)
+  localStorage.removeItem('_funnel_ab')
 }
 
 export async function createFunnelSession(profile: FunnelProfile): Promise<void> {

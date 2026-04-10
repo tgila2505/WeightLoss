@@ -8,6 +8,7 @@ import {
   register,
   setAccessToken
 } from '@/lib/auth';
+import { saveFunnelProfile, getFunnelProfile } from '@/lib/funnel-session';
 
 function createToken(expiresAtSeconds: number): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -81,5 +82,44 @@ describe('auth helpers', () => {
     await expect(login('person@example.com', 'wrong-password')).rejects.toThrow(
       'Invalid email or password'
     );
+  });
+
+  it('funnel profile survives setAccessToken (C4)', () => {
+    saveFunnelProfile({
+      name: 'Alice',
+      age: 30,
+      gender: 'female',
+      height_cm: 165,
+      weight_kg: 70,
+      goal_weight_kg: 60,
+      timeline_weeks: 12,
+      health_conditions: '',
+      activity_level: 'moderate',
+      diet_pattern: 'balanced',
+    });
+
+    const token = createToken(Math.floor(Date.now() / 1000) + 3600);
+    setAccessToken(token); // used to call sessionStorage.clear() — wiping the profile
+
+    expect(getFunnelProfile()?.name).toBe('Alice');
+  });
+
+  it('clearAccessToken removes funnel profile keys', () => {
+    saveFunnelProfile({
+      name: 'Bob',
+      age: 25,
+      gender: 'male',
+      height_cm: 180,
+      weight_kg: 85,
+      goal_weight_kg: 75,
+      timeline_weeks: 16,
+      health_conditions: '',
+      activity_level: 'active',
+      diet_pattern: 'high-protein',
+    });
+
+    clearAccessToken();
+
+    expect(getFunnelProfile()).toBeNull();
   });
 });

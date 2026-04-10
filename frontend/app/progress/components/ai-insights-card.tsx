@@ -55,7 +55,6 @@ function PlanAdjustmentBanner({
   adjustments: Record<string, unknown>;
 }) {
   async function accept() {
-    const { requestWithBody } = await import('@/lib/api-client');
     try {
       const token = (await import('@/lib/auth')).getAccessToken();
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';

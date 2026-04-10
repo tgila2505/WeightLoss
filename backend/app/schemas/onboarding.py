@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -14,6 +15,6 @@ class OnboardingStateResponse(BaseModel):
     current_step: int
     completed: bool
     form_data: dict[str, Any]
-    updated_at: str
+    updated_at: datetime
 
     model_config = {"from_attributes": True}

@@ -50,6 +50,8 @@ export function setAccessToken(token: string): void {
 export function clearAccessToken(): void {
   window.localStorage.removeItem(TOKEN_KEY)
   window.localStorage.removeItem('mindmap-graph-state')
+  window.localStorage.removeItem('_funnel_profile')
+  window.localStorage.removeItem('_funnel_ab')
   resetUser()
 }
 

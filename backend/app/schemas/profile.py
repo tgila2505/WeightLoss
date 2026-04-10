@@ -35,6 +35,10 @@ class ProfileUpdate(BaseModel):
     diet_pattern: str | None = Field(default=None, min_length=1, max_length=100)
 
 
+class GenderUpdate(BaseModel):
+    gender: str = Field(min_length=1, max_length=50)
+
+
 class ProfileResponse(ProfileBase):
     model_config = ConfigDict(from_attributes=True)
 

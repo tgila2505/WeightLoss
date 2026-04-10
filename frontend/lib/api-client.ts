@@ -1019,3 +1019,62 @@ export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
   const data = await res.json();
   return data as WeeklyReport | null;
 }
+
+// ---------------------------------------------------------------------------
+// Leaderboard (C8)
+// ---------------------------------------------------------------------------
+
+export type LeaderboardEntry = {
+  rank: number;
+  username: string;
+  weight_lost_kg: number;
+  weeks_tracked: number;
+};
+
+export type LeaderboardResponse = {
+  entries: LeaderboardEntry[];
+  total_opted_in: number;
+};
+
+export async function fetchLeaderboard(): Promise<LeaderboardResponse> {
+  const resp = await fetch(`${apiBaseUrl}/api/v1/leaderboard`);
+  if (!resp.ok) throw new Error('Failed to fetch leaderboard');
+  return resp.json() as Promise<LeaderboardResponse>;
+}
+
+// ---------------------------------------------------------------------------
+// Shared plans (C9)
+// ---------------------------------------------------------------------------
+
+export type SharedPlanResponse = {
+  slug: string;
+  plan_data: Record<string, unknown>;
+  views: number;
+  created_at: string;
+  expires_at: string | null;
+};
+
+export async function fetchSharedPlan(slug: string): Promise<SharedPlanResponse> {
+  const resp = await fetch(`${apiBaseUrl}/api/v1/shared-plans/${encodeURIComponent(slug)}`);
+  if (resp.status === 404) throw new Error('PLAN_NOT_FOUND');
+  if (!resp.ok) throw new Error('Failed to fetch shared plan');
+  return resp.json() as Promise<SharedPlanResponse>;
+}
+
+// ---------------------------------------------------------------------------
+// Gender update (C2)
+// ---------------------------------------------------------------------------
+
+export async function updateGender(gender: string): Promise<ProfileResponse> {
+  const token = getAccessToken();
+  const res = await fetch(`${apiBaseUrl}/api/v1/profile/gender`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ gender }),
+  });
+  if (!res.ok) throw new Error(await readError(res));
+  return res.json() as Promise<ProfileResponse>;
+}
