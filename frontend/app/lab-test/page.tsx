@@ -593,6 +593,13 @@ export default function LabTestPage() {
         </CardContent>
       </Card>
 
+      {/* Manual entry card — fallback for users without AI keys */}
+      <ManualLabEntry
+        onSaved={() => {
+          fetchLabs().then(setLabs).catch(() => {});
+        }}
+      />
+
       {/* Upload card */}
       <Card className="mb-8">
         <CardHeader className="pb-3">
@@ -921,6 +928,182 @@ function LabResultCard({ record }: Readonly<{ record: LabRecordResponse }>) {
           <span className="text-xs text-slate-400 capitalize">{record.processed.trend}</span>
         </div>
       </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Manual lab entry form (C5) — fallback for users without AI keys
+// ---------------------------------------------------------------------------
+function ManualLabEntry({ onSaved }: Readonly<{ onSaved: () => void }>) {
+  const testNames = Object.keys(LAB_STANDARDS).sort();
+  const [open, setOpen] = useState(false);
+  const [testName, setTestName] = useState('');
+  const [valueStr, setValueStr] = useState('');
+  const [unitIndex, setUnitIndex] = useState(0);
+  const [recordedDate, setRecordedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
+  const unitOptions = testName ? (LAB_STANDARDS[testName] ?? []) : [];
+  const selectedUnit = unitOptions[unitIndex];
+
+  function handleTestChange(name: string) {
+    setTestName(name);
+    setUnitIndex(0);
+    setValueStr('');
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const value = parseFloat(valueStr);
+    if (!testName || isNaN(value)) return;
+    setSaving(true);
+    setSaveError('');
+    try {
+      await createLabRecord({
+        test_name: testName,
+        value,
+        unit: selectedUnit?.unit ?? null,
+        reference_range: selectedUnit?.referenceRange ?? null,
+        recorded_date: recordedDate,
+      });
+      setTestName('');
+      setValueStr('');
+      setUnitIndex(0);
+      setRecordedDate(new Date().toISOString().split('T')[0]);
+      onSaved();
+    } catch {
+      setSaveError('Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card className="mb-6">
+      <CardHeader
+        className="cursor-pointer select-none pb-3"
+        onClick={() => setOpen(o => !o)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {open
+              ? <ChevronDown className="h-4 w-4 text-slate-400" />
+              : <ChevronRight className="h-4 w-4 text-slate-400" />
+            }
+            <CardTitle className="text-base">Enter result manually</CardTitle>
+          </div>
+        </div>
+        {!open && (
+          <p className="ml-6 text-xs text-slate-500 mt-0.5">
+            No AI key? Enter lab values directly from your paper results.
+          </p>
+        )}
+      </CardHeader>
+
+      {open && (
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Test name */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-700" htmlFor="manual-test-name">
+                Test name
+              </label>
+              <select
+                id="manual-test-name"
+                value={testName}
+                onChange={e => handleTestChange(e.target.value)}
+                required
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a test…</option>
+                {testNames.map(name => (
+                  <option key={name} value={name}>
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Value + unit */}
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-1.5">
+                <label className="text-xs font-medium text-slate-700" htmlFor="manual-value">
+                  Value
+                </label>
+                <input
+                  id="manual-value"
+                  type="number"
+                  step="any"
+                  value={valueStr}
+                  onChange={e => setValueStr(e.target.value)}
+                  placeholder="e.g. 5.4"
+                  required
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {unitOptions.length > 1 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-700" htmlFor="manual-unit">
+                    Unit
+                  </label>
+                  <select
+                    id="manual-unit"
+                    value={unitIndex}
+                    onChange={e => setUnitIndex(Number(e.target.value))}
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {unitOptions.map((opt, i) => (
+                      <option key={opt.unit} value={i}>{opt.unit}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {unitOptions.length === 1 && selectedUnit?.unit && (
+                <div className="space-y-1.5">
+                  <span className="block text-xs font-medium text-slate-700">Unit</span>
+                  <span className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600">
+                    {selectedUnit.unit}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {selectedUnit?.referenceRange && (
+              <p className="text-xs text-slate-500">
+                Reference range: <span className="font-medium">{selectedUnit.referenceRange}</span>
+              </p>
+            )}
+
+            {/* Date */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-700" htmlFor="manual-date">
+                Test date
+              </label>
+              <input
+                id="manual-date"
+                type="date"
+                value={recordedDate}
+                max={new Date().toISOString().split('T')[0]}
+                onChange={e => setRecordedDate(e.target.value)}
+                required
+                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+
+            <Button type="submit" size="sm" disabled={saving || !testName || !valueStr}>
+              {saving ? 'Saving…' : 'Save result'}
+            </Button>
+          </form>
+        </CardContent>
+      )}
     </Card>
   );
 }
