@@ -86,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function UgcResultPage({ params }: Props) {
   const { slug } = await params
   const page = await fetchUgcPage(slug)
-  if (!page) notFound()
+  if (!page) return notFound()
 
   const title = page.title ?? 'Weight Loss Success Story'
   const kgLost = page.kg_lost ? Math.round(page.kg_lost) : null
