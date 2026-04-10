@@ -50,3 +50,26 @@
   font-weight: 600;
   width: fit-content;
 }
+
+.mindmap-nonleaf-hint {
+  color: #1e40af;
+  background-color: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  width: fit-content;
+  animation: mindmap-hint-fade-in 0.18s ease;
+}
+
+@keyframes mindmap-hint-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

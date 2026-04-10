@@ -110,6 +110,7 @@ export function FunnelOnboarding() {
       {step === 2 && (
         <Step2
           values={profile}
+          currentWeight={profile.weight_kg}
           onChange={update}
           onBack={() => setStep(1)}
           onNext={() => handleStepComplete(3)}
@@ -257,17 +258,26 @@ function Step1({
 
 function Step2({
   values,
+  currentWeight,
   onChange,
   onBack,
   onNext
 }: {
   values: Step2Fields;
+  currentWeight: number;
   onChange: (fields: Partial<FunnelProfile>) => void;
   onBack: () => void;
   onNext: () => void;
 }) {
+  const [goalWeightError, setGoalWeightError] = useState('');
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (currentWeight > 0 && values.goal_weight_kg >= currentWeight) {
+      setGoalWeightError('Goal weight must be less than your current weight');
+      return;
+    }
+    setGoalWeightError('');
     onNext();
   }
 
@@ -291,10 +301,16 @@ function Step2({
             min={30}
             max={300}
             value={values.goal_weight_kg || ''}
-            onChange={(e) => onChange({ goal_weight_kg: Number(e.target.value) })}
-            className={fieldClassName}
+            onChange={(e) => {
+              onChange({ goal_weight_kg: Number(e.target.value) });
+              setGoalWeightError('');
+            }}
+            className={goalWeightError ? `${fieldClassName} border-red-400` : fieldClassName}
             placeholder="75"
           />
+          {goalWeightError && (
+            <p className="text-sm text-red-600">{goalWeightError}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="timeline" className="text-slate-700">

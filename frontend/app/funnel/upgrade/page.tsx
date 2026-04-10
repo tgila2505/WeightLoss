@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 import { Container } from '@/components/ui/container';
 import { trackFunnelEvent } from '@/lib/analytics';
@@ -27,6 +28,12 @@ export default function FunnelUpgradePage() {
               Create your account
             </h2>
             <UpgradeForm />
+            <p className="mt-4 text-center text-sm text-slate-500">
+              Already have an account?{' '}
+              <Link href="/login" className="font-medium text-blue-600 hover:underline">
+                Log in &rarr;
+              </Link>
+            </p>
           </div>
         </div>
       </Container>

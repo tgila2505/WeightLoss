@@ -185,32 +185,79 @@ export default function UserProfilePage() {
   )
 }
 
+/** Splits a string on **bold** markers and returns an array of strings and <strong> nodes. */
+function renderInline(content: string, baseKey: number): React.ReactNode {
+  const parts = content.split(/(\*\*[^*]+\*\*)/)
+  if (parts.length === 1) return content
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={`${baseKey}-b${i}`}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
 function MarkdownRenderer({ text }: { text: string }) {
   const lines = text.split("\n")
   const elements: React.ReactNode[] = []
   let key = 0
 
-  for (const line of lines) {
-    if (line.startsWith("## ")) {
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+
+    if (line.startsWith("# ") && !line.startsWith("## ")) {
+      // H13 fix (M16): h1
+      elements.push(
+        <h1 key={key++} className="mb-2 mt-6 text-lg font-bold text-slate-900">
+          {renderInline(line.slice(2), key)}
+        </h1>
+      )
+      i++
+    } else if (line.startsWith("## ") && !line.startsWith("### ")) {
+      // existing h2 + M15 inline bold
       elements.push(
         <h2 key={key++} className="mb-1.5 mt-5 text-base font-bold text-slate-900">
-          {line.slice(3)}
+          {renderInline(line.slice(3), key)}
         </h2>
       )
-    } else if (line.startsWith("- ")) {
+      i++
+    } else if (line.startsWith("### ")) {
+      // M16: h3
       elements.push(
-        <li key={key++} className="ml-4 mb-1 text-sm text-slate-700">
-          {line.slice(2).replace(/\*\*(.+?)\*\*/g, "$1")}
-        </li>
+        <h3 key={key++} className="mb-1 mt-4 text-sm font-semibold text-slate-800">
+          {renderInline(line.slice(4), key)}
+        </h3>
+      )
+      i++
+    } else if (line.startsWith("- ") || line.startsWith("* ")) {
+      // H13: collect consecutive list items into a single <ul>
+      const listItems: React.ReactNode[] = []
+      while (i < lines.length && (lines[i].startsWith("- ") || lines[i].startsWith("* "))) {
+        const itemKey = key++
+        listItems.push(
+          <li key={itemKey} className="ml-4 mb-1 text-sm text-slate-700">
+            {renderInline(lines[i].slice(2), itemKey)}
+          </li>
+        )
+        i++
+      }
+      elements.push(
+        <ul key={key++} className="list-disc">
+          {listItems}
+        </ul>
       )
     } else if (line.trim() === "") {
       elements.push(<div key={key++} className="h-2" />)
+      i++
     } else {
+      // M15: apply inline bold to plain paragraphs too
       elements.push(
         <p key={key++} className="my-1 text-sm text-slate-700">
-          {line}
+          {renderInline(line, key)}
         </p>
       )
+      i++
     }
   }
 

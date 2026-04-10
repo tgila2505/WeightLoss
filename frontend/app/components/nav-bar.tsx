@@ -81,7 +81,7 @@ export function NavBar() {
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {links.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
+            const active = pathname === href || pathname.startsWith(href + '/');
             return (
               <Link
                 key={href}
@@ -132,7 +132,7 @@ export function NavBar() {
       <nav className="fixed bottom-0 inset-x-0 z-50 flex border-t border-slate-200 bg-white/95 md:hidden">
         <div className="flex h-20 w-full items-center gap-1 overflow-x-auto px-2">
           {links.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
+            const active = pathname === href || pathname.startsWith(href + '/');
             return (
               <Link
                 key={href}

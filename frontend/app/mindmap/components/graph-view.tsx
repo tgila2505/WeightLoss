@@ -321,6 +321,7 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
   const [modalError, setModalError] = useState("")
   const [completionMessage, setCompletionMessage] = useState("")
   const [zoom, setZoom] = useState(1)
+  const [nonLeafHint, setNonLeafHint] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({})
   // Tracks node IDs with an in-flight save to prevent concurrent duplicate requests
@@ -494,6 +495,20 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
     }
   }, [completionMessage])
 
+  useEffect(() => {
+    if (!nonLeafHint) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setNonLeafHint(null)
+    }, 2400)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [nonLeafHint])
+
   const handleNodeSelect = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId)
     const node = nodesById.get(nodeId)
@@ -505,8 +520,15 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
     if (nodeDepth >= 2) {
       setModalError("")
       setModalNodeId(nodeId)
+    } else {
+      const hasChildren = (childMap.get(nodeId) ?? []).length > 0
+      if (hasChildren) {
+        setNonLeafHint("Click a sub-topic to explore details, or use the expand button to show children.")
+      } else {
+        setNonLeafHint("Click a sub-topic to explore details.")
+      }
     }
-  }, [depthMap, events, nodesById])
+  }, [childMap, depthMap, events, nodesById])
 
   const handleToggleExpand = useCallback((nodeId: string) => {
     const isCurrentlyExpanded = expandedNodeIds.has(nodeId)
@@ -643,6 +665,15 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
           </p>
           {completionMessage ? (
             <div className="mindmap-completion-feedback">{completionMessage}</div>
+          ) : null}
+          {nonLeafHint ? (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mindmap-nonleaf-hint"
+            >
+              {nonLeafHint}
+            </div>
           ) : null}
         </header>
 
