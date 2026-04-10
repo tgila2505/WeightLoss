@@ -1,8 +1,23 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { fetchWizardState, saveWizardState } from '@/lib/api-client'
 import type { WizardState, WizardStepId, WizardStepState } from '../types/wizard'
+
+const WIZARD_STORAGE_KEY = 'wizard_progress'
+
+function loadWizardState(): WizardState | null {
+  try {
+    const raw = window.localStorage.getItem(WIZARD_STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as WizardState
+  } catch {
+    return null
+  }
+}
+
+function persistWizardState(state: WizardState): void {
+  window.localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(state))
+}
 
 const STEP_IDS: WizardStepId[] = [
   'personal-info',
@@ -27,29 +42,19 @@ export function useWizardState() {
   const [state, setState] = useState<WizardState>(createInitialState)
   const [hydrated, setHydrated] = useState(false)
 
-  // Load from server on mount
+  // Load from localStorage on mount
   useEffect(() => {
-    let isMounted = true
-    fetchWizardState().then((raw) => {
-      if (!isMounted) return
-      if (raw && Object.keys(raw).length > 0) {
-        try {
-          setState(raw as unknown as WizardState)
-        } catch {
-          // corrupt — start fresh
-        }
-      }
-      setHydrated(true)
-    }).catch(() => {
-      if (isMounted) setHydrated(true)
-    })
-    return () => { isMounted = false }
+    const saved = loadWizardState()
+    if (saved && Object.keys(saved).length > 0) {
+      setState(saved)
+    }
+    setHydrated(true)
   }, [])
 
-  // Save to server on every state change (after hydration)
+  // Persist to localStorage on every state change (after hydration)
   useEffect(() => {
     if (hydrated) {
-      saveWizardState(state as unknown as Record<string, unknown>)
+      persistWizardState(state)
     }
   }, [state, hydrated])
 
@@ -84,7 +89,7 @@ export function useWizardState() {
   const clearProgress = useCallback(() => {
     const fresh = createInitialState()
     setState(fresh)
-    saveWizardState(fresh as unknown as Record<string, unknown>)
+    persistWizardState(fresh)
   }, [])
 
   return { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress }
