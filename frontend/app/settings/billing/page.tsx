@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSubscription } from '@/lib/subscription-context'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -38,7 +40,7 @@ export default function BillingSettingsPage() {
     setCancelling(true)
     try {
       const token = localStorage.getItem('access_token')
-      await fetch('/api/v1/billing/cancel', {
+      await fetch(`${API_BASE}/api/v1/billing/cancel`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })

@@ -43,9 +43,15 @@ export default function PricingPage() {
         <FeatureComparison />
 
         <div className="flex flex-wrap gap-6 justify-center text-sm text-muted-foreground">
-          <span>&#x2713; Cancel anytime</span>
+          {interval === 'annual' ? (
+            <span>&#x2713; Billed annually · Auto-renews each year</span>
+          ) : (
+            <>
+              <span>&#x2713; Cancel anytime</span>
+              <span>&#x2713; No contracts</span>
+            </>
+          )}
           <span>&#x2713; 30-day money-back guarantee</span>
-          <span>&#x2713; No contracts</span>
           <span>&#x2713; SSL encrypted</span>
         </div>
       </div>

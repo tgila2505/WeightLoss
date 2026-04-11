@@ -116,7 +116,9 @@ export function TierCard({ tier, interval, onSelect, currentTier }: TierCardProp
       </Button>
       {tier !== 'free' && (
         <p className="text-center text-xs text-muted-foreground">
-          Cancel anytime · No contracts
+          {interval === 'annual'
+            ? 'Billed annually · Auto-renews each year'
+            : 'Cancel anytime · No contracts'}
         </p>
       )}
     </div>

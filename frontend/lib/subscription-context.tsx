@@ -54,6 +54,8 @@ const defaultState: SubscriptionState = {
   loading: true,
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+
 const SubscriptionContext = createContext<SubscriptionState>(defaultState)
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
@@ -68,7 +70,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    fetch('/api/v1/billing/status', {
+    fetch(`${API_BASE}/api/v1/billing/status`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => (r.ok ? r.json() : null))
