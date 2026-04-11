@@ -15,7 +15,7 @@ export interface FeatureFlags {
 
 export function getFeatureFlags(): FeatureFlags {
   return {
-    wizardEnabled: process.env.NEXT_PUBLIC_WIZARD_ENABLED === 'true',
+    wizardEnabled: process.env.NEXT_PUBLIC_WIZARD_ENABLED !== 'false',
     mindmapEnabled: process.env.NEXT_PUBLIC_MINDMAP_ENABLED !== 'false',
     abTestingEnabled: process.env.NEXT_PUBLIC_AB_TESTING_ENABLED === 'true',
     wizardRolloutPct: parseInt(process.env.NEXT_PUBLIC_WIZARD_ROLLOUT_PCT ?? '0', 10),

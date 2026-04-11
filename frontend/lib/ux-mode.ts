@@ -66,5 +66,5 @@ export function resolveUXMode(
   }
 
   // 5. Default
-  return { mode: 'mindmap', source: 'default' }
+  return { mode: 'wizard', source: 'default' }
 }
