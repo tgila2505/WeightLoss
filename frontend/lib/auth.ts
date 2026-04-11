@@ -79,6 +79,13 @@ export function isLoggedIn(): boolean {
     return false;
   }
 
+  // Sync the routing cookie if it's missing — handles users who were logged in
+  // before the has_session cookie was introduced (middleware migration).
+  if (typeof document !== 'undefined' && !document.cookie.includes('has_session=1')) {
+    const maxAge = Math.max(0, payload.exp - Math.floor(Date.now() / 1000));
+    document.cookie = `has_session=1; path=/; max-age=${maxAge}; SameSite=Lax`;
+  }
+
   return true;
 }
 
