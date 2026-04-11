@@ -65,5 +65,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...pseoPages, ...blogPages, ...ugcPages];
+  // Public profile pages (same slugs as UGC, person-centered view)
+  const profilePages: MetadataRoute.Sitemap = ugcSlugs.map((slug) => ({
+    url: `${BASE_URL}/profile/${slug}`,
+    lastModified: now,
+    changeFrequency: 'yearly' as const,
+    priority: 0.5,
+  }));
+
+  return [...staticPages, ...pseoPages, ...blogPages, ...ugcPages, ...profilePages];
 }
