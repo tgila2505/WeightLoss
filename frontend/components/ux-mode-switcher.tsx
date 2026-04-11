@@ -19,7 +19,7 @@ interface UXModeSwitcherProps {
    */
   onBeforeSwitch?: () => Promise<void>
   /** 'inline' renders as a subtle text link; 'floating' renders as a fixed bottom-right button */
-  variant?: 'inline' | 'floating'
+  variant?: 'inline' | 'floating' | 'segmented'
 }
 
 export function UXModeSwitcher({
@@ -57,6 +57,37 @@ export function UXModeSwitcher({
   const targetMode: UXVariant = currentMode === 'wizard' ? 'mindmap' : 'wizard'
   const targetLabel = targetMode === 'wizard' ? 'Guided Wizard' : 'Mind Map Explorer'
   const label = isSwitching ? 'Switching…' : `Switch to ${targetLabel}`
+
+  if (variant === 'segmented') {
+    return (
+      <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-0.5 gap-0.5">
+        <button
+          type="button"
+          onClick={() => currentMode !== 'wizard' && switchTo('wizard')}
+          disabled={currentMode === 'wizard' || isSwitching}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            currentMode === 'wizard'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Wizard
+        </button>
+        <button
+          type="button"
+          onClick={() => currentMode !== 'mindmap' && switchTo('mindmap')}
+          disabled={currentMode === 'mindmap' || isSwitching}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            currentMode === 'mindmap'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Mind Map
+        </button>
+      </div>
+    )
+  }
 
   if (variant === 'floating') {
     return (
