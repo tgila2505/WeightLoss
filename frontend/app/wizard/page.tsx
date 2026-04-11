@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchProfile, upsertProfile, saveNodeAnswers } from '@/lib/api-client'
 import { WizardShell, WIZARD_STEPS } from './components/wizard-shell'
 import { useWizardState } from './hooks/useWizardState'
-import { mapWizardToProfilePayload, mapStepToNodeAnswers } from './utils/profile-mapper'
+import { mapWizardToProfilePayload, mapStepToNodeAnswers, mapProfileToWizardAnswers } from './utils/profile-mapper'
 import { trackEvent } from '@/lib/analytics'
 import { resolveUXMode } from '@/lib/ux-mode'
 import type { WizardStepId } from './types/wizard'
@@ -14,7 +14,7 @@ import type { MindMapAnswerValue } from '@/lib/api-client'
 export default function WizardPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress } =
+  const { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress, seedFromProfile } =
     useWizardState()
   const [userId, setUserId] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -33,6 +33,11 @@ export default function WizardPage() {
         router.replace('/mindmap')
         return
       }
+      // Pre-fill from DB if user has a saved profile and no in-progress local work
+      if (profile) {
+        seedFromProfile(mapProfileToWizardAnswers(profile))
+      }
+
       // Track start event only on fresh session (no prior progress)
       if (!state.lastSavedAt) {
         trackEvent('profile_questionnaire_started', {

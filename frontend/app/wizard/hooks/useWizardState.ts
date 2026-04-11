@@ -92,5 +92,36 @@ export function useWizardState() {
     persistWizardState(fresh)
   }, [])
 
-  return { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress }
+  /**
+   * Seeds wizard answers from a previously saved profile (DB data).
+   * Only applies when all steps are empty — won't overwrite in-progress work.
+   */
+  const seedFromProfile = useCallback(
+    (profileAnswers: Partial<Record<WizardStepId, Record<string, unknown>>>) => {
+      setState((prev) => {
+        const hasProgress = Object.values(prev.steps).some(
+          (s) => Object.keys(s.answers).length > 0,
+        )
+        if (hasProgress) return prev
+
+        return {
+          ...prev,
+          steps: Object.fromEntries(
+            STEP_IDS.map((id) => [
+              id,
+              {
+                answers: profileAnswers[id] ?? {},
+                completed: Boolean(
+                  profileAnswers[id] && Object.keys(profileAnswers[id]).length > 0,
+                ),
+              } satisfies WizardStepState,
+            ]),
+          ) as Record<WizardStepId, WizardStepState>,
+        }
+      })
+    },
+    [],
+  )
+
+  return { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress, seedFromProfile }
 }

@@ -1,5 +1,5 @@
 import type { WizardStepId } from '../types/wizard'
-import type { OnboardingPayload, MindMapAnswerValue } from '@/lib/api-client'
+import type { OnboardingPayload, MindMapAnswerValue, ProfileResponse } from '@/lib/api-client'
 
 type StepAnswers = Record<WizardStepId, Record<string, unknown>>
 
@@ -27,6 +27,45 @@ export function mapWizardToProfilePayload(steps: StepAnswers): OnboardingPayload
     sleep_hours: str(lifestyle.sleep_hours),
     diet_pattern: str(diet.diet_pattern),
   }
+}
+
+/**
+ * Maps a saved ProfileResponse back to per-step wizard answers so the wizard
+ * can be pre-filled when the user revisits after completing it.
+ * Only includes fields that have a value; steps with no data are omitted.
+ */
+export function mapProfileToWizardAnswers(
+  profile: ProfileResponse,
+): Partial<Record<WizardStepId, Record<string, unknown>>> {
+  const result: Partial<Record<WizardStepId, Record<string, unknown>>> = {}
+
+  const personal: Record<string, unknown> = {}
+  if (profile.name) personal.name = profile.name
+  if (profile.age) personal.age = String(profile.age)
+  if (profile.gender) personal.gender = profile.gender
+  if (profile.height_cm != null) personal.height_cm = String(profile.height_cm)
+  if (profile.weight_kg != null) personal.weight_kg = String(profile.weight_kg)
+  if (Object.keys(personal).length > 0) result['personal-info'] = personal
+
+  const goals: Record<string, unknown> = {}
+  if (profile.goal_target_weight_kg != null) goals.goal_target_weight_kg = String(profile.goal_target_weight_kg)
+  if (profile.goal_timeline_weeks != null) goals.goal_timeline_weeks = String(profile.goal_timeline_weeks)
+  if (profile.activity_level) goals.activity_level = profile.activity_level
+  if (Object.keys(goals).length > 0) result['goals'] = goals
+
+  const medical: Record<string, unknown> = {}
+  if (profile.health_conditions) medical.summary = profile.health_conditions
+  if (Object.keys(medical).length > 0) result['medical-history'] = medical
+
+  const lifestyle: Record<string, unknown> = {}
+  if (profile.sleep_hours != null) lifestyle.sleep_hours = String(profile.sleep_hours)
+  if (Object.keys(lifestyle).length > 0) result['lifestyle'] = lifestyle
+
+  const diet: Record<string, unknown> = {}
+  if (profile.diet_pattern) diet.diet_pattern = profile.diet_pattern
+  if (Object.keys(diet).length > 0) result['diet'] = diet
+
+  return result
 }
 
 /**
