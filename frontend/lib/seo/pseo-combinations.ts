@@ -74,3 +74,50 @@ export function parsePseoSlug(slug: string): PseoDimensions | null {
   }
   return null
 }
+
+export const GOAL_TYPES: GoalType[] = [
+  'lose-weight',
+  'lose-belly-fat',
+  'lose-10kg',
+  'lose-5kg',
+  'lose-20kg',
+  'get-lean',
+]
+
+export const DIET_TYPES: DietType[] = [
+  'keto',
+  'mediterranean',
+  'intermittent-fasting',
+  'low-carb',
+  'calorie-deficit',
+  'plant-based',
+  'paleo',
+  'vegan',
+]
+
+export function buildPseoDescription({ goalType, dietType }: PseoDimensions): string {
+  if (dietType) {
+    return `Discover how to ${goalLabel(goalType).toLowerCase()} on a ${dietLabel(dietType)} diet. Get a personalised calorie target, meal plan, and expert guidance to reach your goal.`
+  }
+  return `Learn how to ${goalLabel(goalType).toLowerCase()} with a personalised calorie target and AI-powered meal plan. Science-backed approach tailored to your body.`
+}
+
+export function buildPseoH1({ goalType, dietType }: PseoDimensions): string {
+  if (dietType) {
+    return `${goalLabel(goalType)} on a ${dietLabel(dietType)} Diet: Your Complete Guide`
+  }
+  return `How to ${goalLabel(goalType)}: Your Complete Guide`
+}
+
+export function getCoreSlugList(): PseoDimensions[] {
+  const dims: PseoDimensions[] = []
+  for (const goalType of GOAL_TYPES) {
+    dims.push({ goalType })
+  }
+  for (const goalType of GOAL_TYPES) {
+    for (const dietType of DIET_TYPES) {
+      dims.push({ goalType, dietType })
+    }
+  }
+  return dims
+}
