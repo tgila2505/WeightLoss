@@ -11,6 +11,7 @@ import {
   saveNodeAnswers,
   type MindMapAnswerValue,
 } from "@/lib/api-client"
+import { UXModeSwitcher } from "@/components/ux-mode-switcher"
 import { initialProfileGraph } from "@/lib/graph/transformer"
 
 import { useGraphState } from "../hooks/useGraphState"
@@ -656,25 +657,30 @@ export function GraphView({ events }: Readonly<GraphViewProps>) {
   return (
     <PageShell fullWidth>
       <main style={{ display: "grid", gap: 16, minHeight: "calc(100vh - 48px)" }}>
-        <header style={{ display: "grid", gap: 6 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
-            Personal Profile Mind Map
-          </h1>
-          <p style={{ color: "#475569", fontSize: 14 }}>
-            Select a node to edit it, expand or collapse children, and drag cards to reposition them.
-          </p>
-          {completionMessage ? (
-            <div className="mindmap-completion-feedback">{completionMessage}</div>
-          ) : null}
-          {nonLeafHint ? (
-            <div
-              role="status"
-              aria-live="polite"
-              className="mindmap-nonleaf-hint"
-            >
-              {nonLeafHint}
-            </div>
-          ) : null}
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0f172a" }}>
+              Personal Profile Mind Map
+            </h1>
+            <p style={{ color: "#475569", fontSize: 14 }}>
+              Select a node to edit it, expand or collapse children, and drag cards to reposition them.
+            </p>
+            {completionMessage ? (
+              <div className="mindmap-completion-feedback">{completionMessage}</div>
+            ) : null}
+            {nonLeafHint ? (
+              <div
+                role="status"
+                aria-live="polite"
+                className="mindmap-nonleaf-hint"
+              >
+                {nonLeafHint}
+              </div>
+            ) : null}
+          </div>
+          <div style={{ flexShrink: 0, paddingTop: 4 }}>
+            <UXModeSwitcher currentMode="mindmap" variant="segmented" />
+          </div>
         </header>
 
         <section

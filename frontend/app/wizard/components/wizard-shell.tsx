@@ -102,7 +102,17 @@ export function WizardShell({
         <div className="max-w-2xl mx-auto space-y-3">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>Step {currentStepIndex + 1} of {WIZARD_STEPS.length}</span>
-            <span>{progressPct}% complete</span>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline">{progressPct}% complete</span>
+              <UXModeSwitcher
+                currentMode="wizard"
+                userId={userId}
+                stepId={step.id}
+                stepIndex={currentStepIndex}
+                onBeforeSwitch={onBeforeSwitch}
+                variant="segmented"
+              />
+            </div>
           </div>
           <Progress value={progressPct} className="h-2" />
           <div>
