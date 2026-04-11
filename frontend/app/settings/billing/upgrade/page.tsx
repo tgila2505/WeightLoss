@@ -7,6 +7,8 @@ import { getStripe } from '@/lib/stripe-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+
 const TIER_LABELS: Record<string, string> = {
   pro: 'Pro',
   pro_plus: 'Pro+',
@@ -23,6 +25,7 @@ function CheckoutForm({ tier, interval }: { tier: string; interval: string }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   const tierLabel = TIER_LABELS[tier] ?? tier
   const priceLabel = PRICES[tier]?.[interval] ?? ''
@@ -53,7 +56,7 @@ function CheckoutForm({ tier, interval }: { tier: string; interval: string }) {
       }
 
       const token = localStorage.getItem('access_token')
-      const res = await fetch('/api/v1/billing/subscribe', {
+      const res = await fetch(`${API_BASE}/api/v1/billing/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,12 +66,13 @@ function CheckoutForm({ tier, interval }: { tier: string; interval: string }) {
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        setError(data.detail ?? 'Subscription failed')
+        const data = await res.json().catch(() => ({}))
+        setError(data.error?.message ?? data.detail ?? 'Subscription failed')
         return
       }
 
-      router.push('/settings/billing')
+      setSuccess(true)
+      setTimeout(() => { window.location.href = '/settings/billing' }, 1500)
     } finally {
       setLoading(false)
     }
@@ -82,21 +86,28 @@ function CheckoutForm({ tier, interval }: { tier: string; interval: string }) {
             style: {
               base: {
                 fontSize: '16px',
-                color: '#fff',
+                color: '#0f172a',
                 fontFamily: 'inherit',
-                '::placeholder': { color: '#888' },
+                '::placeholder': { color: '#94a3b8' },
               },
               invalid: { color: '#f87171' },
             },
           }}
         />
       </div>
+      {success && (
+        <p className="text-sm text-center font-medium text-green-600">
+          Subscription activated! Redirecting&hellip;
+        </p>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={loading || !stripe} className="w-full">
+      <Button type="submit" disabled={loading || success || !stripe} className="w-full">
         {loading ? 'Processing\u2026' : `Start ${tierLabel} \u2014 ${priceLabel}`}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        Cancel anytime · 30-day money-back guarantee · SSL encrypted
+        {interval === 'annual'
+          ? 'Billed annually · Auto-renews each year · SSL encrypted'
+          : 'Cancel anytime · 30-day money-back guarantee · SSL encrypted'}
       </p>
     </form>
   )

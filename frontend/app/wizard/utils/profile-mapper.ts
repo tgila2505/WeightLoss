@@ -73,6 +73,10 @@ export function mapProfileToWizardAnswers(
  * formatted as Record<nodeId, Record<questionId, MindMapAnswerValue>>.
  * Used to persist medical/family history answers via PUT /questionnaire/{node_id}.
  */
+// Flat profile fields that live on the profile model — not node answers.
+const LIFESTYLE_FLAT_FIELDS = new Set(['sleep_hours', 'stress_level', 'smoking', 'alcohol'])
+const DIET_FLAT_FIELDS = new Set(['diet_pattern', 'restrictions'])
+
 export function mapStepToNodeAnswers(
   stepId: WizardStepId,
   answers: Record<string, unknown>,
@@ -84,5 +88,32 @@ export function mapStepToNodeAnswers(
       Object.entries(answers).filter(([k]) => !k.startsWith('__') && k !== 'summary')
     ) as Record<string, Record<string, MindMapAnswerValue>>
   }
+
+  if (stepId === 'lifestyle') {
+    // Keep only node-ID keys; exclude flat profile fields and UI-state keys.
+    return Object.fromEntries(
+      Object.entries(answers).filter(([k]) => !k.startsWith('__') && !LIFESTYLE_FLAT_FIELDS.has(k))
+    ) as Record<string, Record<string, MindMapAnswerValue>>
+  }
+
+  if (stepId === 'diet') {
+    // Map flat diet fields into the nutrition-groups node, then include any
+    // additional node-ID keys (e.g. nutrition-habits) stored directly.
+    const nutritionGroups: Record<string, MindMapAnswerValue> = {}
+    if (answers.diet_pattern) nutritionGroups['diet-pattern'] = String(answers.diet_pattern)
+    if (Array.isArray(answers.restrictions) && answers.restrictions.length > 0) {
+      nutritionGroups['sensitivities'] = answers.restrictions as string[]
+    }
+
+    const extraNodes = Object.fromEntries(
+      Object.entries(answers).filter(([k]) => !k.startsWith('__') && !DIET_FLAT_FIELDS.has(k))
+    ) as Record<string, Record<string, MindMapAnswerValue>>
+
+    return {
+      ...(Object.keys(nutritionGroups).length > 0 ? { 'nutrition-groups': nutritionGroups } : {}),
+      ...extraNodes,
+    }
+  }
+
   return {}
 }

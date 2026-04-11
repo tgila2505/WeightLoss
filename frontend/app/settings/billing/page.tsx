@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useSubscription } from '@/lib/subscription-context'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,29 +23,63 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { useRouter } from 'next/navigation'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 
 export default function BillingSettingsPage() {
   const subscription = useSubscription()
   const router = useRouter()
   const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const [togglingAutoRenew, setTogglingAutoRenew] = useState(false)
+  const [autoRenewError, setAutoRenewError] = useState<string | null>(null)
 
   const tierLabel =
     subscription.tier === 'pro_plus' ? 'Pro+' : subscription.tier === 'pro' ? 'Pro' : 'Free'
   const periodEnd = subscription.current_period_end
     ? new Date(subscription.current_period_end).toLocaleDateString()
     : null
+  const autoRenew = !subscription.cancel_at_period_end
 
   async function handleCancel() {
     setCancelling(true)
+    setCancelError(null)
     try {
       const token = localStorage.getItem('access_token')
-      await fetch('/api/v1/billing/cancel', {
+      const res = await fetch(`${API_BASE}/api/v1/billing/cancel`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })
-      router.refresh()
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setCancelError(data.error?.message ?? data.detail ?? 'Failed to cancel subscription')
+        return
+      }
+      window.location.href = '/settings/billing'
     } finally {
       setCancelling(false)
+    }
+  }
+
+  async function handleAutoRenewToggle(enabled: boolean) {
+    setTogglingAutoRenew(true)
+    setAutoRenewError(null)
+    try {
+      const token = localStorage.getItem('access_token')
+      const endpoint = enabled ? 'reactivate' : 'cancel'
+      const res = await fetch(`${API_BASE}/api/v1/billing/${endpoint}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setAutoRenewError(data.error?.message ?? data.detail ?? 'Failed to update auto-renewal')
+        return
+      }
+      window.location.href = '/settings/billing'
+    } finally {
+      setTogglingAutoRenew(false)
     }
   }
 
@@ -110,6 +145,9 @@ export default function BillingSettingsPage() {
               </>
             )}
           </div>
+          {cancelError && (
+            <p className="text-sm text-destructive">{cancelError}</p>
+          )}
         </CardContent>
       </Card>
 
@@ -122,6 +160,35 @@ export default function BillingSettingsPage() {
             <Button variant="outline" onClick={() => router.push('/settings/billing/upgrade')}>
               Update payment method
             </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {subscription.tier !== 'free' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Auto-renewal</CardTitle>
+            <CardDescription>
+              {autoRenew
+                ? `Your ${tierLabel} plan renews automatically${periodEnd ? ` on ${periodEnd}` : ''}.`
+                : `Auto-renewal is off. Your ${tierLabel} access ends ${periodEnd ? `on ${periodEnd}` : 'at the end of your billing period'}.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="auto-renew"
+                checked={autoRenew}
+                onCheckedChange={handleAutoRenewToggle}
+                disabled={togglingAutoRenew || subscription.loading}
+              />
+              <Label htmlFor="auto-renew" className="cursor-pointer">
+                {togglingAutoRenew ? 'Updating\u2026' : 'Automatically renew my subscription'}
+              </Label>
+            </div>
+            {autoRenewError && (
+              <p className="text-sm text-destructive">{autoRenewError}</p>
+            )}
           </CardContent>
         </Card>
       )}
