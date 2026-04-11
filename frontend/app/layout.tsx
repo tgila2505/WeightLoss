@@ -9,7 +9,10 @@ import { SubscriptionProvider } from '@/lib/subscription-context';
 
 export const metadata: Metadata = {
   title: 'WeightLoss',
-  description: 'WeightLoss — your personalised health companion'
+  description: 'WeightLoss — your personalised health companion',
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({
