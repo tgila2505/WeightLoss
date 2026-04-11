@@ -2,11 +2,12 @@ import type { MetadataRoute } from 'next';
 import { getCoreSlugList, buildPseoSlug } from '@/lib/seo/pseo-combinations';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://weightloss.app';
+const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8000';
 
 async function fetchPublishedBlogSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:8000'}/api/v1/seo/blog/slugs`, {
-      next: { revalidate: 3600 },
+    const res = await fetch(`${BACKEND_URL}/api/v1/seo/blog/slugs`, {
+      next: { revalidate: 3600, tags: ['sitemap', 'blog-posts'] },
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -18,8 +19,8 @@ async function fetchPublishedBlogSlugs(): Promise<string[]> {
 
 async function fetchPublicUgcSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${process.env.BACKEND_URL ?? 'http://localhost:8000'}/api/v1/seo/ugc/slugs`, {
-      next: { revalidate: 3600 },
+    const res = await fetch(`${BACKEND_URL}/api/v1/seo/ugc/slugs`, {
+      next: { revalidate: 3600, tags: ['sitemap', 'ugc-pages'] },
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -64,5 +65,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...pseoPages, ...blogPages, ...ugcPages];
+  // Public profile pages (same slugs as UGC, person-centered view)
+  const profilePages: MetadataRoute.Sitemap = ugcSlugs.map((slug) => ({
+    url: `${BASE_URL}/profile/${slug}`,
+    lastModified: now,
+    changeFrequency: 'yearly' as const,
+    priority: 0.5,
+  }));
+
+  return [...staticPages, ...pseoPages, ...blogPages, ...ugcPages, ...profilePages];
 }

@@ -44,6 +44,9 @@ export const metadata: Metadata = {
       logo: `${BASE_URL}/logo.png`,
     }),
   },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({

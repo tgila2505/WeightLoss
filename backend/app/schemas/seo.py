@@ -76,3 +76,14 @@ class BlogPostResponse(BaseModel):
     published: bool
     published_at: Any | None = None
     view_count: int = 0
+
+
+class PublicProfileResponse(BaseModel):
+    display_name: str
+    kg_lost: float | None = None
+    weeks_taken: int | None = None
+    diet_type: str | None = None
+    member_since: str
+    title: str | None = None
+    testimonial: str | None = None
+    slug: str

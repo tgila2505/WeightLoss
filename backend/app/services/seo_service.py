@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..models.profile import Profile
 from ..models.seo import BlogPost, SeoPage, UserGeneratedPage
+from ..models.user import User
 
 
 @dataclass
@@ -165,6 +166,27 @@ def unshare_ugc_page(session: Session, user_id: int) -> bool:
     page.is_public = False
     session.commit()
     return True
+
+
+def get_public_profile(session: Session, ugc_slug: str) -> dict | None:
+    """Return public-safe profile data for the given UGC slug."""
+    page = session.query(UserGeneratedPage).filter_by(slug=ugc_slug, is_public=True).first()
+    if not page:
+        return None
+    user = session.get(User, page.user_id)
+    match = re.match(r"How (\w+) Lost", page.title or "")
+    display_name = match.group(1).capitalize() if match else "User"
+    member_since = user.created_at.strftime("%Y") if user else "2024"
+    return {
+        "display_name": display_name,
+        "kg_lost": float(page.kg_lost) if page.kg_lost is not None else None,
+        "weeks_taken": page.weeks_taken,
+        "diet_type": page.diet_type,
+        "member_since": member_since,
+        "title": page.title,
+        "testimonial": page.testimonial,
+        "slug": page.slug,
+    }
 
 
 def get_ugc_preview(

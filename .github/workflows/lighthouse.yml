@@ -1,0 +1,23 @@
+name: Lighthouse CI
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Audit production URLs
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            https://weightloss.app
+            https://weightloss.app/blog
+            https://weightloss.app/plan/lose-weight-keto
+          budgetPath: .github/lighthouse-budget.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true

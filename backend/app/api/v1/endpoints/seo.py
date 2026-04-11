@@ -11,6 +11,7 @@ from app.models.user import User
 from app.schemas.seo import (
     BlogPostResponse,
     BlogSlugListResponse,
+    PublicProfileResponse,
     SeoPageListResponse,
     SeoPageResponse,
     UgcPageResponse,
@@ -124,6 +125,14 @@ def get_ugc_page(slug: str, session: Session = Depends(get_db_session)) -> UgcPa
     if not page:
         raise HTTPException(status_code=404, detail="Result page not found")
     return UgcPageResponse.model_validate(page)
+
+
+@router.get("/profile/{ugc_slug}", response_model=PublicProfileResponse)
+def get_public_profile(ugc_slug: str, session: Session = Depends(get_db_session)) -> PublicProfileResponse:
+    data = seo_service.get_public_profile(session, ugc_slug)
+    if not data:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return PublicProfileResponse(**data)
 
 
 @router.post("/revalidate", status_code=status.HTTP_204_NO_CONTENT)
