@@ -23,7 +23,9 @@ interface Props {
 async function fetchUgcPage(slug: string): Promise<UgcData | null> {
   const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1'
   try {
-    const res = await fetch(`${base}/seo/ugc/${slug}`, { next: { revalidate: 86400 } })
+    const res = await fetch(`${base}/seo/ugc/${slug}`, {
+      next: { revalidate: 86400, tags: ['ugc-pages', `ugc-${slug}`] },
+    })
     if (!res.ok) return null
     return res.json() as Promise<UgcData>
   } catch {
@@ -34,7 +36,9 @@ async function fetchUgcPage(slug: string): Promise<UgcData | null> {
 async function fetchUgcSlugs(): Promise<string[]> {
   const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1'
   try {
-    const res = await fetch(`${base}/seo/ugc/slugs`, { next: { revalidate: 86400 } })
+    const res = await fetch(`${base}/seo/ugc/slugs`, {
+      next: { revalidate: 86400, tags: ['ugc-pages'] },
+    })
     if (!res.ok) return []
     const data = (await res.json()) as { slugs: string[] }
     return data.slugs
