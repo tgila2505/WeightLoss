@@ -1,7 +1,17 @@
 from __future__ import annotations
 
+import json
+import logging
+import re
+from pathlib import Path
+from typing import Any
+
 from app.agents.interface import AgentInput, AgentInterface
+from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
+
+_logger = logging.getLogger(__name__)
+_PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
 
 class LabInterpretationAgent(AgentInterface):
@@ -26,8 +36,50 @@ class LabInterpretationAgent(AgentInterface):
         "gout_risk": "Hydrate well and reduce high-purine foods.",
     }
 
+    def __init__(self, provider: LLMProvider | None = None) -> None:
+        self._provider = provider
+        self._system_prompt = (
+            _PROMPTS_DIR / "endocrinologist_system_prompt.txt"
+        ).read_text(encoding="utf-8")
+
     def run(self, request: AgentInput) -> AIOutput:
         lab_records = request.variables.get("lab_records") or []
+
+        if self._provider is not None:
+            llm_result = self._run_with_llm(request, lab_records)
+            if llm_result is not None:
+                return llm_result
+
+        return self._run_rule_based(lab_records)
+
+    def _run_with_llm(
+        self, request: AgentInput, lab_records: list[dict[str, Any]]
+    ) -> AIOutput | None:
+        records_text = json.dumps(lab_records, indent=2)
+        prompt = (
+            f"{self._system_prompt}\n\n"
+            f"PATIENT LAB RECORDS:\n{records_text}\n\n"
+            f"PATIENT QUERY: {request.prompt}"
+        )
+        try:
+            raw = self._provider.generate(prompt)  # type: ignore[union-attr]
+            data = self._parse_json(raw)
+            return AIOutput(
+                content="Lab interpretation generated",
+                data={
+                    "lab_insights": data.get("lab_insights", []),
+                    "risks": data.get("risks", {}),
+                    "lab_actions": data.get("lab_actions", []),
+                    "clinical_narrative": data.get("clinical_narrative", ""),
+                    "dietary_constraints": data.get("dietary_constraints", []),
+                },
+                metadata={"agent_name": "endocrinologist", "llm_generated": True},
+            )
+        except Exception as exc:
+            _logger.error("LabInterpretationAgent LLM call failed: %s", exc, exc_info=True)
+            return None
+
+    def _run_rule_based(self, lab_records: list[dict[str, Any]]) -> AIOutput:
         insights: list[dict[str, str]] = []
         risks: list[dict[str, str]] = []
         actions: list[str] = []
@@ -43,7 +95,6 @@ class LabInterpretationAgent(AgentInterface):
                     "summary": self._insight_summary(test_name, status),
                 }
             )
-
             risk_info = self._RISK_MAP.get(normalized_name, {}).get(status)
             if risk_info is not None:
                 risk_code, description = risk_info
@@ -61,8 +112,14 @@ class LabInterpretationAgent(AgentInterface):
                 "risks": risks,
                 "lab_actions": actions,
             },
-            metadata={"agent_name": "lab"},
+            metadata={"agent_name": "endocrinologist"},
         )
+
+    def _parse_json(self, raw: str) -> dict[str, Any]:
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        if not match:
+            raise ValueError("No JSON found in LLM response")
+        return json.loads(match.group())
 
     def _insight_summary(self, test_name: str, status: str) -> str:
         if status == "normal":

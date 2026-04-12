@@ -119,7 +119,7 @@ def _get_orchestrator() -> Orchestrator:
         return Orchestrator(
             {
                 "meal": MealPlanAgent(provider=provider),
-                "lab": LabInterpretationAgent(),
+                "lab": LabInterpretationAgent(provider=provider),
                 "behavior": BehaviorAgent(provider=provider),
                 "general": MealPlanAgent(provider=provider),
             }
