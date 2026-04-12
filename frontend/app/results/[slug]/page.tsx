@@ -15,6 +15,7 @@ interface UgcData {
   testimonial: string | null
   view_count: number
   display_name: string | null
+  created_at: string | null
 }
 
 interface Props {
@@ -75,6 +76,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     path: `/results/${slug}`,
     ...(page.display_name ? { author: page.display_name } : {}),
+    ...(page.created_at ? { publishedAt: page.created_at } : {}),
   })
   const breadcrumbs = [
     { name: 'Home', path: '/' },

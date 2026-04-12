@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -49,6 +50,7 @@ class UgcPageResponse(BaseModel):
     testimonial: str | None = None
     view_count: int = 0
     display_name: str | None = None
+    created_at: datetime | None = None
 
     @model_validator(mode='after')
     def derive_display_name(self) -> 'UgcPageResponse':
