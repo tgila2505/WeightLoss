@@ -29,6 +29,13 @@ export function InteractionView() {
 
   const abortRef = useRef<AbortController | null>(null);
 
+  // Abort any in-flight stream on unmount or agent switch
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [activeAgent]);
+
   const loadHistory = useCallback(async (agent: ChatAgent) => {
     setError('');
     try {
@@ -58,6 +65,7 @@ export function InteractionView() {
 
   async function handleSelectAgent(agent: ChatAgent) {
     if (isStreaming) return;
+    abortRef.current?.abort();
     setActiveAgent(agent);
     setStreamingContent(null);
     setIsConsulting(false);
@@ -105,6 +113,7 @@ export function InteractionView() {
         agent: activeAgent,
         message: prompt,
         conversation_id: conversationId,
+        signal: controller.signal,
       })) {
         // First token: hide consultation indicator, show streaming bubble.
         // Use a local variable (not React state) to avoid stale closure reads.

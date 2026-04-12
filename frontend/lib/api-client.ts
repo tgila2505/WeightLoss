@@ -1135,6 +1135,7 @@ export async function* streamChatMessage(params: {
   agent: ChatAgent;
   message: string;
   conversation_id: string;
+  signal?: AbortSignal;
 }): AsyncGenerator<string, void, unknown> {
   const token = getAccessToken();
   if (!token) throw new Error('Not authenticated');
@@ -1145,7 +1146,8 @@ export async function* streamChatMessage(params: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify({ agent: params.agent, message: params.message, conversation_id: params.conversation_id }),
+    signal: params.signal,
   });
 
   if (!res.ok) {
