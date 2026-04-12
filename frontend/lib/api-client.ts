@@ -1123,6 +1123,7 @@ export async function startNewConversation(agent: ChatAgent): Promise<string> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
+    if (res.status === 401) throw new Error('Not authenticated');
     if (res.status === 403) throw new Error('FEATURE_GATED');
     throw new Error(await readError(res));
   }
@@ -1167,13 +1168,14 @@ export async function* streamChatMessage(params: {
       if (!line.startsWith('data: ')) continue;
       const data = line.slice(6).trim();
       if (data === '[DONE]') return;
+      let parsed: { token?: string; error?: string };
       try {
-        const parsed = JSON.parse(data) as { token?: string; error?: string };
-        if (parsed.error) throw new Error(parsed.error);
-        if (parsed.token) yield parsed.token;
-      } catch (e) {
-        if (e instanceof Error && e.message !== 'Unexpected token') throw e;
+        parsed = JSON.parse(data) as { token?: string; error?: string };
+      } catch {
+        continue;
       }
+      if (parsed.error) throw new Error(parsed.error);
+      if (parsed.token) yield parsed.token;
     }
   }
 }
