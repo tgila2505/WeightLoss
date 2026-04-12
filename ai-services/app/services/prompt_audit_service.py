@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
 from app.services.recommendation_service import RecommendationService
+
+_logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
@@ -33,6 +36,7 @@ class PromptAuditService:
         """Load the current system prompt for an agent. Returns None if not found."""
         filename = _AGENT_PROMPT_MAP.get(agent_name)
         if filename is None:
+            _logger.warning("No prompt mapping for agent %r", agent_name)
             return None
         path = _PROMPTS_DIR / filename
         if not path.exists():

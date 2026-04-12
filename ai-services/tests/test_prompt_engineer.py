@@ -16,49 +16,70 @@ from app.agents.prompt_engineer_agent import PromptEngineerAgent
 from app.services.recommendation_service import RecommendationService
 
 
+def _unlink(path: str) -> None:
+    """Delete a temp SQLite file, suppressing Windows lock errors."""
+    gc.collect()
+    try:
+        Path(path).unlink(missing_ok=True)
+    except PermissionError:
+        pass  # Windows may keep a handle; file will be cleaned up by OS
+
+
 class PromptAuditServiceTest(unittest.TestCase):
-    def _make_db_with_samples(self) -> tuple[str, RecommendationService]:
-        handle, db_path = tempfile.mkstemp(suffix=".sqlite3")
+    def setUp(self) -> None:
+        handle, self.db_path = tempfile.mkstemp(suffix=".sqlite3")
         os.close(handle)
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
-        svc = RecommendationService(db_path=db_path)
+        _unlink(self.db_path)
+        self.svc = RecommendationService(db_path=self.db_path)
         for i in range(3):
-            svc.store_recommendation(
+            self.svc.store_recommendation(
                 user_id=1,
                 intent="weekly_plan",
                 content=f"Sample recommendation {i}",
                 data={"meals": [], "agent": "meal"},
             )
-        return db_path, svc
+        self.audit_svc = PromptAuditService(recommendation_service=self.svc)
+
+    def tearDown(self) -> None:
+        _unlink(self.db_path)
 
     def test_sample_returns_up_to_n_records(self) -> None:
-        db_path, svc = self._make_db_with_samples()
-        audit_svc = PromptAuditService(recommendation_service=svc)
-        samples = audit_svc.sample_recent(agent_name="meal", n=2)
+        samples = self.audit_svc.sample_recent(agent_name="meal", n=2)
         self.assertLessEqual(len(samples), 2)
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
 
     def test_sample_returns_all_when_fewer_than_n(self) -> None:
-        db_path, svc = self._make_db_with_samples()
-        audit_svc = PromptAuditService(recommendation_service=svc)
-        samples = audit_svc.sample_recent(agent_name="meal", n=10)
+        samples = self.audit_svc.sample_recent(agent_name="meal", n=10)
         self.assertGreater(len(samples), 0)
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
+
+    def test_sample_filters_by_agent_name(self) -> None:
+        # Store an extra record tagged as "gp"
+        self.svc.store_recommendation(
+            user_id=1,
+            intent="weekly_plan",
+            content="GP recommendation",
+            data={"agent": "gp"},
+        )
+        meal_samples = self.audit_svc.sample_recent(agent_name="meal", n=10)
+        gp_samples = self.audit_svc.sample_recent(agent_name="gp", n=10)
+
+        # meal samples must not contain the gp record
+        self.assertTrue(all(s["data"].get("agent") == "meal" for s in meal_samples))
+        # gp samples must not contain meal records
+        self.assertTrue(all(s["data"].get("agent") == "gp" for s in gp_samples))
+        self.assertEqual(len(gp_samples), 1)
 
 
 class PromptEngineerAgentTest(unittest.TestCase):
+    def setUp(self) -> None:
+        handle, self.db_path = tempfile.mkstemp(suffix=".sqlite3")
+        os.close(handle)
+        _unlink(self.db_path)
+        self.svc = RecommendationService(db_path=self.db_path)
+        self.audit_svc = PromptAuditService(recommendation_service=self.svc)
+
+    def tearDown(self) -> None:
+        _unlink(self.db_path)
+
     def test_audit_returns_report_structure(self) -> None:
         mock_provider = MagicMock()
         mock_provider.generate.return_value = json.dumps({
@@ -67,18 +88,14 @@ class PromptEngineerAgentTest(unittest.TestCase):
             "proposed_prompt": "Shorter version of the prompt here.",
         })
 
-        handle, db_path = tempfile.mkstemp(suffix=".sqlite3")
-        os.close(handle)
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
-        svc = RecommendationService(db_path=db_path)
-        svc.store_recommendation(user_id=1, intent="weekly_plan", content="Sample", data={"meals": [], "agent": "meal"})
+        self.svc.store_recommendation(
+            user_id=1,
+            intent="weekly_plan",
+            content="Sample",
+            data={"meals": [], "agent": "meal"},
+        )
 
-        audit_svc = PromptAuditService(recommendation_service=svc)
-        agent = PromptEngineerAgent(provider=mock_provider, audit_service=audit_svc)
+        agent = PromptEngineerAgent(provider=mock_provider, audit_service=self.audit_svc)
         report = agent.run(agent_filter=["meal"])
 
         self.assertIn("meal", report)
@@ -86,34 +103,14 @@ class PromptEngineerAgentTest(unittest.TestCase):
         self.assertIn("critique", report["meal"])
         self.assertIn("proposed_prompt", report["meal"])
         mock_provider.generate.assert_called()
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
 
     def test_audit_skips_agent_with_no_samples(self) -> None:
         mock_provider = MagicMock()
-
-        handle, db_path = tempfile.mkstemp(suffix=".sqlite3")
-        os.close(handle)
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
-        svc = RecommendationService(db_path=db_path)
-        audit_svc = PromptAuditService(recommendation_service=svc)
-        agent = PromptEngineerAgent(provider=mock_provider, audit_service=audit_svc)
+        agent = PromptEngineerAgent(provider=mock_provider, audit_service=self.audit_svc)
 
         report = agent.run(agent_filter=["meal"])
         self.assertEqual(report.get("meal", {}).get("status"), "skipped")
         mock_provider.generate.assert_not_called()
-        gc.collect()
-        try:
-            Path(db_path).unlink(missing_ok=True)
-        except PermissionError:
-            pass  # Windows may keep a handle; file will be cleaned up by OS
 
 
 if __name__ == "__main__":

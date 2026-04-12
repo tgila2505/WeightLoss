@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from app.providers.base import LLMProvider
 from app.services.prompt_audit_service import PromptAuditService
+from app.utils.json_utils import parse_json
 
 _logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ Respond with ONLY valid JSON:
   "critique": "<string>",
   "proposed_prompt": "<full proposed replacement prompt>"
 }}
-"""
+"""  # double-braces above are .format() escapes, not a bug
 
 _ALL_AGENTS = ["gp", "endocrinologist", "meal", "trainer"]
 
@@ -86,7 +85,7 @@ class PromptEngineerAgent:
             try:
                 provider = self._provider
                 raw = provider.generate(prompt, max_tokens=2048)
-                data = self._parse_json(raw)
+                data = parse_json(raw)
                 report[agent_name] = {
                     "status": "audited",
                     "score": data.get("score"),
@@ -100,8 +99,3 @@ class PromptEngineerAgent:
 
         return report
 
-    def _parse_json(self, raw: str) -> dict[str, Any]:
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON found in LLM response")
-        return json.loads(match.group())

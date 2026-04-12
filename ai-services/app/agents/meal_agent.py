@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import json
 import logging
-import re
 from pathlib import Path
 from typing import Any
 
 from app.agents.interface import AgentInput, AgentInterface
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
+from app.utils.json_utils import parse_json
 
 _logger = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ class MealPlanAgent(AgentInterface):
         try:
             provider = self._provider
             raw = provider.generate(prompt)  # type: ignore[union-attr]
-            data = self._parse_json(raw)
+            data = parse_json(raw)
             meals = [self._normalize_meal(m) for m in data.get("meals", [])]
             meals = [m for m in meals if m.get("meal") and m.get("name")]
             if not meals:
@@ -122,17 +121,7 @@ class MealPlanAgent(AgentInterface):
             f"- Biomarker flags: {flags}\n\n"
             f"ENDOCRINOLOGIST CONTEXT:\n{endo_context}\n\n"
             f"USER REQUEST: \"{user_prompt}\"\n\n"
-            f"Generate 3 meals that directly address the user's request, respect their profile, and honour the endocrinologist's constraints.\n"
-            f"Respond with ONLY valid JSON, no other text:\n"
-            f'{{\n'
-            f'  "meals": [\n'
-            f'    {{"meal": "breakfast", "name": "<meal name and brief description>"}},\n'
-            f'    {{"meal": "lunch", "name": "<meal name and brief description>"}},\n'
-            f'    {{"meal": "dinner", "name": "<meal name and brief description>"}}\n'
-            f'  ],\n'
-            f'  "constraints_applied": ["<constraint 1>"],\n'
-            f'  "biomarker_adjustments": ["<adjustment 1>"]\n'
-            f'}}'
+            f"Generate 3 meals (breakfast, lunch, dinner) that address the user's request, respect their profile, and honour the endocrinologist's constraints."
         )
 
     def _normalize_meal(self, item: dict[str, Any]) -> dict[str, Any]:
@@ -140,11 +129,6 @@ class MealPlanAgent(AgentInterface):
         name = item.get("name") or item.get("description") or item.get("dish") or ""
         return {"meal": meal_type, "name": name}
 
-    def _parse_json(self, raw: str) -> dict[str, Any]:
-        match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON found in response")
-        return json.loads(match.group())
 
     def _biomarker_flags(self, lab_records: list[dict[str, object]]) -> list[str]:
         flags: list[str] = []

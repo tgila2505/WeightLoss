@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from pathlib import Path
 from typing import Any
 
 from app.agents.interface import AgentInput, AgentInterface
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
+from app.utils.json_utils import parse_json
 
 _logger = logging.getLogger(__name__)
 _PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
@@ -69,7 +69,7 @@ class LabInterpretationAgent(AgentInterface):
         try:
             provider = self._provider
             raw = provider.generate(prompt)
-            data = self._parse_json(raw)
+            data = parse_json(raw)
             return AIOutput(
                 content="Lab interpretation generated",
                 data={
@@ -123,12 +123,6 @@ class LabInterpretationAgent(AgentInterface):
             },
             metadata={"agent_name": "endocrinologist"},
         )
-
-    def _parse_json(self, raw: str) -> dict[str, Any]:
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON found in LLM response")
-        return json.loads(match.group())
 
     def _insight_summary(self, test_name: str, status: str) -> str:
         if status == "normal":

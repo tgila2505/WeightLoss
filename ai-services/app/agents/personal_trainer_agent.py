@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import json
 import logging
-import re
 from pathlib import Path
 from typing import Any
 
 from app.agents.interface import AgentInput, AgentInterface
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
+from app.utils.json_utils import parse_json
 
 _logger = logging.getLogger(__name__)
 _PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
@@ -50,7 +49,7 @@ class PersonalTrainerAgent(AgentInterface):
         try:
             provider = self._provider
             raw = provider.generate(prompt)  # type: ignore[union-attr]
-            data = self._parse_json(raw)
+            data = parse_json(raw)
             activity = [self._normalize_activity(a) for a in data.get("activity", [])]
             activity = [a for a in activity if a.get("title") and a.get("frequency")]
             if not activity:
@@ -191,11 +190,6 @@ class PersonalTrainerAgent(AgentInterface):
         score = item.get("score")
         return {"name": name, "completed": completed, "score": int(score) if isinstance(score, float) else score}
 
-    def _parse_json(self, raw: str) -> dict[str, Any]:
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON found in response")
-        return json.loads(match.group())
 
     def _default_signals(self, adherence_signals: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
         if adherence_signals:
