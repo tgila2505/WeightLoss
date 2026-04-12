@@ -189,6 +189,17 @@ def get_public_profile(session: Session, ugc_slug: str) -> dict | None:
     }
 
 
+def list_ugc_pages(session: Session, limit: int = 100, offset: int = 0) -> list[UserGeneratedPage]:
+    return (
+        session.query(UserGeneratedPage)
+        .filter_by(is_public=True)
+        .order_by(UserGeneratedPage.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
 def get_ugc_preview(
     session: Session,
     user_id: int,
