@@ -20,12 +20,14 @@ class PromptAuditService:
         self._rec_svc = recommendation_service
 
     def sample_recent(self, agent_name: str, n: int = 5) -> list[dict[str, Any]]:
-        """Return up to n recent recommendations as plain dicts for scoring."""
+        """Return up to n recent recommendations for the given agent as plain dicts."""
         all_records = self._rec_svc.list_recommendations(user_id=None)
-        return [
+        matching = [
             {"content": r.content, "data": r.data, "intent": r.intent}
-            for r in all_records[:n]
+            for r in all_records
+            if r.data.get("agent") == agent_name
         ]
+        return matching[:n]
 
     def load_prompt(self, agent_name: str) -> str | None:
         """Load the current system prompt for an agent. Returns None if not found."""

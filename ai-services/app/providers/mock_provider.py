@@ -4,5 +4,5 @@ from app.providers.base import LLMProvider
 
 
 class MockLLMProvider(LLMProvider):
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, max_tokens: int | None = None) -> str:
         return f"Mock provider response: {prompt}"

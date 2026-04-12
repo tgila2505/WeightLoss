@@ -75,7 +75,7 @@ class PromptEngineerAgentTest(unittest.TestCase):
         except PermissionError:
             pass  # Windows may keep a handle; file will be cleaned up by OS
         svc = RecommendationService(db_path=db_path)
-        svc.store_recommendation(user_id=1, intent="weekly_plan", content="Sample", data={"meals": []})
+        svc.store_recommendation(user_id=1, intent="weekly_plan", content="Sample", data={"meals": [], "agent": "meal"})
 
         audit_svc = PromptAuditService(recommendation_service=svc)
         agent = PromptEngineerAgent(provider=mock_provider, audit_service=audit_svc)
