@@ -85,3 +85,5 @@ class MistralProvider:
                 raise RateLimitError("Mistral rate limit reached") from e
             body = e.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"Mistral API error {e.code}: {body}") from e
+        except urllib.error.URLError as e:
+            raise RuntimeError(f"Mistral network error: {e.reason}") from e

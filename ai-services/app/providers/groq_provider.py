@@ -85,3 +85,5 @@ class GroqProvider:
                 raise RateLimitError("Groq rate limit reached") from e
             body = e.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"Groq API error {e.code}: {body}") from e
+        except urllib.error.URLError as e:
+            raise RuntimeError(f"Groq network error: {e.reason}") from e
