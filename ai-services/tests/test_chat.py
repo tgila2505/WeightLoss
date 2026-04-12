@@ -6,28 +6,25 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.chat.router import ChatRouter
+from app.chat.router import get_specialist_pipeline
 from app.agents.gp_agent import GPAgent
 
 
 class TestChatRouter(unittest.TestCase):
-    def setUp(self):
-        self.router = ChatRouter()
-
     def test_dietitian_pipeline_is_meal_only(self):
-        pipeline = self.router.get_specialist_pipeline("dietitian")
+        pipeline = get_specialist_pipeline("dietitian")
         self.assertEqual(pipeline, [("meal", "dietitian")])
 
     def test_endo_pipeline_is_lab_only(self):
-        pipeline = self.router.get_specialist_pipeline("endo")
+        pipeline = get_specialist_pipeline("endo")
         self.assertEqual(pipeline, [("lab", "endocrinologist")])
 
     def test_trainer_pipeline_is_trainer_only(self):
-        pipeline = self.router.get_specialist_pipeline("trainer")
+        pipeline = get_specialist_pipeline("trainer")
         self.assertEqual(pipeline, [("trainer", "trainer")])
 
     def test_panel_runs_full_cascade(self):
-        pipeline = self.router.get_specialist_pipeline("panel")
+        pipeline = get_specialist_pipeline("panel")
         self.assertEqual(pipeline, [
             ("lab", "endocrinologist"),
             ("meal", "dietitian"),
@@ -35,7 +32,7 @@ class TestChatRouter(unittest.TestCase):
         ])
 
     def test_gp_runs_full_cascade(self):
-        pipeline = self.router.get_specialist_pipeline("gp")
+        pipeline = get_specialist_pipeline("gp")
         self.assertEqual(pipeline, [
             ("lab", "endocrinologist"),
             ("meal", "dietitian"),

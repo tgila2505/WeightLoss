@@ -20,7 +20,7 @@ class GPAgent(AgentInterface):
         self._system_prompt: str | None = None
 
     def build_chat_prompt(self, user_prompt: str, specialist_outputs: dict) -> str:
-        """Public method for chat endpoint — builds the GP prompt from specialist outputs."""
+        """Build the full LLM prompt string for a chat turn, including specialist panel context."""
         return self._build_prompt(user_prompt, specialist_outputs)
 
     def _get_system_prompt(self) -> str:

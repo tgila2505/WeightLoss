@@ -33,6 +33,8 @@ _AI_SERVICES_URL = os.environ.get("AI_SERVICES_URL", "http://localhost:8001")
 # Capability required: "ai_plans" (available on pro and pro_plus tiers)
 _chat_gate = require_capability("ai_plans")
 
+_VALID_AGENTS = frozenset({"gp", "endo", "dietitian", "trainer", "panel"})
+
 
 def _get_or_create_conversation_id(
     session: Session, user_id: int, agent: str
@@ -54,6 +56,8 @@ def get_chat_history(
     current_user: User = Depends(get_current_user),
     _access: SubscriptionAccess = Depends(_chat_gate),
 ) -> ChatHistoryResponse:
+    if agent not in _VALID_AGENTS:
+        raise HTTPException(status_code=422, detail=f"Unknown agent: {agent!r}")
     conversation_id = _get_or_create_conversation_id(session, current_user.id, agent)
     messages = list(
         session.scalars(
@@ -80,6 +84,8 @@ def new_conversation(
     current_user: User = Depends(get_current_user),
     _access: SubscriptionAccess = Depends(_chat_gate),
 ) -> NewConversationResponse:
+    if agent not in _VALID_AGENTS:
+        raise HTTPException(status_code=422, detail=f"Unknown agent: {agent!r}")
     new_id = uuid.uuid4()
     return NewConversationResponse(conversation_id=str(new_id))
 

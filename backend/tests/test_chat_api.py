@@ -6,7 +6,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import app.models.chat  # noqa: F401 — registers ChatMessage with Base.metadata
 from tests.support import ApiTestCase
 
 

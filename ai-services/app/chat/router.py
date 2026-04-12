@@ -12,9 +12,6 @@ _SPECIALIST_PIPELINE: dict[str, list[tuple[str, str]]] = {
 }
 
 
-class ChatRouter:
-    """Determines which specialist agents to invoke before GP consensus for a chat turn."""
-
-    def get_specialist_pipeline(self, agent: str) -> list[tuple[str, str]]:
-        """Return ordered list of (agent_key, specialist_output_key) pairs for the agent."""
-        return _SPECIALIST_PIPELINE.get(agent, [])
+def get_specialist_pipeline(agent: str) -> list[tuple[str, str]]:
+    """Return ordered list of (agent_key, specialist_output_key) pairs for the agent."""
+    return _SPECIALIST_PIPELINE.get(agent, [])

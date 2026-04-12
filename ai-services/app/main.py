@@ -32,7 +32,7 @@ from app.orchestrator import (
 )
 from app.providers.fallback_provider import FallbackProvider, ProvidersExhaustedError
 from app.agents.interface import AgentInput
-from app.chat.router import ChatRouter
+from app.chat.router import get_specialist_pipeline
 
 
 class UserProfilePayload(BaseModel):
@@ -800,11 +800,9 @@ def chat(payload: ChatRequest) -> StreamingResponse:
 
     def generate() -> Iterator[str]:
         orch = _get_orchestrator()
-        router = ChatRouter()
-
         # --- Phase 1: run specialist agents synchronously ---
         specialist_outputs: dict[str, dict] = {}
-        for agent_key, output_key in router.get_specialist_pipeline(payload.agent):
+        for agent_key, output_key in get_specialist_pipeline(payload.agent):
             agent_obj = orch._agents.get(agent_key)
             if agent_obj is None:
                 continue
