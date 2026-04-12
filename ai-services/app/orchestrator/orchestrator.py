@@ -91,17 +91,37 @@ class Orchestrator:
                 )
             )
 
+        # --- GP synthesis: reads all three specialist outputs ---
+        gp_agent = self._agents.get("gp")
+        gp_output: AIOutput | None = None
+        if gp_agent is not None:
+            gp_request = self._build_agent_request(
+                request.context, "gp", retrieved_context, specialist_outputs
+            )
+            gp_output = gp_agent.run(gp_request)
+
         # ConflictResolver runs here as a keyword-level safety net only.
-        # Primary conflict arbitration happens inside GPAgent (Task 4) via clinical reasoning.
+        # Primary conflict arbitration happens inside GPAgent via clinical reasoning.
+        # See: app/prompts/gp_system_prompt.txt
         aggregated = self._aggregator.aggregate(results)
         resolved = self._conflict_resolver.resolve(aggregated)
         status = "success" if aggregated.successful_results else "error"
         error = None if aggregated.successful_results else "No successful agent outputs"
 
+        # GP response becomes the primary content when available
+        primary_content = (
+            gp_output.content
+            if gp_output is not None and gp_output.status == "success"
+            else resolved.final_content
+        )
+        primary_data = dict(resolved.final_data)
+        if gp_output is not None and gp_output.status == "success":
+            primary_data["gp_summary"] = gp_output.data
+
         return AIOutput(
-            content=resolved.final_content,
+            content=primary_content,
             status=status,
-            data=resolved.final_data,
+            data=primary_data,
             error=error,
             metadata=self._final_metadata(
                 request.context,
