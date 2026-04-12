@@ -68,13 +68,9 @@ class GPAgent(AgentInterface):
         user_prompt: str,
         specialist_outputs: dict[str, Any],
     ) -> str:
-        def _extract(key: str) -> dict[str, Any]:
-            item = specialist_outputs.get(key, {})
-            return item.get("data", {}) if isinstance(item, dict) else {}
-
-        endo = _extract("endocrinologist")
-        dietitian = _extract("dietitian")
-        trainer = _extract("trainer")
+        endo = self._extract_specialist_data(specialist_outputs, "endocrinologist")
+        dietitian = self._extract_specialist_data(specialist_outputs, "dietitian")
+        trainer = self._extract_specialist_data(specialist_outputs, "trainer")
 
         context = json.dumps({
             "endocrinologist": {
@@ -104,13 +100,9 @@ class GPAgent(AgentInterface):
         user_prompt: str,
         specialist_outputs: dict[str, Any],
     ) -> AIOutput:
-        def _extract(key: str) -> dict[str, Any]:
-            item = specialist_outputs.get(key, {})
-            return item.get("data", {}) if isinstance(item, dict) else {}
-
-        endo = _extract("endocrinologist")
-        dietitian = _extract("dietitian")
-        trainer = _extract("trainer")
+        endo = self._extract_specialist_data(specialist_outputs, "endocrinologist")
+        dietitian = self._extract_specialist_data(specialist_outputs, "dietitian")
+        trainer = self._extract_specialist_data(specialist_outputs, "trainer")
 
         endo_risks = endo.get("risks", {})
         lab_actions = endo.get("lab_actions", [])
@@ -137,7 +129,7 @@ class GPAgent(AgentInterface):
         for c in constraints[:2]:
             action_plan.append(f"Diet: {c}")
         for act in activity[:2]:
-            action_plan.append(f"Activity: {act['title']} — {act['frequency']}")
+            action_plan.append(f"Activity: {act.get('title', 'Activity')} — {act.get('frequency', '')}")
         action_plan.append("Log your meals and activity daily to track progress.")
 
         # Urgent flags
@@ -162,6 +154,12 @@ class GPAgent(AgentInterface):
             },
             metadata={"agent_name": "gp"},
         )
+
+    @staticmethod
+    def _extract_specialist_data(specialist_outputs: dict[str, Any], key: str) -> dict[str, Any]:
+        """Extract the data dict for a given specialist from specialist_outputs."""
+        item = specialist_outputs.get(key, {})
+        return item.get("data", {}) if isinstance(item, dict) else {}
 
     def _parse_json(self, raw: str) -> dict[str, Any]:
         match = re.search(r"\{.*\}", raw, re.DOTALL)
