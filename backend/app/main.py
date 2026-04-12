@@ -46,9 +46,10 @@ def create_app() -> FastAPI:
     )
     application.add_middleware(ObservabilityMiddleware)
     application.add_middleware(SecurityHeadersMiddleware)
+    origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

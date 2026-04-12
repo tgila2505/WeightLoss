@@ -51,6 +51,7 @@ class Settings:
     # Paths for env-file sync (admin service writes updated AI keys here)
     ai_services_env_path: str
     frontend_env_path: str
+    allowed_origins: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -94,6 +95,7 @@ class Settings:
                 "FRONTEND_ENV_PATH",
                 str(BASE_DIR / "frontend" / ".env.local"),
             ),
+            allowed_origins=os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000"),
         )
 
 
