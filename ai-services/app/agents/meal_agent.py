@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,8 @@ from typing import Any
 from app.agents.interface import AgentInput, AgentInterface
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
+
+_logger = logging.getLogger(__name__)
 
 
 class MealPlanAgent(AgentInterface):
@@ -54,10 +57,9 @@ class MealPlanAgent(AgentInterface):
         specialist_outputs: dict[str, Any] | None = None,
     ) -> AIOutput | None:
         prompt = self._build_prompt(request.prompt, profile, restrictions, preferences, biomarker_flags, specialist_outputs or {})
-        print(f"[DEBUG] MealPlanAgent calling LLM, provider={type(self._provider).__name__}", flush=True)
         try:
-            raw = self._provider.generate(prompt)  # type: ignore[union-attr]
-            print(f"[DEBUG] MealPlanAgent LLM raw response (first 200 chars): {raw[:200]}", flush=True)
+            provider = self._provider
+            raw = provider.generate(prompt)  # type: ignore[union-attr]
             data = self._parse_json(raw)
             meals = [self._normalize_meal(m) for m in data.get("meals", [])]
             meals = [m for m in meals if m.get("meal") and m.get("name")]
@@ -73,8 +75,7 @@ class MealPlanAgent(AgentInterface):
                 metadata={"agent_name": "meal", "llm_generated": True},
             )
         except Exception as e:
-            import logging
-            logging.getLogger(__name__).error("MealPlanAgent LLM call failed: %s", e, exc_info=True)
+            _logger.error("MealPlanAgent LLM call failed: %s", e, exc_info=True)
             return None
 
     def _get_system_prompt(self) -> str:
