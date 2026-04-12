@@ -16,7 +16,7 @@ _MISTRAL_API_KEY: str = os.environ.get("MISTRAL_API_KEY", "")
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.agents import BehaviorAgent, LabInterpretationAgent, MealPlanAgent
+from app.agents import LabInterpretationAgent, MealPlanAgent, PersonalTrainerAgent
 from app.orchestrator import (
     AdherenceSignalContext,
     HealthMetricContext,
@@ -96,7 +96,7 @@ _rule_based_orchestrator = Orchestrator(
     {
         "meal": MealPlanAgent(),
         "lab": LabInterpretationAgent(),
-        "behavior": BehaviorAgent(),
+        "trainer": PersonalTrainerAgent(),
         "general": MealPlanAgent(),
     }
 )
@@ -120,7 +120,7 @@ def _get_orchestrator() -> Orchestrator:
             {
                 "meal": MealPlanAgent(provider=provider),
                 "lab": LabInterpretationAgent(provider=provider),
-                "behavior": BehaviorAgent(provider=provider),
+                "trainer": PersonalTrainerAgent(provider=provider),
                 "general": MealPlanAgent(provider=provider),
             }
         )

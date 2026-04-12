@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.agents import BehaviorAgent, LabInterpretationAgent, MealPlanAgent
+from app.agents import LabInterpretationAgent, MealPlanAgent, PersonalTrainerAgent
 from app.agents.interface import AgentInput
 from app.orchestrator import (
     AdherenceSignalContext,
@@ -81,7 +81,7 @@ class DomainAgentsAndOrchestratorTest(unittest.TestCase):
             {
                 "meal": MealPlanAgent(),
                 "lab": LabInterpretationAgent(),
-                "behavior": BehaviorAgent(),
+                "trainer": PersonalTrainerAgent(),
                 "general": MealPlanAgent(),
             },
             recommendation_service=recommendation_service,
@@ -125,7 +125,7 @@ class DomainAgentsAndOrchestratorTest(unittest.TestCase):
         self.assertEqual(response.status, "success")
         self.assertTrue(response.metadata["recommendation_id"] is not None)
         self.assertEqual(len(response.metadata["final_plan"]["meals"]), 3)
-        self.assertEqual(len(response.metadata["final_plan"]["activity"]), 1)
+        self.assertGreater(len(response.metadata["final_plan"]["activity"]), 0)
         self.assertIn(
             "Prioritize lower-sugar meals and follow up with a clinician.",
             response.metadata["final_plan"]["recommendations"],
