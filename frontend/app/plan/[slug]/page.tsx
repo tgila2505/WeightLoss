@@ -14,7 +14,7 @@ import {
 } from '@/lib/seo/pseo-combinations';
 import { getRelatedPages } from '@/lib/seo/related-pages';
 import { buildMetadata } from '@/lib/seo/metadata';
-import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema, buildHowToSchema, buildSpeakableSchema } from '@/lib/seo/schema';
+import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema, buildHowToSchema, buildSpeakableSchema, buildOrganizationSchema } from '@/lib/seo/schema';
 import { getPseoContent } from '@/content/plans/templates';
 import { SeoCta } from './seo-cta';
 
@@ -58,6 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ];
 
   const schemas = [
+    buildOrganizationSchema(),
     buildWebPageSchema({ name: h1, description, path: `/plan/${slug}` }),
     buildBreadcrumbSchema(breadcrumbs),
     buildHowToSchema(h1, description, howToSteps),

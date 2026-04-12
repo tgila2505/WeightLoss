@@ -1,5 +1,26 @@
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://weightloss.app'
 
+/**
+ * Standalone Organization schema — used on pages that don't emit an Article
+ * schema (which already embeds publisher). Adds publisher context for Google's
+ * rich-result eligibility and AI search grounding.
+ */
+export function buildOrganizationSchema(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'WeightLoss App',
+    url: BASE_URL,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${BASE_URL}/logo.png`,
+    },
+    sameAs: [
+      `${BASE_URL}`,
+    ],
+  }
+}
+
 interface ArticleSchemaOptions {
   title: string
   description: string
