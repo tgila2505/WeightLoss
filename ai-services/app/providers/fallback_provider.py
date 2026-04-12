@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Iterator
+
 from app.providers.groq_provider import GroqProvider
 from app.providers.groq_provider import RateLimitError as GroqRateLimitError
 from app.providers.mistral_provider import MistralProvider
@@ -34,6 +36,24 @@ class FallbackProvider:
         if not self._rls.is_limited("mistral"):
             try:
                 return self._mistral.generate(prompt, max_tokens=max_tokens)
+            except MistralRateLimitError:
+                self._rls.mark_limited("mistral")
+
+        resets_at = self._rls.get_reset_time("groq") or self._rls.get_reset_time("mistral")
+        raise ProvidersExhaustedError(resets_at=resets_at)
+
+    def stream_generate(self, prompt: str, max_tokens: int = 1024) -> Iterator[str]:
+        if not self._rls.is_limited("groq"):
+            try:
+                yield from self._groq.stream_generate(prompt, max_tokens=max_tokens)
+                return
+            except GroqRateLimitError:
+                self._rls.mark_limited("groq")
+
+        if not self._rls.is_limited("mistral"):
+            try:
+                yield from self._mistral.stream_generate(prompt, max_tokens=max_tokens)
+                return
             except MistralRateLimitError:
                 self._rls.mark_limited("mistral")
 
