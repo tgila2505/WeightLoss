@@ -96,23 +96,6 @@ export function buildBreadcrumbSchema(
   }
 }
 
-export function buildFaqSchema(
-  faq: Array<{ q: string; a: string }>
-): Record<string, unknown> {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faq.map(({ q, a }) => ({
-      '@type': 'Question',
-      name: q,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: a,
-      },
-    })),
-  }
-}
-
 interface PersonSchemaOptions {
   name: string
   description: string
