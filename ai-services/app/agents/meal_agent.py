@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 from typing import Any
 
 from app.agents.interface import AgentInput, AgentInterface
@@ -12,6 +13,7 @@ from app.schemas.output import AIOutput
 class MealPlanAgent(AgentInterface):
     def __init__(self, provider: LLMProvider | None = None) -> None:
         self._provider = provider
+        self._system_prompt: str | None = None
 
     def run(self, request: AgentInput) -> AIOutput:
         profile = request.variables.get("user_profile") or {}
@@ -75,6 +77,13 @@ class MealPlanAgent(AgentInterface):
             logging.getLogger(__name__).error("MealPlanAgent LLM call failed: %s", e, exc_info=True)
             return None
 
+    def _get_system_prompt(self) -> str:
+        if self._system_prompt is None:
+            self._system_prompt = (
+                Path(__file__).resolve().parent.parent / "prompts" / "dietitian_system_prompt.txt"
+            ).read_text(encoding="utf-8")
+        return self._system_prompt
+
     def _build_prompt(
         self,
         user_prompt: str,
@@ -101,32 +110,29 @@ class MealPlanAgent(AgentInterface):
             if endo_data else "No endocrinologist findings."
         )
 
-        return f"""You are a weight loss nutrition expert. Generate a personalized daily meal plan.
-
-USER PROFILE:
-- Age: {age}, Gender: {gender}
-- Height: {height}cm, Current weight: {weight}kg
-- Dietary restrictions: {diet_restrictions}
-- Dietary preferences: {diet_preferences}
-- Health conditions: {conditions}
-- Biomarker flags: {flags}
-
-ENDOCRINOLOGIST CONTEXT:
-{endo_context}
-
-USER REQUEST: "{user_prompt}"
-
-Generate 3 meals that directly address the user's request, respect their profile, and honour the endocrinologist's constraints.
-Respond with ONLY valid JSON, no other text:
-{{
-  "meals": [
-    {{"meal": "breakfast", "name": "<meal name and brief description>"}},
-    {{"meal": "lunch", "name": "<meal name and brief description>"}},
-    {{"meal": "dinner", "name": "<meal name and brief description>"}}
-  ],
-  "constraints_applied": ["<constraint 1>"],
-  "biomarker_adjustments": ["<adjustment 1>"]
-}}"""
+        return (
+            f"{self._get_system_prompt()}\n\n"
+            f"USER PROFILE:\n"
+            f"- Age: {age}, Gender: {gender}\n"
+            f"- Height: {height}cm, Current weight: {weight}kg\n"
+            f"- Dietary restrictions: {diet_restrictions}\n"
+            f"- Dietary preferences: {diet_preferences}\n"
+            f"- Health conditions: {conditions}\n"
+            f"- Biomarker flags: {flags}\n\n"
+            f"ENDOCRINOLOGIST CONTEXT:\n{endo_context}\n\n"
+            f"USER REQUEST: \"{user_prompt}\"\n\n"
+            f"Generate 3 meals that directly address the user's request, respect their profile, and honour the endocrinologist's constraints.\n"
+            f"Respond with ONLY valid JSON, no other text:\n"
+            f'{{\n'
+            f'  "meals": [\n'
+            f'    {{"meal": "breakfast", "name": "<meal name and brief description>"}},\n'
+            f'    {{"meal": "lunch", "name": "<meal name and brief description>"}},\n'
+            f'    {{"meal": "dinner", "name": "<meal name and brief description>"}}\n'
+            f'  ],\n'
+            f'  "constraints_applied": ["<constraint 1>"],\n'
+            f'  "biomarker_adjustments": ["<adjustment 1>"]\n'
+            f'}}'
+        )
 
     def _normalize_meal(self, item: dict[str, Any]) -> dict[str, Any]:
         meal_type = item.get("meal") or item.get("type") or item.get("meal_type") or ""

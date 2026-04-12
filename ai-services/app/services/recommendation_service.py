@@ -51,17 +51,26 @@ class RecommendationService:
             created_at=created_at,
         )
 
-    def list_recommendations(self, user_id: int) -> list[RecommendationRecord]:
+    def list_recommendations(self, user_id: int | None = None) -> list[RecommendationRecord]:
         with sqlite3.connect(self._db_path) as connection:
-            rows = connection.execute(
-                """
-                SELECT id, user_id, intent, content, data, created_at
-                FROM recommendations
-                WHERE user_id = ?
-                ORDER BY created_at DESC, id DESC
-                """,
-                (user_id,),
-            ).fetchall()
+            if user_id is not None:
+                rows = connection.execute(
+                    """
+                    SELECT id, user_id, intent, content, data, created_at
+                    FROM recommendations
+                    WHERE user_id = ?
+                    ORDER BY created_at DESC, id DESC
+                    """,
+                    (user_id,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """
+                    SELECT id, user_id, intent, content, data, created_at
+                    FROM recommendations
+                    ORDER BY created_at DESC, id DESC
+                    """,
+                ).fetchall()
 
         return [
             RecommendationRecord(
