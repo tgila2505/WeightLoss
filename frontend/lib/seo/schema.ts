@@ -144,3 +144,24 @@ export function buildPersonSchema({
     },
   }
 }
+
+/**
+ * SpeakableSpecification — marks page sections that AI assistants and voice
+ * interfaces should use for summaries and spoken responses.
+ * @param path  Page path (e.g. '/plan/lose-weight-keto')
+ * @param cssSelectors  CSS selectors targeting the most informative sections
+ */
+export function buildSpeakableSchema(
+  path: string,
+  cssSelectors: string[]
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: `${BASE_URL}${path}`,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: cssSelectors,
+    },
+  }
+}

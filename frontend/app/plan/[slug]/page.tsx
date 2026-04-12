@@ -14,7 +14,7 @@ import {
 } from '@/lib/seo/pseo-combinations';
 import { getRelatedPages } from '@/lib/seo/related-pages';
 import { buildMetadata } from '@/lib/seo/metadata';
-import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema, buildHowToSchema } from '@/lib/seo/schema';
+import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema, buildHowToSchema, buildSpeakableSchema } from '@/lib/seo/schema';
 import { getPseoContent } from '@/content/plans/templates';
 import { SeoCta } from './seo-cta';
 
@@ -62,6 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     buildBreadcrumbSchema(breadcrumbs),
     buildHowToSchema(h1, description, howToSteps),
     ...(content.faq ? [buildFaqSchema(content.faq)] : []),
+    buildSpeakableSchema(`/plan/${slug}`, ['[data-ai-summary]', 'h1', '[data-ai-qa]']),
   ];
 
   const base = buildMetadata({ title, description, path: `/plan/${slug}`, ogImage: `/api/og/plan/${slug}` });
@@ -135,6 +136,49 @@ export default async function PseoPage({ params }: Props) {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 py-12 space-y-14">
+        {/* TL;DR — AI-readable quick summary */}
+        <section
+          aria-label="Quick summary"
+          data-ai-summary
+          className="bg-slate-50 border border-slate-200 rounded-2xl p-6"
+        >
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Quick summary</p>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            <div className="flex gap-2">
+              <dt className="font-semibold text-slate-700 shrink-0">Goal:</dt>
+              <dd className="text-slate-600">{h1}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="font-semibold text-slate-700 shrink-0">Approach:</dt>
+              <dd className="text-slate-600">
+                {dietType
+                  ? `${dietType.replace(/-/g, ' ')} diet with a sustained calorie deficit`
+                  : 'Calorie deficit with balanced macro targets'}
+              </dd>
+            </div>
+            {content.calorieGuidance && (
+              <div className="flex gap-2">
+                <dt className="font-semibold text-slate-700 shrink-0">Calories:</dt>
+                <dd className="text-slate-600">{content.calorieGuidance}</dd>
+              </div>
+            )}
+            {content.proteinTarget && (
+              <div className="flex gap-2">
+                <dt className="font-semibold text-slate-700 shrink-0">Protein:</dt>
+                <dd className="text-slate-600">{content.proteinTarget}</dd>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <dt className="font-semibold text-slate-700 shrink-0">Top foods:</dt>
+              <dd className="text-slate-600">{content.foodsToPrioritize.slice(0, 3).join(', ')}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="font-semibold text-slate-700 shrink-0">Results timeline:</dt>
+              <dd className="text-slate-600">Noticeable changes in 4–8 weeks with consistent adherence</dd>
+            </div>
+          </dl>
+        </section>
+
         {/* Intro */}
         <section>
           <h2 className="text-xl font-bold text-slate-900 mb-3">
@@ -194,7 +238,7 @@ export default async function PseoPage({ params }: Props) {
 
         {/* FAQ */}
         {content.faq && content.faq.length > 0 && (
-          <section>
+          <section data-ai-qa>
             <h2 className="text-xl font-bold text-slate-900 mb-6">Frequently asked questions</h2>
             <div className="space-y-4">
               {content.faq.map(({ q, a }) => (
