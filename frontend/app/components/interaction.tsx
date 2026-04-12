@@ -126,7 +126,6 @@ export function InteractionView() {
         setMessages((prev) => [...prev, assistantMsg]);
       }
     } catch (err) {
-      setIsConsulting(false);
       if (err instanceof Error && err.message === 'FEATURE_GATED') {
         setIsGated(true);
       } else {

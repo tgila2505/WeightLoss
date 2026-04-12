@@ -1,17 +1,11 @@
 'use client';
 
-const AGENT_NAME: Record<string, string> = {
-  gp: 'General Practitioner',
-  endo: 'Endocrinologist',
-  dietitian: 'Dietitian',
-  trainer: 'Personal Trainer',
-  panel: 'Medical Panel',
-};
+import { AGENT_NAME } from './agents';
 
 type Props = { agent: string };
 
 export function ConsultationIndicator({ agent }: Props) {
-  const personaName = AGENT_NAME[agent] ?? agent;
+  const personaName = AGENT_NAME[agent as keyof typeof AGENT_NAME] ?? agent;
   const isPanel = agent === 'panel' || agent === 'gp';
 
   return (

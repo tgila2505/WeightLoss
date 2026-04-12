@@ -2,14 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import type { ChatAgent } from '@/lib/api-client';
-
-const AGENTS: { value: ChatAgent; emoji: string; name: string; description: string }[] = [
-  { value: 'gp', emoji: '🩺', name: 'General Practitioner', description: 'Holistic health' },
-  { value: 'endo', emoji: '🔬', name: 'Endocrinologist', description: 'Labs & metabolic health' },
-  { value: 'dietitian', emoji: '🥗', name: 'Dietitian', description: 'Nutrition & meal plans' },
-  { value: 'trainer', emoji: '💪', name: 'Personal Trainer', description: 'Exercise & fitness' },
-  { value: 'panel', emoji: '👥', name: 'Medical Panel', description: 'Full panel consultation' },
-];
+import { AGENTS } from './agents';
 
 type Props = {
   activeAgent: ChatAgent;
@@ -30,7 +23,7 @@ export function AgentSidebar({ activeAgent, onSelectAgent, onNewConversation, is
         {AGENTS.map(({ value, emoji, name, description }) => (
           <button
             key={value}
-            onClick={() => !isStreaming && onSelectAgent(value)}
+            onClick={() => !isStreaming && onSelectAgent(value as ChatAgent)}
             disabled={isStreaming}
             className={cn(
               'flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition-colors',
