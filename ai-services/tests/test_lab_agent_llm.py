@@ -63,18 +63,14 @@ class LabAgentLLMTest(unittest.TestCase):
 
         # Rule-based fallback should still produce a valid output
         self.assertEqual(result.status, "success")
-        self.assertTrue(
-            any(r.get("code") == "diabetes_risk" for r in result.data["risks"])
-        )
+        self.assertTrue(result.data["risks"]["diabetes_risk"])
 
     def test_rule_based_when_no_provider(self) -> None:
         agent = LabInterpretationAgent()
         result = agent.run(_LAB_INPUT)
 
         self.assertEqual(result.status, "success")
-        self.assertTrue(
-            any(r.get("code") == "diabetes_risk" for r in result.data["risks"])
-        )
+        self.assertTrue(result.data["risks"]["diabetes_risk"])
 
 
 if __name__ == "__main__":

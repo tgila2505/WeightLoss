@@ -38,9 +38,14 @@ class LabInterpretationAgent(AgentInterface):
 
     def __init__(self, provider: LLMProvider | None = None) -> None:
         self._provider = provider
-        self._system_prompt = (
-            _PROMPTS_DIR / "endocrinologist_system_prompt.txt"
-        ).read_text(encoding="utf-8")
+        self._system_prompt: str | None = None
+
+    def _get_system_prompt(self) -> str:
+        if self._system_prompt is None:
+            self._system_prompt = (
+                _PROMPTS_DIR / "endocrinologist_system_prompt.txt"
+            ).read_text(encoding="utf-8")
+        return self._system_prompt
 
     def run(self, request: AgentInput) -> AIOutput:
         lab_records = request.variables.get("lab_records") or []
@@ -57,12 +62,13 @@ class LabInterpretationAgent(AgentInterface):
     ) -> AIOutput | None:
         records_text = json.dumps(lab_records, indent=2)
         prompt = (
-            f"{self._system_prompt}\n\n"
+            f"{self._get_system_prompt()}\n\n"
             f"PATIENT LAB RECORDS:\n{records_text}\n\n"
             f"PATIENT QUERY: {request.prompt}"
         )
         try:
-            raw = self._provider.generate(prompt)  # type: ignore[union-attr]
+            provider = self._provider
+            raw = provider.generate(prompt)
             data = self._parse_json(raw)
             return AIOutput(
                 content="Lab interpretation generated",
@@ -81,7 +87,12 @@ class LabInterpretationAgent(AgentInterface):
 
     def _run_rule_based(self, lab_records: list[dict[str, Any]]) -> AIOutput:
         insights: list[dict[str, str]] = []
-        risks: list[dict[str, str]] = []
+        risks: dict[str, bool] = {
+            "prediabetes_risk": False,
+            "diabetes_risk": False,
+            "liver_stress_risk": False,
+            "gout_risk": False,
+        }
         actions: list[str] = []
 
         for record in lab_records:
@@ -97,10 +108,8 @@ class LabInterpretationAgent(AgentInterface):
             )
             risk_info = self._RISK_MAP.get(normalized_name, {}).get(status)
             if risk_info is not None:
-                risk_code, description = risk_info
-                risk = {"code": risk_code, "description": description, "status": status}
-                if risk not in risks:
-                    risks.append(risk)
+                risk_code, _ = risk_info
+                risks[risk_code] = True
                 action = self._ACTION_MAP[risk_code]
                 if action not in actions:
                     actions.append(action)

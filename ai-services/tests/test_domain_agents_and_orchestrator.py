@@ -60,7 +60,10 @@ class DomainAgentsAndOrchestratorTest(unittest.TestCase):
             )
         )
 
-        self.assertEqual(len(output.data["risks"]), 2)
+        self.assertTrue(output.data["risks"]["diabetes_risk"])
+        self.assertTrue(output.data["risks"]["liver_stress_risk"])
+        self.assertFalse(output.data["risks"]["prediabetes_risk"])
+        self.assertFalse(output.data["risks"]["gout_risk"])
         self.assertIn(
             "Prioritize lower-sugar meals and follow up with a clinician.",
             output.data["lab_actions"],
