@@ -30,6 +30,7 @@ export type AnalyticsEventName =
   | 'checkout_started'
   | 'conversion_completed'
   | 'trial_expired'
+  | 'ugc_cta_clicked'
 
 export interface AnalyticsEventProperties {
   userId?: number
