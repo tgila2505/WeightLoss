@@ -5,6 +5,7 @@ import {
   getAccessToken,
   isLoggedIn,
   login,
+  logout,
   register,
   setAccessToken
 } from '@/lib/auth';
@@ -23,22 +24,27 @@ function createToken(expiresAtSeconds: number): string {
 describe('auth helpers', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
+    // Clear cookies between tests
+    document.cookie = 'has_session=; path=/; max-age=0';
   });
 
-  it('stores and clears the access token', () => {
+  it('getAccessToken returns null (tokens now in httpOnly cookies)', () => {
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it('setAccessToken sets has_session cookie and clearAccessToken removes it', () => {
     const token = createToken(Math.floor(Date.now() / 1000) + 3600);
     setAccessToken(token);
 
-    expect(getAccessToken()).toBe(token);
     expect(isLoggedIn()).toBe(true);
+    expect(document.cookie).toContain('has_session=1');
 
     clearAccessToken();
 
-    expect(getAccessToken()).toBeNull();
     expect(isLoggedIn()).toBe(false);
   });
 
-  it('register sends the expected payload', async () => {
+  it('register sends the expected payload with credentials: include', async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock.mockResolvedValue(new Response(null, { status: 201 }));
 
@@ -48,6 +54,7 @@ describe('auth helpers', () => {
       'http://localhost:8000/api/v1/auth/register',
       expect.objectContaining({
         method: 'POST',
+        credentials: 'include',
         body: JSON.stringify({
           email: 'person@example.com',
           password: 'password123'
@@ -56,10 +63,11 @@ describe('auth helpers', () => {
     );
   });
 
-  it('login saves the received access token', async () => {
+  it('login sets has_session cookie from received access token', async () => {
     const fetchMock = vi.mocked(fetch);
+    const token = createToken(Math.floor(Date.now() / 1000) + 3600);
     fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ access_token: 'token-123' }), {
+      new Response(JSON.stringify({ access_token: token }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -67,7 +75,10 @@ describe('auth helpers', () => {
 
     await login('person@example.com', 'password123');
 
-    expect(getAccessToken()).toBe('token-123');
+    // getAccessToken returns null now (tokens in httpOnly cookies)
+    expect(getAccessToken()).toBeNull();
+    // But has_session cookie should be set
+    expect(isLoggedIn()).toBe(true);
   });
 
   it('login surfaces backend errors', async () => {
@@ -81,6 +92,27 @@ describe('auth helpers', () => {
 
     await expect(login('person@example.com', 'wrong-password')).rejects.toThrow(
       'Invalid email or password'
+    );
+  });
+
+  it('logout calls backend and clears client state', async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
+
+    // Simulate logged-in state
+    const token = createToken(Math.floor(Date.now() / 1000) + 3600);
+    setAccessToken(token);
+    expect(isLoggedIn()).toBe(true);
+
+    await logout();
+
+    expect(isLoggedIn()).toBe(false);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/auth/logout',
+      expect.objectContaining({
+        method: 'POST',
+        credentials: 'include',
+      })
     );
   });
 

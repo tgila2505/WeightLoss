@@ -56,11 +56,11 @@ function PlanAdjustmentBanner({
 }) {
   async function accept() {
     try {
-      const token = (await import('@/lib/auth')).getAccessToken();
       const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
       await fetch(`${apiBase}/api/v1/reports/accept-adjustment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' as RequestCredentials,
         body: JSON.stringify({ report_id: reportId }),
       });
     } catch {

@@ -55,13 +55,12 @@ function CheckoutForm({ tier, interval }: { tier: string; interval: string }) {
         return
       }
 
-      const token = localStorage.getItem('access_token')
       const res = await fetch(`${API_BASE}/api/v1/billing/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include' as RequestCredentials,
         body: JSON.stringify({ tier, interval, payment_method_id: paymentMethod.id }),
       })
 

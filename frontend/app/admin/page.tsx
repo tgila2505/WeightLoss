@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { PageShell } from '../components/page-shell';
-import { getAccessToken } from '../../lib/auth';
+import { isLoggedIn } from '../../lib/auth';
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -33,9 +33,9 @@ interface AiKeysStatus {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function fetchAiKeys(token: string): Promise<AiKeysStatus> {
+async function fetchAiKeys(): Promise<AiKeysStatus> {
   const res = await fetch(`${apiBase}/api/v1/admin/ai-keys`, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include' as RequestCredentials,
     cache: 'no-store',
   });
   if (res.status === 403) throw new Error('forbidden');
@@ -43,13 +43,13 @@ async function fetchAiKeys(token: string): Promise<AiKeysStatus> {
   return res.json() as Promise<AiKeysStatus>;
 }
 
-async function saveAiKeys(token: string, groq: string, mistral: string): Promise<AiKeysStatus> {
+async function saveAiKeys(groq: string, mistral: string): Promise<AiKeysStatus> {
   const res = await fetch(`${apiBase}/api/v1/admin/ai-keys`, {
     method: 'PATCH',
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({
       groq_api_key: groq || null,
       mistral_api_key: mistral || null,
@@ -76,13 +76,11 @@ export default function AdminPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  const token = typeof window !== 'undefined' ? getAccessToken() : null;
-
   const load = useCallback(async () => {
-    if (!token) { router.push('/'); return; }
+    if (typeof window !== 'undefined' && !isLoggedIn()) { router.push('/'); return; }
     setLoading(true);
     try {
-      const data = await fetchAiKeys(token);
+      const data = await fetchAiKeys();
       setStatus(data);
     } catch (err) {
       if (err instanceof Error && err.message === 'forbidden') {
@@ -91,17 +89,16 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, router]);
+  }, [router]);
 
   useEffect(() => { load(); }, [load]);
 
   async function handleSave() {
-    if (!token) return;
     setSaving(true);
     setSaveError('');
     setSaveSuccess(false);
     try {
-      const updated = await saveAiKeys(token, groqInput.trim(), mistralInput.trim());
+      const updated = await saveAiKeys(groqInput.trim(), mistralInput.trim());
       setStatus(updated);
       setGroqInput('');
       setMistralInput('');

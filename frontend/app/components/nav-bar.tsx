@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { clearAccessToken, getAccessToken } from '../../lib/auth';
+import { isLoggedIn, logout } from '../../lib/auth';
 import { LogoMark, LogoText } from './logo';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 
@@ -29,10 +29,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 function useIsAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) return;
+    if (!isLoggedIn()) return;
     fetch(`${API_BASE}/api/v1/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include' as RequestCredentials,
       cache: 'no-store',
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -63,8 +62,8 @@ export function NavBar() {
   const router = useRouter();
   const isAdmin = useIsAdmin();
 
-  function handleLogout() {
-    clearAccessToken();
+  async function handleLogout() {
+    await logout();
     router.push('/funnel');
   }
 

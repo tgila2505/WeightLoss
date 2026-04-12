@@ -1,4 +1,5 @@
-import { getAccessToken } from './auth';
+// Auth tokens are now in httpOnly cookies — no manual token management needed.
+// All fetch calls use `credentials: 'include'` to send cookies automatically.
 
 export type OnboardingPayload = {
   name: string;
@@ -205,20 +206,15 @@ const sessionPlanKey = 'latest_plan_snapshot';
 const sessionInteractionKey = 'interaction_history';
 
 export async function upsertProfile(payload: OnboardingPayload): Promise<void> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before completing onboarding.');
-  }
-
   const body = serializeProfile(payload);
-  const headers = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`
   };
 
   const createResponse = await fetch(`${apiBaseUrl}/api/v1/profile`, {
     method: 'POST',
     headers,
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify(body)
   });
 
@@ -230,6 +226,7 @@ export async function upsertProfile(payload: OnboardingPayload): Promise<void> {
     const updateResponse = await fetch(`${apiBaseUrl}/api/v1/profile`, {
       method: 'PUT',
       headers,
+      credentials: 'include' as RequestCredentials,
       body: JSON.stringify(body)
     });
 
@@ -252,11 +249,10 @@ export async function fetchProfile(): Promise<ProfileResponse | null> {
 }
 
 export async function patchProfileGender(gender: string): Promise<void> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Not authenticated');
   const res = await fetch(`${apiBaseUrl}/api/v1/profile`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({ gender }),
   });
   if (!res.ok) {
@@ -298,11 +294,6 @@ export async function submitOrchestratorRequest(input: {
   consistencyLevel?: string | null;
   adaptiveAdjustment?: AdaptiveAdjustment | null;
 }): Promise<OrchestratorResponse> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before using the assistant.');
-  }
-
   // Fetch master profile to enrich orchestrator context (non-blocking)
   let masterProfileText = '';
   try {
@@ -316,8 +307,8 @@ export async function submitOrchestratorRequest(input: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({
       context: {
         prompt: input.prompt,
@@ -368,17 +359,12 @@ export async function submitOrchestratorRequest(input: {
 }
 
 export async function persistLatestPlan(plan: PlanSnapshot): Promise<void> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before saving a plan.');
-  }
-
   const response = await fetch(`${apiBaseUrl}/api/v1/plans`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({
       title: 'Latest plan',
       status: 'active',
@@ -524,18 +510,14 @@ export async function saveNodeAnswers(
   nodeId: string,
   answers: Record<string, MindMapAnswerValue>
 ): Promise<void> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before saving answers.');
-  }
   const response = await fetch(
     `${apiBaseUrl}/api/v1/questionnaire/${encodeURIComponent(nodeId)}`,
     {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
+      credentials: 'include' as RequestCredentials,
       body: JSON.stringify({ answers }),
     }
   );
@@ -545,16 +527,10 @@ export async function saveNodeAnswers(
 }
 
 export async function generateMasterProfile(): Promise<{ profile_text: string; generated_at: string }> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before generating a master profile.');
-  }
   const response = await fetch(`${apiBaseUrl}/api/v1/user-profile/generate`, {
     method: 'POST',
     cache: 'no-store',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include' as RequestCredentials,
   });
   if (!response.ok) {
     throw new Error(await readError(response));
@@ -662,15 +638,8 @@ async function readError(response: Response): Promise<string> {
 }
 
 async function request<T>(url: string): Promise<T> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before viewing this data.');
-  }
-
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+    credentials: 'include' as RequestCredentials,
   });
 
   if (!response.ok) {
@@ -681,17 +650,12 @@ async function request<T>(url: string): Promise<T> {
 }
 
 async function requestWithBody<T>(url: string, body: unknown): Promise<T> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before updating this data.');
-  }
-
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify(body)
   });
 
@@ -703,15 +667,8 @@ async function requestWithBody<T>(url: string, body: unknown): Promise<T> {
 }
 
 async function requestWithOptional404<T>(url: string): Promise<T | null> {
-  const token = getAccessToken();
-  if (!token) {
-    throw new Error('You must be logged in before viewing this data.');
-  }
-
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+    credentials: 'include' as RequestCredentials,
   });
 
   if (response.status === 404) {
@@ -795,11 +752,10 @@ export async function saveOnboardingState(payload: {
   form_data: Record<string, unknown>;
   completed: boolean;
 }): Promise<OnboardingStateResponse> {
-  const token = getAccessToken();
-  if (!token) throw new Error('You must be logged in before saving progress.');
   const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/state`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(await readError(res));
@@ -820,13 +776,12 @@ export type FeedbackPayload = {
 };
 
 export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
-  const token = typeof window !== 'undefined' ? getAccessToken() : null;
   await fetch(`${apiBaseUrl}/api/v1/feedback`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({ ...payload, metadata: payload.metadata ?? {} }),
   }).catch(() => {});
 }
@@ -839,13 +794,12 @@ export type BehaviorSignalPayload = {
 };
 
 export async function logBehaviorSignal(payload: BehaviorSignalPayload): Promise<void> {
-  const token = typeof window !== 'undefined' ? getAccessToken() : null;
   await fetch(`${apiBaseUrl}/api/v1/feedback/signals`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({ ...payload, properties: payload.properties ?? {} }),
   }).catch(() => {});
 }
@@ -990,11 +944,9 @@ export async function fetchNotificationInbox(): Promise<{ unread_count: number; 
 }
 
 export async function dismissNotification(id: string): Promise<void> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Not authenticated');
   await fetch(`${apiBaseUrl}/api/v1/notifications/inbox/${id}/dismiss`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include' as RequestCredentials,
   });
 }
 
@@ -1014,10 +966,8 @@ export type WeeklyReport = {
 };
 
 export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Not authenticated');
   const res = await fetch(`${apiBaseUrl}/api/v1/reports/weekly`, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include' as RequestCredentials,
   });
   if (res.status === 404 || res.status === 204) return null;
   if (!res.ok) throw new Error(await readError(res));
@@ -1071,13 +1021,12 @@ export async function fetchSharedPlan(slug: string): Promise<SharedPlanResponse>
 // ---------------------------------------------------------------------------
 
 export async function updateGender(gender: string): Promise<ProfileResponse> {
-  const token = getAccessToken();
   const res = await fetch(`${apiBaseUrl}/api/v1/profile/gender`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({ gender }),
   });
   if (!res.ok) throw new Error(await readError(res));
@@ -1101,10 +1050,8 @@ export type ChatHistoryResponse = {
 };
 
 export async function getChatHistory(agent: ChatAgent): Promise<ChatHistoryResponse> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Not authenticated');
   const res = await fetch(`${apiBaseUrl}/api/v1/chat/${agent}/history`, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include' as RequestCredentials,
     cache: 'no-store',
   });
   if (!res.ok) {
@@ -1116,11 +1063,9 @@ export async function getChatHistory(agent: ChatAgent): Promise<ChatHistoryRespo
 }
 
 export async function startNewConversation(agent: ChatAgent): Promise<string> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Not authenticated');
   const res = await fetch(`${apiBaseUrl}/api/v1/chat/${agent}/new`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include' as RequestCredentials,
   });
   if (!res.ok) {
     if (res.status === 401) throw new Error('Not authenticated');
@@ -1137,15 +1082,12 @@ export async function* streamChatMessage(params: {
   conversation_id: string;
   signal?: AbortSignal;
 }): AsyncGenerator<string, void, unknown> {
-  const token = getAccessToken();
-  if (!token) throw new Error('Not authenticated');
-
   const res = await fetch(`${apiBaseUrl}/api/v1/chat/message`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify({ agent: params.agent, message: params.message, conversation_id: params.conversation_id }),
     signal: params.signal,
   });

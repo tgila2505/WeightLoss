@@ -1,4 +1,3 @@
-import { getAccessToken } from './auth'
 import { captureEvent } from './posthog'
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
@@ -78,13 +77,12 @@ export function trackEvent(
   captureEvent(event, { ...properties, session_id: sid })
 
   // 2. Fire to backend (source-of-truth + fallback)
-  const token = typeof window !== 'undefined' ? getAccessToken() : null
   fetch(`${apiBaseUrl}/api/v1/analytics/events`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    credentials: 'include' as RequestCredentials,
     body: JSON.stringify(payload),
   }).catch((err) => {
     if (process.env.NODE_ENV === 'development') {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { getAccessToken } from '@/lib/auth';
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -22,13 +21,12 @@ export function useSharePlan() {
     setSharing(true);
     setError(null);
     try {
-      const token = getAccessToken();
       const res = await fetch(`${apiBaseUrl}/api/v1/shared-plans`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include' as RequestCredentials,
         body: JSON.stringify({ plan_data: planData }),
       });
       if (!res.ok) throw new Error('Failed to create share link');

@@ -1,6 +1,5 @@
 import { identifyUser, resetUser } from './posthog'
 
-const TOKEN_KEY = 'access_token';
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -18,26 +17,22 @@ function decodeBase64Url(value: string): string {
 function readTokenPayload(token: string): JwtPayload | null {
   try {
     const [, payloadSegment] = token.split('.');
-    if (!payloadSegment) {
-      return null;
-    }
-
+    if (!payloadSegment) return null;
     return JSON.parse(decodeBase64Url(payloadSegment)) as JwtPayload;
   } catch {
     return null;
   }
 }
 
+/**
+ * @deprecated Tokens are now in httpOnly cookies. This returns null.
+ * Callers should use `credentials: 'include'` on fetch instead.
+ */
 export function getAccessToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  return window.localStorage.getItem(TOKEN_KEY);
+  return null;
 }
 
 export function setAccessToken(token: string): void {
-  window.localStorage.setItem(TOKEN_KEY, token)
   window.sessionStorage.clear()
 
   const payload = readTokenPayload(token)
@@ -46,15 +41,13 @@ export function setAccessToken(token: string): void {
     identifyUser(userId)
   }
 
-  // Sync a routing cookie so middleware can guard protected routes without
-  // reading localStorage (which is unavailable in the Edge runtime).
   const exp = payload?.exp
   const maxAge = exp ? Math.max(0, exp - Math.floor(Date.now() / 1000)) : 60 * 60 * 24 * 7
   document.cookie = `has_session=1; path=/; max-age=${maxAge}; SameSite=Lax`
 }
 
 export function clearAccessToken(): void {
-  window.localStorage.removeItem(TOKEN_KEY)
+  window.localStorage.removeItem('access_token')
   window.localStorage.removeItem('mindmap-graph-state')
   window.localStorage.removeItem('_funnel_profile')
   window.localStorage.removeItem('_funnel_ab')
@@ -63,35 +56,16 @@ export function clearAccessToken(): void {
 }
 
 export function isLoggedIn(): boolean {
-  const token = getAccessToken();
-  if (!token) {
-    return false;
-  }
-
-  const payload = readTokenPayload(token);
-  if (!payload?.exp) {
-    clearAccessToken();
-    return false;
-  }
-
-  if (Date.now() >= payload.exp * 1000) {
-    clearAccessToken();
-    return false;
-  }
-
-  // Sync the routing cookie if it's missing — handles users who were logged in
-  // before the has_session cookie was introduced (middleware migration).
-  if (typeof document !== 'undefined' && !document.cookie.includes('has_session=1')) {
-    const maxAge = Math.max(0, payload.exp - Math.floor(Date.now() / 1000));
-    document.cookie = `has_session=1; path=/; max-age=${maxAge}; SameSite=Lax`;
-  }
-
-  return true;
+  if (typeof document === 'undefined') return false;
+  return document.cookie.includes('has_session=1');
 }
 
 async function apiFetch(path: string, init: RequestInit): Promise<Response> {
   try {
-    return await fetch(`${apiBaseUrl}${path}`, init);
+    return await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      credentials: 'include',
+    });
   } catch {
     throw new Error('Unable to reach the server. Please check that the backend is running.');
   }
@@ -110,7 +84,7 @@ export async function register(
   const response = await apiFetch('/api/v1/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -126,7 +100,7 @@ export async function login(
   const response = await apiFetch('/api/v1/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
 
   if (!response.ok) {
@@ -136,4 +110,16 @@ export async function login(
 
   const data = await response.json();
   setAccessToken(data.access_token);
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${apiBaseUrl}/api/v1/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  } catch {
+    // Best-effort — clear client state regardless
+  }
+  clearAccessToken();
 }
