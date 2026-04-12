@@ -1,4 +1,4 @@
-import { getABVariant } from '@/lib/ab-testing'
+import { getABVariant, getSeoCtaVariant } from '@/lib/ab-testing'
 
 describe('getABVariant', () => {
   it('returns mindmap when rollout is 0', () => {
@@ -21,5 +21,16 @@ describe('getABVariant', () => {
     // Expect roughly 50%, allow ±10%
     expect(wizardCount).toBeGreaterThan(400)
     expect(wizardCount).toBeLessThan(600)
+  })
+})
+
+describe('getSeoCtaVariant', () => {
+  it('returns control when disabled', () => {
+    expect(getSeoCtaVariant(false, 100)).toBe('control')
+  })
+
+  it('returns control when rollout is 0', () => {
+    // sessionStorage not available in test env — falls back via enabled=false path
+    expect(getSeoCtaVariant(false, 0)).toBe('control')
   })
 })

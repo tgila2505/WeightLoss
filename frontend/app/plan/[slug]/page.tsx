@@ -17,6 +17,7 @@ import { getRelatedPages } from '@/lib/seo/related-pages';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema, buildHowToSchema } from '@/lib/seo/schema';
 import { getPseoContent } from '@/content/plans/templates';
+import { SeoCta } from './seo-cta';
 
 export const revalidate = 604800; // 7 days
 export const dynamicParams = true; // serve any valid goal/diet slug without rebuild
@@ -150,12 +151,10 @@ export default async function PseoPage({ params }: Props) {
           <p className="text-base text-slate-600 max-w-xl mx-auto mb-8">
             {buildPseoDescription({ goalType, dietType })}
           </p>
-          <a
+          <SeoCta
             href={funnelHref}
-            className="inline-block px-8 py-3 rounded-xl font-semibold text-base bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-          >
-            Get your personalised {dietType ? dietType.replace(/-/g, ' ') + ' ' : ''}plan →
-          </a>
+            defaultText={`Get your personalised ${dietType ? dietType.replace(/-/g, ' ') + ' ' : ''}plan →`}
+          />
         </div>
       </section>
 
