@@ -20,6 +20,8 @@ const defaultFlags = {
   abPricingIntervalRollout: 0,
   abHeroPlanEnabled: false,
   abHeroPlanRollout: 0,
+  seoAbEnabled: false,
+  seoAbRollout: 50,
 }
 
 beforeEach(() => {

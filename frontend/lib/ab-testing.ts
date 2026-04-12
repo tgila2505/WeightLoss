@@ -39,6 +39,27 @@ export function getPaywallModalStyleVariant(enabled: boolean): PaywallModalStyle
   return variant
 }
 
+// ---------------------------------------------------------------------------
+// Phase 15.3 — SEO page CTA A/B experiment
+// ---------------------------------------------------------------------------
+
+export type SeoCtaVariant = 'control' | 'social_proof'
+
+/**
+ * SEO plan page CTA experiment.
+ * control:      "Start for free →" (default)
+ * social_proof: "Join 10,000+ people who've hit their goal →"
+ * sessionStorage bucketed for anonymous users; disabled by default.
+ */
+export function getSeoCtaVariant(enabled: boolean, rollout: number): SeoCtaVariant {
+  if (!enabled || typeof window === 'undefined') return 'control'
+  const stored = sessionStorage.getItem('_ab_seo_cta')
+  if (stored === 'control' || stored === 'social_proof') return stored as SeoCtaVariant
+  const variant: SeoCtaVariant = Math.random() * 100 < rollout ? 'social_proof' : 'control'
+  sessionStorage.setItem('_ab_seo_cta', variant)
+  return variant
+}
+
 /**
  * djb2 hash adapted for numeric user IDs.
  * Returns a stable bucket 0–99 for a given userId.

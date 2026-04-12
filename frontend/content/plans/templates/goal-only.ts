@@ -1,6 +1,18 @@
 import type { GoalType } from '@/lib/seo/pseo-combinations';
 
 const GOAL_INTRO: Record<GoalType, string> = {
+  'burn-fat':
+    'Burning fat specifically targets stored body fat while preserving lean muscle. This plan combines a moderate calorie deficit with high protein to maximise the ratio of fat lost versus muscle retained — so the scale number matters less than your body composition.',
+  'tone-up':
+    'Toning up means reducing body fat while building or maintaining muscle — creating a firmer, more defined appearance. This requires a small calorie deficit, high protein, and resistance training. You cannot tone fat; you reveal muscle by losing fat on top of it.',
+  'lose-weight-fast':
+    'Rapid weight loss requires a larger calorie deficit — typically 750–1000 kcal/day. This plan sets an aggressive but safe target with high protein to minimise muscle loss, and a structured schedule to prevent the metabolic slowdown that undermines fast-loss diets.',
+  'slim-down':
+    'Slimming down focuses on overall size reduction — losing both fat and water retention for a leaner silhouette. This plan uses a consistent calorie deficit, reduced sodium, and high-volume low-calorie foods to create a significant size change quickly.',
+  'healthy-eating':
+    'Sustainable fat loss through healthy eating means replacing calorie-dense processed foods with nutrient-dense whole foods — not extreme restriction. This plan focuses on food quality, adequate protein, and building habits that support your weight and health for the long term.',
+  'body-recomposition':
+    'Body recomposition — simultaneously losing fat and gaining muscle — is achievable at a maintenance or slight deficit when protein intake is high and resistance training is consistent. Progress is slower than a pure cut, but the result is a more favourable body composition without the physical cost of aggressive restriction.',
   'lose-weight':
     'Sustainable weight loss comes down to a consistent calorie deficit combined with adequate protein intake. This plan is built around that principle — giving you the macro targets, food choices, and weekly schedule your body needs to lose fat without sacrificing muscle.',
   'lose-belly-fat':
@@ -16,6 +28,12 @@ const GOAL_INTRO: Record<GoalType, string> = {
 };
 
 const GOAL_FOODS: Record<GoalType, string[]> = {
+  'burn-fat': ['Salmon', 'Eggs', 'Green tea', 'Broccoli', 'Chicken breast', 'Almonds', 'Berries'],
+  'tone-up': ['Chicken breast', 'Eggs', 'Cottage cheese', 'Brown rice', 'Spinach', 'Almonds', 'Greek yoghurt'],
+  'lose-weight-fast': ['Turkey breast', 'Egg whites', 'Broccoli', 'Greek yoghurt', 'Sweet potato', 'Tuna', 'Leafy greens'],
+  'slim-down': ['Cucumber', 'Celery', 'Watermelon', 'Chicken breast', 'Asparagus', 'Lemon water', 'Greek yoghurt'],
+  'healthy-eating': ['Oats', 'Salmon', 'Lentils', 'Avocado', 'Blueberries', 'Broccoli', 'Whole grain bread'],
+  'body-recomposition': ['Lean beef', 'Eggs', 'Quinoa', 'Greek yoghurt', 'Chicken breast', 'Cottage cheese', 'Sweet potato'],
   'lose-weight': ['Chicken breast', 'Greek yoghurt', 'Leafy greens', 'Oats', 'Eggs', 'Lentils', 'Sweet potato'],
   'lose-belly-fat': ['Salmon', 'Avocado', 'Blueberries', 'Broccoli', 'Almonds', 'Green tea', 'Apple cider vinegar'],
   'lose-10kg': ['Turkey mince', 'Cottage cheese', 'Brown rice', 'Asparagus', 'Tuna', 'Chickpeas', 'Banana'],
@@ -25,6 +43,36 @@ const GOAL_FOODS: Record<GoalType, string[]> = {
 };
 
 const GOAL_MISTAKES: Record<GoalType, string[]> = {
+  'burn-fat': [
+    'Doing only cardio — resistance training is equally important for maximising fat-to-muscle ratio.',
+    'Cutting calories too aggressively — a deficit over 1000 kcal/day accelerates muscle loss.',
+    'Ignoring sleep — poor sleep increases the proportion of lean mass lost versus fat.',
+  ],
+  'tone-up': [
+    'Avoiding weights because of fear of bulking — women and most men cannot bulk without deliberate effort.',
+    'Focusing on the scale — toning increases muscle density; weight may stay the same while composition improves.',
+    'Not eating enough protein — without 1.8–2.2 g/kg/day, muscle preservation is impaired.',
+  ],
+  'lose-weight-fast': [
+    'Setting an unsustainable deficit and abandoning the plan after two weeks.',
+    'Neglecting protein — at aggressive deficits, muscle loss accelerates without adequate protein.',
+    'Confusing water weight loss in week one with fat loss — real fat loss is ~0.5–1.0 kg/week maximum.',
+  ],
+  'slim-down': [
+    'Relying on water manipulation tricks — diuretics and sodium cuts create temporary results only.',
+    'Under-eating — very low calorie intakes cause muscle loss and rebound weight gain.',
+    'Not distinguishing fat loss from bloating reduction — both contribute to slimming but require different interventions.',
+  ],
+  'healthy-eating': [
+    'Labelling foods as "good" or "bad" — this mindset leads to restriction cycles and overeating.',
+    'Assuming healthy food means unlimited portions — calorie density still applies to whole foods.',
+    'Changing everything at once — habit-based changes sustain long-term results; gradual substitution works better.',
+  ],
+  'body-recomposition': [
+    'Expecting fast results — recomposition is slower than a pure cut or bulk; 3–6 months is realistic.',
+    'Eating in too large a deficit — recomposition works at or near maintenance calories, not a 750 kcal deficit.',
+    'Skipping resistance training sessions — progressive overload is the stimulus for the muscle-building half of recomposition.',
+  ],
   'lose-weight': [
     'Eating too little protein — muscle loss masks fat loss progress on the scale.',
     'Skipping meals to "save" calories — this triggers overeating later in the day.',
@@ -58,6 +106,42 @@ const GOAL_MISTAKES: Record<GoalType, string[]> = {
 };
 
 const GOAL_FAQ: Record<GoalType, Array<{ q: string; a: string }>> = {
+  'burn-fat': [
+    { q: 'What is the fastest way to burn fat?', a: 'A consistent calorie deficit of 500–750 kcal/day combined with high protein (1.8–2.2 g/kg) and resistance training produces the best fat-to-muscle loss ratio. Fad approaches lose more muscle than fat.' },
+    { q: 'Does cardio burn fat better than weights?', a: 'Cardio burns more calories per session; weights build muscle that raises your resting metabolic rate. The combination is superior to either alone for long-term fat loss.' },
+    { q: 'Can I target fat loss in specific areas?', a: 'No — spot reduction is a myth. Fat is lost systemically based on genetics. A calorie deficit reduces fat throughout the body.' },
+    { q: 'How long to see fat loss results?', a: 'Visible changes in the mirror take 4–6 weeks. Measurable changes (body fat % or measurements) are detectable within 2 weeks of consistent deficit.' },
+  ],
+  'tone-up': [
+    { q: 'What does "toning up" actually mean?', a: 'Toning = lower body fat percentage + visible muscle definition. It requires losing fat (calorie deficit) and maintaining or building muscle (protein + resistance training).' },
+    { q: 'How much resistance training do I need to tone up?', a: '2–4 sessions per week of full-body or split resistance training is sufficient. Progressive overload (gradually increasing weight or reps) is essential.' },
+    { q: 'Will lifting weights make me bulky?', a: 'No. Significant muscle hypertrophy requires a calorie surplus, high training volume, and months of consistent effort. In a deficit with moderate training, you build shape — not size.' },
+    { q: 'How long does it take to tone up?', a: 'Visible toning changes take 8–12 weeks of consistent training and nutrition. Initial changes are in posture and muscle firmness; visible definition appears as body fat decreases.' },
+  ],
+  'lose-weight-fast': [
+    { q: 'How much weight can I safely lose per week?', a: 'A maximum of 1.0–1.5 kg/week is considered safe for most people. A 750–1000 kcal/day deficit achieves this range.' },
+    { q: 'Is rapid weight loss dangerous?', a: 'Aggressive deficits (over 1000 kcal/day) for extended periods risk muscle loss, nutrient deficiencies, and metabolic adaptation. Planned 2-week fast-loss phases followed by maintenance breaks are safer.' },
+    { q: 'What is the best diet for fast weight loss?', a: 'High protein (1.8–2.2 g/kg), moderate deficit (750–1000 kcal below TDEE), and resistance training produce the fastest body composition improvement.' },
+    { q: 'Will I regain weight after losing it fast?', a: 'Rapid weight loss followed by a return to old habits causes rebound. A maintenance phase after reaching your goal — gradually increasing calories back to TDEE — is essential to prevent this.' },
+  ],
+  'slim-down': [
+    { q: 'What is the difference between slimming down and losing weight?', a: 'Slimming down describes reducing body size and bloating — both fat loss and reduced water retention contribute. Losing weight refers specifically to the scale number.' },
+    { q: 'How can I slim down my waist specifically?', a: 'A total body calorie deficit reduces waist size. Reducing sodium lowers water retention. Resistance training improves posture, which visually slims the waist even without fat loss.' },
+    { q: 'Does drinking water help slim down?', a: '2–3 litres of water per day reduces water retention, supports metabolism, and reduces false hunger signals.' },
+    { q: 'How long to slim down noticeably?', a: 'Noticeable slimming — visible in clothing and the mirror — typically takes 3–5 weeks of consistent calorie deficit and reduced sodium.' },
+  ],
+  'healthy-eating': [
+    { q: 'What is the healthiest diet for weight loss?', a: 'The Mediterranean diet has the strongest evidence base for both weight management and long-term health. It emphasises vegetables, legumes, fish, olive oil, and moderate portions without strict restriction.' },
+    { q: 'Can I lose weight just by eating healthy?', a: 'Yes, if "eating healthy" means eating less calorie-dense food. Whole foods are naturally lower in calorie density, making it easier to eat at a deficit without strict tracking.' },
+    { q: 'Do I need to give up my favourite foods?', a: 'No. Sustainable healthy eating includes moderate amounts of any food. The goal is to make whole foods the majority of your diet, not to eliminate foods you enjoy.' },
+    { q: 'How do I start eating healthier without feeling overwhelmed?', a: 'Replace one processed food per week with a whole food equivalent. Focus on adding vegetables to every meal before reducing anything. Habit stacking is more effective than wholesale diet changes.' },
+  ],
+  'body-recomposition': [
+    { q: 'Is body recomposition possible for everyone?', a: 'Body recomposition is easiest for beginners, people returning after a break (muscle memory), and those with significant body fat. Advanced lifters with low body fat find recomposition very slow.' },
+    { q: 'How many calories should I eat for recomposition?', a: 'Eat at or slightly below maintenance (0–300 kcal deficit). On training days, eat at maintenance. On rest days, eat at a slight deficit. This maximises muscle protein synthesis while sustaining fat loss.' },
+    { q: 'How much protein do I need for body recomposition?', a: '2.0–2.4 g of protein per kg of body weight per day — higher than standard fat-loss recommendations.' },
+    { q: 'How do I track recomposition progress?', a: 'Do not track progress solely by scale weight. Use body measurements, progress photos, and strength metrics. DEXA scans every 8–12 weeks give the most accurate body composition data.' },
+  ],
   'lose-weight': [
     { q: 'How many calories should I eat to lose weight?', a: 'A deficit of 500 kcal/day produces approximately 0.5 kg of fat loss per week. Your exact target depends on your TDEE (Total Daily Energy Expenditure). The calculator above estimates your personalised target.' },
     { q: 'How much protein do I need?', a: 'Aim for 1.6–2.2 g of protein per kg of body weight. Protein preserves muscle during a deficit and keeps you full.' },

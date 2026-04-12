@@ -5,6 +5,12 @@ export type GoalType =
   | 'lose-5kg'
   | 'lose-20kg'
   | 'get-lean'
+  | 'burn-fat'
+  | 'tone-up'
+  | 'lose-weight-fast'
+  | 'slim-down'
+  | 'healthy-eating'
+  | 'body-recomposition'
 
 export type DietType =
   | 'keto'
@@ -15,6 +21,12 @@ export type DietType =
   | 'plant-based'
   | 'paleo'
   | 'vegan'
+  | 'high-protein'
+  | 'whole30'
+  | 'dash'
+  | 'anti-inflammatory'
+  | 'carnivore'
+  | 'flexitarian'
 
 export interface PseoDimensions {
   goalType: GoalType | string
@@ -28,6 +40,12 @@ const GOAL_LABELS: Record<string, string> = {
   'lose-5kg': 'Lose 5kg',
   'lose-20kg': 'Lose 20kg',
   'get-lean': 'Get Lean',
+  'burn-fat': 'Burn Fat',
+  'tone-up': 'Tone Up',
+  'lose-weight-fast': 'Lose Weight Fast',
+  'slim-down': 'Slim Down',
+  'healthy-eating': 'Eat Healthily and Lose Weight',
+  'body-recomposition': 'Recompose Your Body',
 }
 
 const DIET_LABELS: Record<string, string> = {
@@ -39,6 +57,12 @@ const DIET_LABELS: Record<string, string> = {
   'plant-based': 'Plant-Based',
   'paleo': 'Paleo',
   'vegan': 'Vegan',
+  'high-protein': 'High Protein',
+  'whole30': 'Whole30',
+  'dash': 'DASH',
+  'anti-inflammatory': 'Anti-Inflammatory',
+  'carnivore': 'Carnivore',
+  'flexitarian': 'Flexitarian',
 }
 
 export const GOAL_TYPES: GoalType[] = [
@@ -48,6 +72,12 @@ export const GOAL_TYPES: GoalType[] = [
   'lose-5kg',
   'lose-20kg',
   'get-lean',
+  'burn-fat',
+  'tone-up',
+  'lose-weight-fast',
+  'slim-down',
+  'healthy-eating',
+  'body-recomposition',
 ]
 
 export const DIET_TYPES: DietType[] = [
@@ -59,6 +89,12 @@ export const DIET_TYPES: DietType[] = [
   'plant-based',
   'paleo',
   'vegan',
+  'high-protein',
+  'whole30',
+  'dash',
+  'anti-inflammatory',
+  'carnivore',
+  'flexitarian',
 ]
 
 function goalLabel(goalType: string): string {

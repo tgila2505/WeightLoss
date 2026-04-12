@@ -3,50 +3,28 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
-  DIET_TYPES,
-  GOAL_TYPES,
   buildPseoSlug,
   buildPseoTitle,
   buildPseoDescription,
   buildPseoH1,
   getCoreSlugList,
+  parsePseoSlug,
   type DietType,
   type GoalType,
 } from '@/lib/seo/pseo-combinations';
 import { getRelatedPages } from '@/lib/seo/related-pages';
 import { buildMetadata } from '@/lib/seo/metadata';
-import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema } from '@/lib/seo/schema';
+import { buildWebPageSchema, buildFaqSchema, buildBreadcrumbSchema, buildHowToSchema } from '@/lib/seo/schema';
 import { getPseoContent } from '@/content/plans/templates';
+import { SeoCta } from './seo-cta';
 
 export const revalidate = 604800; // 7 days
+export const dynamicParams = true; // serve any valid goal/diet slug without rebuild
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-function parsePseoSlug(slug: string) {
-  let remaining = slug;
-  let goalType: GoalType | undefined;
-  let dietType: DietType | undefined;
-
-  for (const g of GOAL_TYPES) {
-    if (remaining.startsWith(g)) {
-      goalType = g;
-      remaining = remaining.slice(g.length).replace(/^-/, '');
-      break;
-    }
-  }
-  if (!goalType) return null;
-
-  for (const d of DIET_TYPES) {
-    if (remaining === d || remaining.startsWith(d)) {
-      dietType = d;
-      break;
-    }
-  }
-
-  return { goalType, dietType };
-}
 
 export async function generateStaticParams() {
   return getCoreSlugList().map((dims) => ({
@@ -71,9 +49,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     { name: h1, path: `/plan/${slug}` },
   ];
 
+  const howToSteps = [
+    { name: 'Calculate your TDEE', text: `Use the calculator to find your Total Daily Energy Expenditure for your ${h1} goal.` },
+    { name: 'Set your calorie target', text: 'Apply a 500–750 kcal/day deficit below your TDEE for steady, sustainable fat loss.' },
+    { name: 'Hit your protein target', text: 'Eat 1.6–2.2 g of protein per kg of body weight daily to preserve muscle.' },
+    { name: 'Follow the food plan', text: 'Prioritise the foods listed below and hit your daily macro targets consistently.' },
+    { name: 'Track and adjust weekly', text: 'Weigh yourself weekly and adjust calories down by 100–200 kcal if progress stalls for 2+ weeks.' },
+  ];
+
   const schemas = [
     buildWebPageSchema({ name: h1, description, path: `/plan/${slug}` }),
     buildBreadcrumbSchema(breadcrumbs),
+    buildHowToSchema(h1, description, howToSteps),
     ...(content.faq ? [buildFaqSchema(content.faq)] : []),
   ];
 
@@ -140,12 +127,10 @@ export default async function PseoPage({ params }: Props) {
           <p className="text-base text-slate-600 max-w-xl mx-auto mb-8">
             {buildPseoDescription({ goalType, dietType })}
           </p>
-          <a
+          <SeoCta
             href={funnelHref}
-            className="inline-block px-8 py-3 rounded-xl font-semibold text-base bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-          >
-            Get your personalised {dietType ? dietType.replace(/-/g, ' ') + ' ' : ''}plan →
-          </a>
+            defaultText={`Get your personalised ${dietType ? dietType.replace(/-/g, ' ') + ' ' : ''}plan →`}
+          />
         </div>
       </section>
 
