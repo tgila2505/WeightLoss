@@ -10,7 +10,6 @@ from app.orchestrator.models import (
     OrchestrationContext,
     OrchestrationRequest,
 )
-from app.orchestrator.router import OrchestratorRouter
 from app.prompts.template import PromptTemplate
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
@@ -52,7 +51,6 @@ class Orchestrator:
         else:
             self._agents = {"general": agent}
 
-        self._router = OrchestratorRouter()
         self._aggregator = OutputAggregator()
         self._conflict_resolver = ConflictResolver()
         self._recommendation_service = recommendation_service
@@ -114,11 +112,15 @@ class Orchestrator:
         )
 
     def _serialize_output(self, output: AIOutput) -> dict[str, object]:
-        """Convert AIOutput to a plain dict for passing as specialist_outputs."""
+        """Convert AIOutput to a plain dict for passing as specialist_outputs.
+
+        Shallow-copies data and metadata to prevent downstream mutation from
+        corrupting AgentExecutionResult outputs already stored in results.
+        """
         return {
             "content": output.content,
-            "data": output.data,
-            "metadata": output.metadata,
+            "data": dict(output.data),
+            "metadata": dict(output.metadata),
             "status": output.status,
         }
 
