@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { buildMetadata } from '@/lib/seo/metadata'
-import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schema'
+import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/seo/schema'
 
 export const revalidate = 86400 // 24 hours
 
@@ -14,6 +14,7 @@ interface UgcData {
   diet_type: string | null
   testimonial: string | null
   view_count: number
+  display_name: string | null
 }
 
 interface Props {
@@ -69,7 +70,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ogImage: `/api/og/result/${slug}`,
   })
 
-  const schema = buildWebPageSchema({ name: title, description, path: `/results/${slug}` })
+  const schema = buildArticleSchema({
+    title,
+    description,
+    path: `/results/${slug}`,
+    ...(page.display_name ? { author: page.display_name } : {}),
+  })
   const breadcrumbs = [
     { name: 'Home', path: '/' },
     { name: 'Results', path: '/results' },
