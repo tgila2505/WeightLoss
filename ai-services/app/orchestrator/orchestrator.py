@@ -38,7 +38,7 @@ class SimpleAgent(AgentInterface):
         )
 
 
-class Orchestrator:
+class MedicalPanel:
     def __init__(
         self,
         agent: AgentInterface | dict[str, AgentInterface],
@@ -293,3 +293,7 @@ class Orchestrator:
         if self._vector_store is None:
             self._vector_store = MockVectorDB()
         return self._vector_store
+
+
+# Backward-compatible alias — prefer MedicalPanel in new code
+Orchestrator = MedicalPanel
