@@ -56,3 +56,48 @@ class TestGPAgentBuildChatPrompt(unittest.TestCase):
         }
         prompt = agent.build_chat_prompt("What should I eat?", specialist_outputs)
         self.assertIn("dietitian", prompt.lower())
+
+
+import json
+from fastapi.testclient import TestClient
+
+
+class TestChatEndpoint(unittest.TestCase):
+    def setUp(self):
+        from app.main import app
+        self.client = TestClient(app)
+
+    def _base_payload(self, agent: str = "dietitian") -> dict:
+        return {
+            "agent": agent,
+            "message": "What should I eat today?",
+            "conversation_history": [],
+            "user_context": {},
+        }
+
+    def test_chat_returns_event_stream_content_type(self):
+        with self.client.stream("POST", "/chat", json=self._base_payload()) as response:
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("text/event-stream", response.headers["content-type"])
+
+    def test_chat_response_ends_with_done(self):
+        with self.client.stream("POST", "/chat", json=self._base_payload()) as response:
+            content = response.read().decode()
+        self.assertIn("[DONE]", content)
+
+    def test_chat_emits_token_data_lines(self):
+        with self.client.stream("POST", "/chat", json=self._base_payload()) as response:
+            content = response.read().decode()
+        token_lines = [
+            line for line in content.splitlines()
+            if line.startswith("data: ") and "[DONE]" not in line
+        ]
+        self.assertTrue(len(token_lines) > 0)
+        # Each token line must be valid JSON with a "token" key
+        for line in token_lines:
+            parsed = json.loads(line[6:])
+            self.assertIn("token", parsed)
+
+    def test_chat_panel_agent_accepted(self):
+        with self.client.stream("POST", "/chat", json=self._base_payload("panel")) as response:
+            self.assertEqual(response.status_code, 200)

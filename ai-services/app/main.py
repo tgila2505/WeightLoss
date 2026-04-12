@@ -3,9 +3,11 @@ from __future__ import annotations
 import os
 from dataclasses import asdict
 from pathlib import Path
+from typing import Iterator, Literal
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 
 load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
@@ -29,6 +31,8 @@ from app.orchestrator import (
     UserProfileContext,
 )
 from app.providers.fallback_provider import FallbackProvider, ProvidersExhaustedError
+from app.agents.interface import AgentInput
+from app.chat.router import ChatRouter
 
 
 class UserProfilePayload(BaseModel):
@@ -83,6 +87,25 @@ class OrchestrationContextPayload(BaseModel):
 
 class OrchestratorRequestPayload(BaseModel):
     context: OrchestrationContextPayload
+
+
+class ChatMessageItem(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatUserContext(BaseModel):
+    user_profile: UserProfilePayload | None = None
+    health_metrics: list[HealthMetricPayload] = Field(default_factory=list)
+    lab_records: list[LabRecordPayload] = Field(default_factory=list)
+    master_profile: str | None = None
+
+
+class ChatRequest(BaseModel):
+    agent: Literal["gp", "endo", "dietitian", "trainer", "panel"]
+    message: str
+    conversation_history: list[ChatMessageItem] = Field(default_factory=list)
+    user_context: ChatUserContext = Field(default_factory=ChatUserContext)
 
 
 app = FastAPI(title="WeightLoss AI Services", version="0.1.0")
@@ -740,3 +763,104 @@ def reload_config() -> dict[str, str]:
     Called by the backend admin service after the admin updates keys — no restart required."""
     _reload_env_keys()
     return {"status": "ok", "groq_set": str(bool(_GROQ_API_KEY)), "mistral_set": str(bool(_MISTRAL_API_KEY))}
+
+
+def _get_streaming_provider() -> FallbackProvider | None:
+    """Return a FallbackProvider when both API keys are configured, else None."""
+    if _GROQ_API_KEY and _MISTRAL_API_KEY:
+        return FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
+    return None
+
+
+@app.post("/chat")
+def chat(payload: ChatRequest) -> StreamingResponse:
+    """
+    Streamed multi-agent chat endpoint.
+
+    Phase 1 (silent): Runs specialist agent(s) based on the selected persona.
+    Phase 2 (streamed): GP validates the specialist output and streams its response.
+    The frontend shows a 'consultation underway' indicator until the first token arrives.
+    """
+    import json as _json
+
+    # Build conversation history block for prompt injection
+    history_text = ""
+    if payload.conversation_history:
+        lines = []
+        for msg in payload.conversation_history[-20:]:
+            prefix = "Patient" if msg.role == "user" else "Consultant"
+            lines.append(f"{prefix}: {msg.content}")
+        history_text = "\n".join(lines)
+
+    prompt_with_history = payload.message
+    if history_text:
+        prompt_with_history = (
+            f"PRIOR CONVERSATION:\n{history_text}\n\nCURRENT QUESTION: {payload.message}"
+        )
+
+    def generate() -> Iterator[str]:
+        orch = _get_orchestrator()
+        router = ChatRouter()
+
+        # --- Phase 1: run specialist agents synchronously ---
+        specialist_outputs: dict[str, dict] = {}
+        for agent_key, output_key in router.get_specialist_pipeline(payload.agent):
+            agent_obj = orch._agents.get(agent_key)
+            if agent_obj is None:
+                continue
+            agent_input = AgentInput(
+                prompt=prompt_with_history,
+                task_type=agent_key,
+                variables={
+                    "intent": "question",
+                    "user_profile": (
+                        payload.user_context.user_profile.model_dump()
+                        if payload.user_context.user_profile else None
+                    ),
+                    "master_profile": payload.user_context.master_profile or "",
+                    "health_metrics": [
+                        m.model_dump() for m in payload.user_context.health_metrics
+                    ],
+                    "lab_records": [
+                        r.model_dump() for r in payload.user_context.lab_records
+                    ],
+                    "adherence_signals": [],
+                    "consistency_level": None,
+                    "adaptive_adjustment": None,
+                    "past_recommendations": [],
+                    "specialist_outputs": specialist_outputs,
+                },
+                metadata={"agent_name": agent_key},
+            )
+            output = agent_obj.run(agent_input)
+            specialist_outputs[output_key] = {
+                "content": output.content,
+                "data": dict(output.data),
+                "metadata": dict(output.metadata),
+                "status": output.status,
+            }
+
+        # --- Phase 2: stream GP response ---
+        gp_agent = orch._agents.get("gp")
+        if gp_agent is None:
+            yield "data: [DONE]\n\n"
+            return
+
+        provider = _get_streaming_provider()
+        if provider is not None:
+            try:
+                gp_prompt = gp_agent.build_chat_prompt(prompt_with_history, specialist_outputs)
+                for token in provider.stream_generate(gp_prompt):
+                    yield f"data: {_json.dumps({'token': token})}\n\n"
+            except Exception:
+                # Fall back to rule-based on any provider error
+                result = gp_agent._run_rule_based(prompt_with_history, specialist_outputs)
+                yield f"data: {_json.dumps({'token': result.content})}\n\n"
+        else:
+            # No provider keys: rule-based response emitted as a single token
+            result = gp_agent._run_rule_based(prompt_with_history, specialist_outputs)
+            yield f"data: {_json.dumps({'token': result.content})}\n\n"
+
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
