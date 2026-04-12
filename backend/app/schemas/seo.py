@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class SeoPageResponse(BaseModel):
@@ -34,6 +35,9 @@ class UgcSlugListResponse(BaseModel):
     slugs: list[str]
 
 
+_TITLE_AUTHOR_RE = re.compile(r'^How (.+?) Lost \d')
+
+
 class UgcPageResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -44,6 +48,15 @@ class UgcPageResponse(BaseModel):
     diet_type: str | None = None
     testimonial: str | None = None
     view_count: int = 0
+    display_name: str | None = None
+
+    @model_validator(mode='after')
+    def derive_display_name(self) -> 'UgcPageResponse':
+        if self.display_name is None and self.title:
+            m = _TITLE_AUTHOR_RE.match(self.title)
+            if m:
+                self.display_name = m.group(1)
+        return self
 
 
 class UgcShareRequest(BaseModel):
