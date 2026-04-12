@@ -1083,3 +1083,101 @@ export async function updateGender(gender: string): Promise<ProfileResponse> {
   if (!res.ok) throw new Error(await readError(res));
   return res.json() as Promise<ProfileResponse>;
 }
+
+// ─── Chat ────────────────────────────────────────────────────────────────────
+
+export type ChatAgent = 'gp' | 'endo' | 'dietitian' | 'trainer' | 'panel';
+
+export type ChatMessageItem = {
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+};
+
+export type ChatHistoryResponse = {
+  conversation_id: string;
+  agent: ChatAgent;
+  messages: ChatMessageItem[];
+};
+
+export async function getChatHistory(agent: ChatAgent): Promise<ChatHistoryResponse> {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
+  const res = await fetch(`${apiBaseUrl}/api/v1/chat/${agent}/history`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('Not authenticated');
+    if (res.status === 403) throw new Error('FEATURE_GATED');
+    throw new Error(await readError(res));
+  }
+  return res.json() as Promise<ChatHistoryResponse>;
+}
+
+export async function startNewConversation(agent: ChatAgent): Promise<string> {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
+  const res = await fetch(`${apiBaseUrl}/api/v1/chat/${agent}/new`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('Not authenticated');
+    if (res.status === 403) throw new Error('FEATURE_GATED');
+    throw new Error(await readError(res));
+  }
+  const data = await res.json() as { conversation_id: string };
+  return data.conversation_id;
+}
+
+export async function* streamChatMessage(params: {
+  agent: ChatAgent;
+  message: string;
+  conversation_id: string;
+  signal?: AbortSignal;
+}): AsyncGenerator<string, void, unknown> {
+  const token = getAccessToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch(`${apiBaseUrl}/api/v1/chat/message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ agent: params.agent, message: params.message, conversation_id: params.conversation_id }),
+    signal: params.signal,
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('Not authenticated');
+    if (res.status === 402 || res.status === 403) throw new Error('FEATURE_GATED');
+    throw new Error(await readError(res));
+  }
+
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') return;
+      let parsed: { token?: string; error?: string };
+      try {
+        parsed = JSON.parse(data) as { token?: string; error?: string };
+      } catch {
+        continue;
+      }
+      if (parsed.error) throw new Error(parsed.error);
+      if (parsed.token) yield parsed.token;
+    }
+  }
+}

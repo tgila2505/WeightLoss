@@ -37,12 +37,13 @@ import app.models.referral  # noqa: F401
 import app.models.reminder  # noqa: F401
 import app.models.seo  # noqa: F401
 import app.models.shared_plan  # noqa: F401
+import app.models.chat  # noqa: F401
 
 
 def sqlite_compatible_tables() -> list:
     """Return tables from Base.metadata that can be created in SQLite.
 
-    Tables with PostgreSQL-specific column types (e.g. JSONB) are excluded
+    Tables with PostgreSQL-specific column types (JSONB, ARRAY) are excluded
     because SQLite cannot compile them.
     """
     compatible = []
