@@ -3,6 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.core.brute_force import get_brute_force_guard
+from app.core.cookies import clear_auth_cookies, set_auth_cookies
 from app.core.rate_limiter import rate_limit
 from app.core.security import decode_access_token
 from app.core.token_blacklist import get_token_blacklist
@@ -64,6 +65,7 @@ def register(
 def login(
     payload: LoginRequest,
     request: Request,
+    response: Response,
     session: Session = Depends(get_db_session),
 ) -> TokenResponse:
     ip = request.client.host if request.client else "unknown"
@@ -92,6 +94,7 @@ def login(
     admin_service.maybe_promote_admin(session, user)
     access_token = _auth_service.create_token_for_user(user)
     refresh_token = _auth_service.create_refresh_token_for_user(session, user)
+    set_auth_cookies(response, access_token, refresh_token)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
@@ -102,6 +105,7 @@ def login(
 )
 def refresh(
     payload: RefreshTokenRequest,
+    response: Response,
     session: Session = Depends(get_db_session),
 ) -> TokenResponse:
     result = _auth_service.rotate_refresh_token(session, payload.refresh_token)
@@ -111,20 +115,38 @@ def refresh(
             detail="Invalid or expired refresh token",
         )
     _, new_access, new_refresh = result
+    set_auth_cookies(response, new_access, new_refresh)
     return TokenResponse(access_token=new_access, refresh_token=new_refresh)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
-    payload: RefreshTokenRequest,
+    request: Request,
+    response: Response,
+    payload: RefreshTokenRequest | None = None,
     session: Session = Depends(get_db_session),
     credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
 ) -> Response:
-    _auth_service.revoke_refresh_token(session, payload.refresh_token)
+    # Get refresh token from body or cookie
+    refresh_tok = None
+    if payload and payload.refresh_token:
+        refresh_tok = payload.refresh_token
+    else:
+        refresh_tok = request.cookies.get("refresh_token")
 
-    if credentials is not None:
+    if refresh_tok:
+        _auth_service.revoke_refresh_token(session, refresh_tok)
+
+    # Get access token from header or cookie for blacklisting
+    access_tok = None
+    if credentials:
+        access_tok = credentials.credentials
+    else:
+        access_tok = request.cookies.get("access_token")
+
+    if access_tok:
         try:
-            token_data = decode_access_token(credentials.credentials)
+            token_data = decode_access_token(access_tok)
             jti = token_data.get("jti", "")
             exp = token_data.get("exp", 0.0)
             if jti and exp:
@@ -132,6 +154,7 @@ def logout(
         except ValueError:
             pass
 
+    clear_auth_cookies(response)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

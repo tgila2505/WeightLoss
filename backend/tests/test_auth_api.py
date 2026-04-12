@@ -55,6 +55,45 @@ class AuthApiTest(ApiTestCase):
             "Authentication credentials were not provided",
         )
 
+    def test_login_sets_httponly_access_cookie(self) -> None:
+        self.client.post(
+            "/api/v1/auth/register",
+            json={"email": "cookie@test.com", "password": "Password123"},
+        )
+        resp = self.client.post(
+            "/api/v1/auth/login",
+            json={"email": "cookie@test.com", "password": "Password123"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        cookie_names = {c.name for c in self.client.cookies.jar}
+        self.assertIn("access_token", cookie_names)
+
+    def test_me_works_with_cookie_auth(self) -> None:
+        self.client.post(
+            "/api/v1/auth/register",
+            json={"email": "cookie2@test.com", "password": "Password123"},
+        )
+        self.client.post(
+            "/api/v1/auth/login",
+            json={"email": "cookie2@test.com", "password": "Password123"},
+        )
+        # TestClient carries cookies automatically — no Bearer header needed
+        me = self.client.get("/api/v1/auth/me")
+        self.assertEqual(me.status_code, 200)
+        self.assertEqual(me.json()["email"], "cookie2@test.com")
+
+    def test_logout_clears_cookies_without_body(self) -> None:
+        self.client.post(
+            "/api/v1/auth/register",
+            json={"email": "cookie3@test.com", "password": "Password123"},
+        )
+        self.client.post(
+            "/api/v1/auth/login",
+            json={"email": "cookie3@test.com", "password": "Password123"},
+        )
+        resp = self.client.post("/api/v1/auth/logout")
+        self.assertEqual(resp.status_code, 204)
+
     def test_register_rejects_blank_fields(self) -> None:
         response = self.client.post(
             "/api/v1/auth/register",
