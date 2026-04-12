@@ -6,6 +6,7 @@ import { buildMetadata } from '@/lib/seo/metadata'
 import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schema'
 
 export const revalidate = 604800
+export const dynamicParams = true
 
 interface Props { params: Promise<{ diet: string }> }
 

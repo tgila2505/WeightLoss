@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import { getABVariant, getSeoCtaVariant } from '@/lib/ab-testing'
 
 describe('getABVariant', () => {
@@ -30,7 +31,28 @@ describe('getSeoCtaVariant', () => {
   })
 
   it('returns control when rollout is 0', () => {
-    // sessionStorage not available in test env — falls back via enabled=false path
     expect(getSeoCtaVariant(false, 0)).toBe('control')
+  })
+
+  it('returns social_proof when enabled and rollout is 100', () => {
+    const storage: Record<string, string> = {}
+    vi.stubGlobal('window', {})
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => storage[k] ?? null,
+      setItem: (k: string, v: string) => { storage[k] = v },
+    })
+    expect(getSeoCtaVariant(true, 100)).toBe('social_proof')
+    vi.unstubAllGlobals()
+  })
+
+  it('returns stored value without re-bucketing', () => {
+    const storage: Record<string, string> = { _ab_seo_cta: 'social_proof' }
+    vi.stubGlobal('window', {})
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => storage[k] ?? null,
+      setItem: (k: string, v: string) => { storage[k] = v },
+    })
+    expect(getSeoCtaVariant(true, 0)).toBe('social_proof')
+    vi.unstubAllGlobals()
   })
 })

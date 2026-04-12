@@ -3,13 +3,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
-  DIET_TYPES,
-  GOAL_TYPES,
   buildPseoSlug,
   buildPseoTitle,
   buildPseoDescription,
   buildPseoH1,
   getCoreSlugList,
+  parsePseoSlug,
   type DietType,
   type GoalType,
 } from '@/lib/seo/pseo-combinations';
@@ -26,29 +25,6 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-function parsePseoSlug(slug: string) {
-  let remaining = slug;
-  let goalType: GoalType | undefined;
-  let dietType: DietType | undefined;
-
-  for (const g of GOAL_TYPES) {
-    if (remaining.startsWith(g)) {
-      goalType = g;
-      remaining = remaining.slice(g.length).replace(/^-/, '');
-      break;
-    }
-  }
-  if (!goalType) return null;
-
-  for (const d of DIET_TYPES) {
-    if (remaining === d || remaining.startsWith(d)) {
-      dietType = d;
-      break;
-    }
-  }
-
-  return { goalType, dietType };
-}
 
 export async function generateStaticParams() {
   return getCoreSlugList().map((dims) => ({
