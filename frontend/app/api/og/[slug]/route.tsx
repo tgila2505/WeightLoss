@@ -7,12 +7,15 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:800
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   let planSummary = 'A personalised AI weight loss plan';
 
   try {
-    const res = await fetch(`${apiBaseUrl}/api/v1/shared-plans/${params.slug}`);
+    const res = await fetch(`${apiBaseUrl}/api/v1/shared-plans/${slug}`, {
+      signal: AbortSignal.timeout(5000),
+    });
     if (res.ok) {
       const plan = await res.json();
       const data = plan.plan_data as Record<string, unknown>;

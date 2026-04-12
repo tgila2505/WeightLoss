@@ -24,6 +24,7 @@ async function fetchUgcList(): Promise<UgcListItem[]> {
   try {
     const res = await fetch(`${base}/seo/ugc/list`, {
       next: { revalidate: 86400, tags: ['ugc-pages'] },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return []
     const data = (await res.json()) as UgcListResponse

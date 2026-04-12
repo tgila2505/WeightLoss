@@ -26,7 +26,7 @@ export function MindMapModeGuard({ children }: { children: ReactNode }) {
       }
     }
     check()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!allowed) return null
   return (

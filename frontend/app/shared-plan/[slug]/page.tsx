@@ -19,6 +19,7 @@ async function fetchPlan(slug: string): Promise<SharedPlan | null> {
   try {
     const res = await fetch(`${apiBaseUrl}/api/v1/shared-plans/${slug}`, {
       next: { revalidate: 60 },
+      signal: AbortSignal.timeout(5000),
     });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Failed to fetch plan');
@@ -31,15 +32,16 @@ async function fetchPlan(slug: string): Promise<SharedPlan | null> {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const plan = await fetchPlan(params.slug);
+  const { slug } = await params;
+  const plan = await fetchPlan(slug);
   if (!plan) return { title: 'Plan not found' };
   return {
     title: 'Shared Weight Loss Plan',
     description: 'A personalised AI weight loss plan shared with you.',
     openGraph: {
-      images: [`/api/og/${params.slug}`],
+      images: [`/api/og/${slug}`],
     },
   };
 }
@@ -47,9 +49,10 @@ export async function generateMetadata({
 export default async function SharedPlanPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const plan = await fetchPlan(params.slug);
+  const { slug } = await params;
+  const plan = await fetchPlan(slug);
   if (!plan) notFound();
 
   const entries = Object.entries(plan.plan_data);

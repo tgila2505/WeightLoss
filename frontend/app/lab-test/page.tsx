@@ -114,7 +114,7 @@ function normaliseTestKey(name: string): string {
   return name
     .toLowerCase()
     .replace(/\s*\([^)]*\)/g, '')   // remove "(umol/L)", "(Fasting)", etc.
-    .replace(/[^a-z0-9\s/\-]/g, '') // remove special chars except / and -
+    .replace(/[^a-z0-9\s/-]/g, '') // remove special chars except / and -
     .trim();
 }
 

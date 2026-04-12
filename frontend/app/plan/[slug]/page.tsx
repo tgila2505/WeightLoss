@@ -9,8 +9,6 @@ import {
   buildPseoH1,
   getCoreSlugList,
   parsePseoSlug,
-  type DietType,
-  type GoalType,
 } from '@/lib/seo/pseo-combinations';
 import { getRelatedPages } from '@/lib/seo/related-pages';
 import { buildMetadata } from '@/lib/seo/metadata';

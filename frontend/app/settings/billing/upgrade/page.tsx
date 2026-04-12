@@ -1,6 +1,6 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Suspense, useState } from 'react'
 import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js'
 import { getStripe } from '@/lib/stripe-client'
@@ -22,7 +22,6 @@ const PRICES: Record<string, Record<string, string>> = {
 function CheckoutForm({ tier, interval }: { tier: string; interval: string }) {
   const stripe = useStripe()
   const elements = useElements()
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)

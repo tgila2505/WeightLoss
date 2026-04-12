@@ -70,7 +70,8 @@ export function getAllBlogPosts(): BlogPostMeta[] {
     const slug = file.replace(/\.mdx$/, '');
     const post = getBlogPost(slug);
     if (!post) continue;
-    const { content: _content, ...meta } = post;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { content, ...meta } = post;
     posts.push(meta);
   }
 

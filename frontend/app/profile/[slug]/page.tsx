@@ -28,6 +28,7 @@ async function fetchProfile(slug: string): Promise<ProfileData | null> {
   try {
     const res = await fetch(`${API_BASE}/seo/profile/${slug}`, {
       next: { revalidate: 86400, tags: ['ugc-pages', `profile-${slug}`] },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return null
     return res.json() as Promise<ProfileData>
@@ -40,6 +41,7 @@ async function fetchProfileSlugs(): Promise<string[]> {
   try {
     const res = await fetch(`${API_BASE}/seo/ugc/slugs`, {
       next: { revalidate: 3600, tags: ['sitemap', 'ugc-pages'] },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return []
     const data = (await res.json()) as { slugs: string[] }

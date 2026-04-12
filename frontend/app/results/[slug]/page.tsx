@@ -28,6 +28,7 @@ async function fetchUgcPage(slug: string): Promise<UgcData | null> {
   try {
     const res = await fetch(`${base}/seo/ugc/${slug}`, {
       next: { revalidate: 86400, tags: ['ugc-pages', `ugc-${slug}`] },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return null
     return res.json() as Promise<UgcData>
@@ -41,6 +42,7 @@ async function fetchUgcSlugs(): Promise<string[]> {
   try {
     const res = await fetch(`${base}/seo/ugc/slugs`, {
       next: { revalidate: 86400, tags: ['ugc-pages'] },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) return []
     const data = (await res.json()) as { slugs: string[] }

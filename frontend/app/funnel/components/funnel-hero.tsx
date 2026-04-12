@@ -36,7 +36,6 @@ export function FunnelHero() {
       headline_variant: variants.headline,
       cta_variant: variants.cta
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
