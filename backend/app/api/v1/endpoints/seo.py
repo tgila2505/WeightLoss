@@ -14,6 +14,8 @@ from app.schemas.seo import (
     PublicProfileResponse,
     SeoPageListResponse,
     SeoPageResponse,
+    UgcListItem,
+    UgcListResponse,
     UgcPageResponse,
     UgcPreviewResponse,
     UgcShareRequest,
@@ -63,6 +65,17 @@ def get_blog_post(slug: str, session: Session = Depends(get_db_session)) -> Blog
 def list_ugc_slugs(session: Session = Depends(get_db_session)) -> UgcSlugListResponse:
     slugs = seo_service.list_ugc_slugs(session)
     return UgcSlugListResponse(slugs=slugs)
+
+
+@router.get("/ugc/list", response_model=UgcListResponse)
+def list_ugc_pages(
+    limit: int = 100,
+    offset: int = 0,
+    session: Session = Depends(get_db_session),
+) -> UgcListResponse:
+    pages = seo_service.list_ugc_pages(session, limit=limit, offset=offset)
+    items = [UgcListItem.model_validate(p) for p in pages]
+    return UgcListResponse(pages=items, total=len(items))
 
 
 @router.post("/ugc/share", response_model=UgcShareResponse, status_code=status.HTTP_201_CREATED)

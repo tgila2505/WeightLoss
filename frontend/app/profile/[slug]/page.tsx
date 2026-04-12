@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { UgcCtaButton } from '@/components/ugc-cta-button'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { buildBreadcrumbSchema, buildPersonSchema } from '@/lib/seo/schema'
 
@@ -210,12 +211,11 @@ export default async function PublicProfilePage({ params }: Props) {
           <p className="text-slate-400 text-sm mb-6">
             Get a free personalised calorie target built for your body in under 60 seconds.
           </p>
-          <Link
+          <UgcCtaButton
             href="/funnel"
-            className="inline-block px-8 py-3 rounded-xl font-semibold text-base bg-blue-500 text-white hover:bg-blue-400 transition-colors"
-          >
-            Get my free plan →
-          </Link>
+            label={dietLabel ? `Get my ${dietLabel} plan →` : 'Get my free plan →'}
+            slug={slug}
+          />
         </section>
       </div>
     </main>

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -49,6 +50,7 @@ class UgcPageResponse(BaseModel):
     testimonial: str | None = None
     view_count: int = 0
     display_name: str | None = None
+    created_at: datetime | None = None
 
     @model_validator(mode='after')
     def derive_display_name(self) -> 'UgcPageResponse':
@@ -100,3 +102,27 @@ class PublicProfileResponse(BaseModel):
     title: str | None = None
     testimonial: str | None = None
     slug: str
+
+
+class UgcListItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    slug: str
+    title: str | None = None
+    kg_lost: float | None = None
+    weeks_taken: int | None = None
+    diet_type: str | None = None
+    display_name: str | None = None
+
+    @model_validator(mode='after')
+    def derive_display_name(self) -> 'UgcListItem':
+        if self.display_name is None and self.title:
+            m = _TITLE_AUTHOR_RE.match(self.title)
+            if m:
+                self.display_name = m.group(1)
+        return self
+
+
+class UgcListResponse(BaseModel):
+    pages: list[UgcListItem]
+    total: int
