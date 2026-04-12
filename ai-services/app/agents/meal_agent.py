@@ -20,8 +20,10 @@ class MealPlanAgent(AgentInterface):
         preferences = {item.lower() for item in profile.get("dietary_preferences", [])}
         biomarker_flags = self._biomarker_flags(lab_records)
 
+        specialist_outputs = request.variables.get("specialist_outputs") or {}
+
         if self._provider is not None:
-            llm_result = self._run_with_llm(request, profile, restrictions, preferences, biomarker_flags)
+            llm_result = self._run_with_llm(request, profile, restrictions, preferences, biomarker_flags, specialist_outputs)
             if llm_result is not None:
                 return llm_result
 
@@ -47,8 +49,9 @@ class MealPlanAgent(AgentInterface):
         restrictions: set[str],
         preferences: set[str],
         biomarker_flags: list[str],
+        specialist_outputs: dict[str, Any] | None = None,
     ) -> AIOutput | None:
-        prompt = self._build_prompt(request.prompt, profile, restrictions, preferences, biomarker_flags)
+        prompt = self._build_prompt(request.prompt, profile, restrictions, preferences, biomarker_flags, specialist_outputs or {})
         print(f"[DEBUG] MealPlanAgent calling LLM, provider={type(self._provider).__name__}", flush=True)
         try:
             raw = self._provider.generate(prompt)  # type: ignore[union-attr]
@@ -79,6 +82,7 @@ class MealPlanAgent(AgentInterface):
         restrictions: set[str],
         preferences: set[str],
         biomarker_flags: list[str],
+        specialist_outputs: dict[str, Any] | None = None,
     ) -> str:
         age = profile.get("age", "unknown")
         gender = profile.get("gender", "unknown")
@@ -88,6 +92,14 @@ class MealPlanAgent(AgentInterface):
         diet_restrictions = ", ".join(sorted(restrictions)) or "none"
         diet_preferences = ", ".join(sorted(preferences)) or "none"
         flags = ", ".join(biomarker_flags) or "none"
+
+        endo = (specialist_outputs or {}).get("endocrinologist", {})
+        endo_data = endo.get("data", {}) if isinstance(endo, dict) else {}
+        endo_context = (
+            f"Endocrinologist findings: narrative={endo_data.get('clinical_narrative', 'none')}, "
+            f"constraints={endo_data.get('dietary_constraints', [])}"
+            if endo_data else "No endocrinologist findings."
+        )
 
         return f"""You are a weight loss nutrition expert. Generate a personalized daily meal plan.
 
@@ -99,9 +111,12 @@ USER PROFILE:
 - Health conditions: {conditions}
 - Biomarker flags: {flags}
 
+ENDOCRINOLOGIST CONTEXT:
+{endo_context}
+
 USER REQUEST: "{user_prompt}"
 
-Generate 3 meals that directly address the user's request and respect their profile.
+Generate 3 meals that directly address the user's request, respect their profile, and honour the endocrinologist's constraints.
 Respond with ONLY valid JSON, no other text:
 {{
   "meals": [
