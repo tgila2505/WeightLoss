@@ -11,6 +11,9 @@ export interface FeatureFlags {
   abPricingIntervalRollout: number
   abHeroPlanEnabled: boolean
   abHeroPlanRollout: number
+  // Phase 15.3 — SEO A/B
+  seoAbEnabled: boolean
+  seoAbRollout: number
 }
 
 export function getFeatureFlags(): FeatureFlags {
@@ -27,6 +30,9 @@ export function getFeatureFlags(): FeatureFlags {
     abPricingIntervalRollout: parseInt(process.env.NEXT_PUBLIC_AB_PRICING_INTERVAL_ROLLOUT ?? '50', 10),
     abHeroPlanEnabled: process.env.NEXT_PUBLIC_AB_HERO_PLAN_ENABLED === 'true',
     abHeroPlanRollout: parseInt(process.env.NEXT_PUBLIC_AB_HERO_PLAN_ROLLOUT ?? '50', 10),
+    // Phase 15.3 — SEO A/B
+    seoAbEnabled: process.env.NEXT_PUBLIC_SEO_AB_ENABLED === 'true',
+    seoAbRollout: parseInt(process.env.NEXT_PUBLIC_SEO_AB_ROLLOUT ?? '50', 10),
   }
 }
 
