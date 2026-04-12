@@ -61,6 +61,7 @@ export function InteractionView() {
     setActiveAgent(agent);
     setStreamingContent(null);
     setIsConsulting(false);
+    setIsGated(false);
     setError('');
   }
 
@@ -72,6 +73,7 @@ export function InteractionView() {
       setMessages([]);
       setStreamingContent(null);
       setIsConsulting(false);
+      setIsGated(false);
       setError('');
     } catch {
       setError('Failed to start new conversation.');
