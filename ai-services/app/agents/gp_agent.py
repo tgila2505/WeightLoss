@@ -19,6 +19,10 @@ class GPAgent(AgentInterface):
         self._provider = provider
         self._system_prompt: str | None = None
 
+    def build_chat_prompt(self, user_prompt: str, specialist_outputs: dict) -> str:
+        """Public method for chat endpoint — builds the GP prompt from specialist outputs."""
+        return self._build_prompt(user_prompt, specialist_outputs)
+
     def _get_system_prompt(self) -> str:
         if self._system_prompt is None:
             self._system_prompt = (
