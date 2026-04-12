@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getCoreSlugList, buildPseoSlug } from '@/lib/seo/pseo-combinations';
+import { getCoreSlugList, buildPseoSlug, GOAL_TYPES, DIET_TYPES } from '@/lib/seo/pseo-combinations';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://weightloss.app';
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8000';
@@ -73,5 +73,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticPages, ...pseoPages, ...blogPages, ...ugcPages, ...profilePages];
+  // Goal hub pages
+  const goalHubs: MetadataRoute.Sitemap = GOAL_TYPES.map((goal) => ({
+    url: `${BASE_URL}/plan/goal/${goal}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }));
+
+  // Diet hub pages
+  const dietHubs: MetadataRoute.Sitemap = DIET_TYPES.map((diet) => ({
+    url: `${BASE_URL}/plan/diet/${diet}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...pseoPages, ...goalHubs, ...dietHubs, ...blogPages, ...ugcPages, ...profilePages];
 }
