@@ -16,7 +16,9 @@ _MISTRAL_API_KEY: str = os.environ.get("MISTRAL_API_KEY", "")
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from app.agents import BehaviorAgent, LabInterpretationAgent, MealPlanAgent
+from app.agents import GPAgent, LabInterpretationAgent, MealPlanAgent, PersonalTrainerAgent, PromptEngineerAgent
+from app.services.prompt_audit_service import PromptAuditService
+from app.services.recommendation_service import RecommendationService
 from app.orchestrator import (
     AdherenceSignalContext,
     HealthMetricContext,
@@ -96,7 +98,8 @@ _rule_based_orchestrator = Orchestrator(
     {
         "meal": MealPlanAgent(),
         "lab": LabInterpretationAgent(),
-        "behavior": BehaviorAgent(),
+        "trainer": PersonalTrainerAgent(),
+        "gp": GPAgent(),
         "general": MealPlanAgent(),
     }
 )
@@ -119,8 +122,9 @@ def _get_orchestrator() -> Orchestrator:
         return Orchestrator(
             {
                 "meal": MealPlanAgent(provider=provider),
-                "lab": LabInterpretationAgent(),
-                "behavior": BehaviorAgent(provider=provider),
+                "lab": LabInterpretationAgent(provider=provider),
+                "trainer": PersonalTrainerAgent(provider=provider),
+                "gp": GPAgent(provider=provider),
                 "general": MealPlanAgent(provider=provider),
             }
         )
@@ -698,6 +702,34 @@ Rules:
 
     profile_text = "\n\n".join(all_sections)
     return {"profile_text": profile_text}
+
+
+# ── Admin: PromptEngineerAgent audit ─────────────────────────────────────────
+
+class PromptEngineerRequest(BaseModel):
+    agent_filter: list[str] | None = None  # None = audit all agents
+
+
+@app.post("/internal/prompt-engineer/run", include_in_schema=False)
+def run_prompt_engineer(payload: PromptEngineerRequest) -> dict[str, object]:
+    """
+    Run the PromptEngineerAgent audit on one or all agents.
+    Returns scores, critiques, and proposed prompts for developer review.
+    Does NOT auto-apply any prompt changes.
+    """
+    if not (_GROQ_API_KEY or _MISTRAL_API_KEY):
+        raise HTTPException(
+            status_code=503,
+            detail="AI provider keys not configured. Set GROQ_API_KEY or MISTRAL_API_KEY.",
+        )
+
+    provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
+    rec_svc = RecommendationService()
+    audit_svc = PromptAuditService(recommendation_service=rec_svc)
+    engineer = PromptEngineerAgent(provider=provider, audit_service=audit_svc)
+
+    report = engineer.run(agent_filter=payload.agent_filter)
+    return {"report": report}
 
 
 # ── Admin: hot-reload env keys ────────────────────────────────────────────────

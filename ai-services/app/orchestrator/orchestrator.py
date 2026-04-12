@@ -10,7 +10,6 @@ from app.orchestrator.models import (
     OrchestrationContext,
     OrchestrationRequest,
 )
-from app.orchestrator.router import OrchestratorRouter
 from app.prompts.template import PromptTemplate
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
@@ -39,7 +38,7 @@ class SimpleAgent(AgentInterface):
         )
 
 
-class Orchestrator:
+class MedicalPanel:
     def __init__(
         self,
         agent: AgentInterface | dict[str, AgentInterface],
@@ -52,7 +51,6 @@ class Orchestrator:
         else:
             self._agents = {"general": agent}
 
-        self._router = OrchestratorRouter()
         self._aggregator = OutputAggregator()
         self._conflict_resolver = ConflictResolver()
         self._recommendation_service = recommendation_service
@@ -67,48 +65,63 @@ class Orchestrator:
             return default_agent.run(request)
 
         retrieved_context = self._retrieve_recommendation_context(request.context)
-        routed_agents = self._router.route(request.context)
-        results: list[AgentExecutionResult] = []
-        for routed_agent in routed_agents:
-            agent = self._agents.get(routed_agent.agent_name) or self._agents.get("general")
-            if agent is None:
-                results.append(
-                    AgentExecutionResult(
-                        agent_name=routed_agent.agent_name,
-                        priority=routed_agent.priority,
-                        output=AIOutput(
-                            content="",
-                            status="error",
-                            error=f"Agent '{routed_agent.agent_name}' is not available",
-                            metadata={"agent_name": routed_agent.agent_name},
-                        ),
-                    )
-                )
-                continue
+        specialist_outputs: dict[str, dict[str, object]] = {}
 
+        # --- Cascading pipeline: Endocrinologist → Dietitian → PersonalTrainer ---
+        cascade_order = [
+            ("lab", "endocrinologist"),
+            ("meal", "dietitian"),
+            ("trainer", "trainer"),
+        ]
+        results: list[AgentExecutionResult] = []
+        for agent_key, output_key in cascade_order:
+            agent = self._agents.get(agent_key)
+            if agent is None:
+                continue
             agent_request = self._build_agent_request(
-                request.context,
-                routed_agent.agent_name,
-                retrieved_context,
+                request.context, agent_key, retrieved_context, specialist_outputs
             )
             output = agent.run(agent_request)
+            specialist_outputs[output_key] = self._serialize_output(output)
             results.append(
                 AgentExecutionResult(
-                    agent_name=routed_agent.agent_name,
-                    priority=routed_agent.priority,
+                    agent_name=agent_key,
+                    priority={"lab": 1, "meal": 2, "trainer": 3}.get(agent_key, 4),
                     output=output,
                 )
             )
 
+        # --- GP synthesis: reads all three specialist outputs ---
+        gp_agent = self._agents.get("gp")
+        gp_output: AIOutput | None = None
+        if gp_agent is not None:
+            gp_request = self._build_agent_request(
+                request.context, "gp", retrieved_context, specialist_outputs
+            )
+            gp_output = gp_agent.run(gp_request)
+
+        # ConflictResolver runs here as a keyword-level safety net only.
+        # Primary conflict arbitration happens inside GPAgent via clinical reasoning.
+        # See: app/prompts/gp_system_prompt.txt
         aggregated = self._aggregator.aggregate(results)
         resolved = self._conflict_resolver.resolve(aggregated)
         status = "success" if aggregated.successful_results else "error"
         error = None if aggregated.successful_results else "No successful agent outputs"
 
+        # GP response becomes the primary content when available
+        primary_content = (
+            gp_output.content
+            if gp_output is not None and gp_output.status == "success"
+            else resolved.final_content
+        )
+        primary_data = dict(resolved.final_data)
+        if gp_output is not None and gp_output.status == "success":
+            primary_data["gp_summary"] = gp_output.data
+
         return AIOutput(
-            content=resolved.final_content,
+            content=primary_content,
             status=status,
-            data=resolved.final_data,
+            data=primary_data,
             error=error,
             metadata=self._final_metadata(
                 request.context,
@@ -118,11 +131,25 @@ class Orchestrator:
             ),
         )
 
+    def _serialize_output(self, output: AIOutput) -> dict[str, object]:
+        """Convert AIOutput to a plain dict for passing as specialist_outputs.
+
+        Shallow-copies data and metadata to prevent downstream mutation from
+        corrupting AgentExecutionResult outputs already stored in results.
+        """
+        return {
+            "content": output.content,
+            "data": dict(output.data),
+            "metadata": dict(output.metadata),
+            "status": output.status,
+        }
+
     def _build_agent_request(
         self,
         context: OrchestrationContext,
         agent_name: str,
         retrieved_context: list[dict[str, object]],
+        specialist_outputs: dict[str, dict[str, object]] | None = None,
     ) -> AgentInput:
         return AgentInput(
             prompt=context.prompt,
@@ -137,6 +164,7 @@ class Orchestrator:
                 "consistency_level": context.consistency_level,
                 "adaptive_adjustment": context.adaptive_adjustment,
                 "past_recommendations": retrieved_context,
+                "specialist_outputs": specialist_outputs or {},
             },
             metadata={
                 "agent_name": agent_name,
@@ -265,3 +293,7 @@ class Orchestrator:
         if self._vector_store is None:
             self._vector_store = MockVectorDB()
         return self._vector_store
+
+
+# Backward-compatible alias — prefer MedicalPanel in new code
+Orchestrator = MedicalPanel

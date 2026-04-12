@@ -7,12 +7,12 @@ class OrchestratorRouter:
     _KEYWORDS = {
         "lab": ("lab", "hba1c", "alt", "uric"),
         "meal": ("meal", "diet", "nutrition", "food"),
-        "behavior": ("sleep", "habit", "hydration", "activity", "walk"),
+        "trainer": ("sleep", "habit", "hydration", "activity", "walk"),
     }
     _PRIORITY = {
         "lab": 1,
         "meal": 2,
-        "behavior": 3,
+        "trainer": 3,
         "general": 4,
     }
 
@@ -27,7 +27,7 @@ class OrchestratorRouter:
         if context.lab_records:
             selected.add("lab")
         if context.health_metrics or context.user_profile is not None:
-            selected.add("behavior")
+            selected.add("trainer")
         if context.user_profile is not None or context.health_metrics or context.lab_records:
             selected.add("meal")
         if not selected:

@@ -35,7 +35,7 @@ class OrchestratorTest(unittest.TestCase):
             {
                 "lab": StubAgent("lab output"),
                 "meal": StubAgent("meal output"),
-                "behavior": StubAgent("behavior output"),
+                "trainer": StubAgent("trainer output"),
                 "general": StubAgent("general output"),
             }
         )
@@ -57,7 +57,7 @@ class OrchestratorTest(unittest.TestCase):
         self.assertTrue(response.metadata["conflict_detected"])
         self.assertEqual(
             response.metadata["routed_agents"],
-            ["lab", "meal", "behavior"],
+            ["lab", "meal", "trainer"],
         )
 
     def test_conflict_resolution_prefers_higher_priority_actions(self) -> None:

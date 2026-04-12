@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-import json
-import re
+import logging
+from pathlib import Path
 from typing import Any
 
 from app.agents.interface import AgentInput, AgentInterface
 from app.providers.base import LLMProvider
 from app.schemas.output import AIOutput
+from app.utils.json_utils import parse_json
+
+_logger = logging.getLogger(__name__)
 
 
 class MealPlanAgent(AgentInterface):
     def __init__(self, provider: LLMProvider | None = None) -> None:
         self._provider = provider
+        self._system_prompt: str | None = None
 
     def run(self, request: AgentInput) -> AIOutput:
         profile = request.variables.get("user_profile") or {}
@@ -20,8 +24,10 @@ class MealPlanAgent(AgentInterface):
         preferences = {item.lower() for item in profile.get("dietary_preferences", [])}
         biomarker_flags = self._biomarker_flags(lab_records)
 
+        specialist_outputs = request.variables.get("specialist_outputs") or {}
+
         if self._provider is not None:
-            llm_result = self._run_with_llm(request, profile, restrictions, preferences, biomarker_flags)
+            llm_result = self._run_with_llm(request, profile, restrictions, preferences, biomarker_flags, specialist_outputs)
             if llm_result is not None:
                 return llm_result
 
@@ -47,13 +53,13 @@ class MealPlanAgent(AgentInterface):
         restrictions: set[str],
         preferences: set[str],
         biomarker_flags: list[str],
+        specialist_outputs: dict[str, Any] | None = None,
     ) -> AIOutput | None:
-        prompt = self._build_prompt(request.prompt, profile, restrictions, preferences, biomarker_flags)
-        print(f"[DEBUG] MealPlanAgent calling LLM, provider={type(self._provider).__name__}", flush=True)
+        prompt = self._build_prompt(request.prompt, profile, restrictions, preferences, biomarker_flags, specialist_outputs or {})
         try:
-            raw = self._provider.generate(prompt)  # type: ignore[union-attr]
-            print(f"[DEBUG] MealPlanAgent LLM raw response (first 200 chars): {raw[:200]}", flush=True)
-            data = self._parse_json(raw)
+            provider = self._provider
+            raw = provider.generate(prompt)  # type: ignore[union-attr]
+            data = parse_json(raw)
             meals = [self._normalize_meal(m) for m in data.get("meals", [])]
             meals = [m for m in meals if m.get("meal") and m.get("name")]
             if not meals:
@@ -68,9 +74,15 @@ class MealPlanAgent(AgentInterface):
                 metadata={"agent_name": "meal", "llm_generated": True},
             )
         except Exception as e:
-            import logging
-            logging.getLogger(__name__).error("MealPlanAgent LLM call failed: %s", e, exc_info=True)
+            _logger.error("MealPlanAgent LLM call failed: %s", e, exc_info=True)
             return None
+
+    def _get_system_prompt(self) -> str:
+        if self._system_prompt is None:
+            self._system_prompt = (
+                Path(__file__).resolve().parent.parent / "prompts" / "dietitian_system_prompt.txt"
+            ).read_text(encoding="utf-8")
+        return self._system_prompt
 
     def _build_prompt(
         self,
@@ -79,6 +91,7 @@ class MealPlanAgent(AgentInterface):
         restrictions: set[str],
         preferences: set[str],
         biomarker_flags: list[str],
+        specialist_outputs: dict[str, Any] | None = None,
     ) -> str:
         age = profile.get("age", "unknown")
         gender = profile.get("gender", "unknown")
@@ -89,40 +102,33 @@ class MealPlanAgent(AgentInterface):
         diet_preferences = ", ".join(sorted(preferences)) or "none"
         flags = ", ".join(biomarker_flags) or "none"
 
-        return f"""You are a weight loss nutrition expert. Generate a personalized daily meal plan.
+        endo = (specialist_outputs or {}).get("endocrinologist", {})
+        endo_data = endo.get("data", {}) if isinstance(endo, dict) else {}
+        endo_context = (
+            f"Endocrinologist findings: narrative={endo_data.get('clinical_narrative', 'none')}, "
+            f"constraints={endo_data.get('dietary_constraints', [])}"
+            if endo_data else "No endocrinologist findings."
+        )
 
-USER PROFILE:
-- Age: {age}, Gender: {gender}
-- Height: {height}cm, Current weight: {weight}kg
-- Dietary restrictions: {diet_restrictions}
-- Dietary preferences: {diet_preferences}
-- Health conditions: {conditions}
-- Biomarker flags: {flags}
-
-USER REQUEST: "{user_prompt}"
-
-Generate 3 meals that directly address the user's request and respect their profile.
-Respond with ONLY valid JSON, no other text:
-{{
-  "meals": [
-    {{"meal": "breakfast", "name": "<meal name and brief description>"}},
-    {{"meal": "lunch", "name": "<meal name and brief description>"}},
-    {{"meal": "dinner", "name": "<meal name and brief description>"}}
-  ],
-  "constraints_applied": ["<constraint 1>"],
-  "biomarker_adjustments": ["<adjustment 1>"]
-}}"""
+        return (
+            f"{self._get_system_prompt()}\n\n"
+            f"USER PROFILE:\n"
+            f"- Age: {age}, Gender: {gender}\n"
+            f"- Height: {height}cm, Current weight: {weight}kg\n"
+            f"- Dietary restrictions: {diet_restrictions}\n"
+            f"- Dietary preferences: {diet_preferences}\n"
+            f"- Health conditions: {conditions}\n"
+            f"- Biomarker flags: {flags}\n\n"
+            f"ENDOCRINOLOGIST CONTEXT:\n{endo_context}\n\n"
+            f"USER REQUEST: \"{user_prompt}\"\n\n"
+            f"Generate 3 meals (breakfast, lunch, dinner) that address the user's request, respect their profile, and honour the endocrinologist's constraints."
+        )
 
     def _normalize_meal(self, item: dict[str, Any]) -> dict[str, Any]:
         meal_type = item.get("meal") or item.get("type") or item.get("meal_type") or ""
         name = item.get("name") or item.get("description") or item.get("dish") or ""
         return {"meal": meal_type, "name": name}
 
-    def _parse_json(self, raw: str) -> dict[str, Any]:
-        match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON found in response")
-        return json.loads(match.group())
 
     def _biomarker_flags(self, lab_records: list[dict[str, object]]) -> list[str]:
         flags: list[str] = []

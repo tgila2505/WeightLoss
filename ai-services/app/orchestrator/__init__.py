@@ -8,7 +8,7 @@ from app.orchestrator.models import (
     HealthMetricContext,
     LabRecordContext,
 )
-from app.orchestrator.orchestrator import Orchestrator, SimpleAgent
+from app.orchestrator.orchestrator import MedicalPanel, Orchestrator, SimpleAgent
 from app.orchestrator.router import OrchestratorRouter
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "ConflictResolver",
     "HealthMetricContext",
     "LabRecordContext",
+    "MedicalPanel",
     "OrchestrationContext",
     "OrchestrationRequest",
     "Orchestrator",
