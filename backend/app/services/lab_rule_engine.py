@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 from app.models.lab import LabRecord
 from app.schemas.lab import LabEvaluation
@@ -97,7 +97,11 @@ class LabRuleEngine:
             return None
 
         return LabEvaluation(
-            normalized_test_name=normalized_test_name if (normalized_test_name := self._normalize_test_name(record.test_name)) else None,
+            normalized_test_name=(
+                normalized_test_name
+                if (normalized_test_name := self._normalize_test_name(record.test_name))
+                else None
+            ),
             status="normal" if is_normal else "abnormal",
             is_abnormal=not is_normal,
             rule_applied=True,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.orchestrator.models import AggregatedOutputs, AgentExecutionResult
+from app.orchestrator.models import AgentExecutionResult, AggregatedOutputs
 
 
 class OutputAggregator:

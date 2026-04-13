@@ -4,10 +4,9 @@ Revision ID: e457f5743fa7
 Revises: b3c1d4e2f567
 Create Date: 2026-04-06 12:38:36.742402
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
-
 
 # revision identifiers, used by Alembic.
 revision = 'e457f5743fa7'

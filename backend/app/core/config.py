@@ -1,9 +1,8 @@
 import os
 from dataclasses import dataclass
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
 from typing import Final
-
 
 DEFAULT_API_PREFIX: Final[str] = "/api"
 DEFAULT_ENV_FILE: Final[str] = ".env"

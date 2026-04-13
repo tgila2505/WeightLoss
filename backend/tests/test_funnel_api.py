@@ -5,8 +5,9 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.api.v1.endpoints.funnel import _get_stripe_service
 from tests.support import ApiTestCase
+
+from app.api.v1.endpoints.funnel import _get_stripe_service
 
 _PROFILE_PAYLOAD = {
     "name": "Alex",

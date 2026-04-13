@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import sys
-import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from sqlalchemy import select as sa_select
+from tests.support import ApiTestCase
+
 import app.models.chat  # noqa: F401
 from app.models.chat import ChatMessage
-from sqlalchemy import select as sa_select
-
-from tests.support import ApiTestCase
 
 SSE_RESPONSE = b'data: {"token": "Hello"}\n\ndata: {"token": " world"}\n\ndata: [DONE]\n\n'
 

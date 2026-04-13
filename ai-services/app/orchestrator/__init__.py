@@ -2,11 +2,11 @@ from app.orchestrator.aggregator import OutputAggregator
 from app.orchestrator.conflict_resolver import ConflictResolver
 from app.orchestrator.models import (
     AdherenceSignalContext,
+    HealthMetricContext,
+    LabRecordContext,
     OrchestrationContext,
     OrchestrationRequest,
     UserProfileContext,
-    HealthMetricContext,
-    LabRecordContext,
 )
 from app.orchestrator.orchestrator import MedicalPanel, Orchestrator, SimpleAgent
 from app.orchestrator.router import OrchestratorRouter

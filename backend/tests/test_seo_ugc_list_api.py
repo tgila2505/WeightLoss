@@ -1,7 +1,8 @@
 import unittest
 
-from app.models.seo import UserGeneratedPage
 from tests.support import ApiTestCase
+
+from app.models.seo import UserGeneratedPage
 
 
 class SeoUgcListApiTest(ApiTestCase):

@@ -6,7 +6,7 @@ import uuid
 from typing import AsyncIterator
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,9 +15,9 @@ from app.db.session import SessionLocal, get_db_session
 from app.dependencies.auth import get_current_user
 from app.dependencies.billing import SubscriptionAccess, require_capability
 from app.models.chat import ChatMessage
-from app.models.profile import Profile
 from app.models.health_metrics import HealthMetrics
 from app.models.lab import LabRecord
+from app.models.profile import Profile
 from app.models.user import User
 from app.schemas.chat import (
     ChatHistoryResponse,
@@ -153,7 +153,11 @@ async def send_chat_message(
             "gender": profile.gender,
             "height_cm": float(profile.height_cm) if profile.height_cm is not None else None,
             "weight_kg": float(profile.weight_kg) if profile.weight_kg is not None else None,
-            "goal_target_weight_kg": float(profile.goal_target_weight_kg) if profile.goal_target_weight_kg is not None else None,
+            "goal_target_weight_kg": (
+                float(profile.goal_target_weight_kg)
+                if profile.goal_target_weight_kg is not None
+                else None
+            ),
             "goal_timeline_weeks": profile.goal_timeline_weeks,
             "health_conditions": profile.health_conditions,
             "activity_level": profile.activity_level,

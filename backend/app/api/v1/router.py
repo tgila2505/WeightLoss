@@ -1,33 +1,33 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints.adherence import router as adherence_router
-from app.api.v1.endpoints.billing import router as billing_router
-from app.api.v1.endpoints.funnel import router as funnel_router
+from app.api.v1.endpoints.admin import router as admin_router
 from app.api.v1.endpoints.analytics import router as analytics_router
 from app.api.v1.endpoints.auth import router as auth_router
+from app.api.v1.endpoints.billing import router as billing_router
+from app.api.v1.endpoints.chat import router as chat_router
+from app.api.v1.endpoints.experiments import router as experiments_router
 from app.api.v1.endpoints.feedback import router as feedback_router
+from app.api.v1.endpoints.funnel import router as funnel_router
+from app.api.v1.endpoints.gamification import router as gamification_router
+from app.api.v1.endpoints.habits import router as habits_router
 from app.api.v1.endpoints.health import router as health_router
 from app.api.v1.endpoints.health_metrics import router as health_metrics_router
 from app.api.v1.endpoints.lab import router as lab_router
+from app.api.v1.endpoints.leaderboard import router as leaderboard_router
 from app.api.v1.endpoints.metrics import router as metrics_router
+from app.api.v1.endpoints.notifications import router as notifications_router
 from app.api.v1.endpoints.onboarding import router as onboarding_router
 from app.api.v1.endpoints.plans import router as plans_router
 from app.api.v1.endpoints.profile import router as profile_router
+from app.api.v1.endpoints.profile_state import router as profile_state_router
+from app.api.v1.endpoints.progress import router as progress_router
 from app.api.v1.endpoints.questionnaire import router as questionnaire_router
-from app.api.v1.endpoints.experiments import router as experiments_router
-from app.api.v1.endpoints.leaderboard import router as leaderboard_router
 from app.api.v1.endpoints.referrals import router as referrals_router
 from app.api.v1.endpoints.reminders import router as reminders_router
-from app.api.v1.endpoints.gamification import router as gamification_router
-from app.api.v1.endpoints.habits import router as habits_router
-from app.api.v1.endpoints.notifications import router as notifications_router
-from app.api.v1.endpoints.progress import router as progress_router
 from app.api.v1.endpoints.reports import router as reports_router
-from app.api.v1.endpoints.admin import router as admin_router
-from app.api.v1.endpoints.profile_state import router as profile_state_router
 from app.api.v1.endpoints.seo import router as seo_router
 from app.api.v1.endpoints.shared_plans import router as shared_plans_router
-from app.api.v1.endpoints.chat import router as chat_router
 
 router = APIRouter()
 router.include_router(admin_router, tags=["admin"])

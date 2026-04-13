@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.billing import CoachingSession, WeeklyReport
+from app.models.billing import WeeklyReport
 from app.models.funnel import UserSubscription
 
 logger = logging.getLogger(__name__)

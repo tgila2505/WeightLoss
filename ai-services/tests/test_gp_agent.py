@@ -11,7 +11,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.agents.gp_agent import GPAgent
 from app.agents.interface import AgentInput
 
-
 _LLM_RESPONSE = json.dumps({
     "patient_response": "Based on your lab results and activity data, here is your personalised plan.",
     "action_plan": [

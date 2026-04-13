@@ -7,14 +7,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
+from app.core.security import get_password_hash
 from app.db.base import Base
-from tests.support import sqlite_compatible_tables
 from app.models.funnel import AnonymousSession, ConversionEvent, UserSubscription
 from app.models.user import User
-from app.core.security import get_password_hash
 
 
 class FunnelModelsTest(unittest.TestCase):

@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 
 import httpx
 from fastapi import HTTPException, status
-from sqlalchemy import func, select, update as sql_update
+from sqlalchemy import func, select
+from sqlalchemy import update as sql_update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session

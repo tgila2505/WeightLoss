@@ -1,16 +1,16 @@
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
-from app.middleware.observability import ObservabilityMiddleware
-from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.middleware.observability import ObservabilityMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.services.reminder_dispatcher import dispatch_due_reminders
 
 logger = get_logger(__name__)

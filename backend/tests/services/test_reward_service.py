@@ -1,6 +1,6 @@
 import sys
 import unittest
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -8,12 +8,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from tests.support import sqlite_compatible_tables
 
 import app.models.referral  # noqa: F401
 import app.models.shared_plan  # noqa: F401
 import app.models.user  # noqa: F401
 from app.db.base import Base
-from tests.support import sqlite_compatible_tables
 from app.models.referral import Referral, ReferralEvent, ReferralEventType, RewardLog
 from app.models.user import User
 

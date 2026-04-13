@@ -35,7 +35,10 @@ class AiReport(Base):
     __tablename__ = "ai_report"
     __table_args__ = (
         UniqueConstraint("user_id", "report_type", "period_key", name="uq_ai_report_user_type_period"),
-        CheckConstraint("report_type IN ('weekly', 'behavioral_insights', 'plan_adjustment')", name="ck_ai_report_type"),
+        CheckConstraint(
+            "report_type IN ('weekly', 'behavioral_insights', 'plan_adjustment')",
+            name="ck_ai_report_type",
+        ),
         CheckConstraint("status IN ('pending', 'generating', 'ready', 'failed')", name="ck_ai_report_status"),
     )
 

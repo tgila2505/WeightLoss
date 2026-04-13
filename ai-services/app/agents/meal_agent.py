@@ -27,7 +27,10 @@ class MealPlanAgent(AgentInterface):
         specialist_outputs = request.variables.get("specialist_outputs") or {}
 
         if self._provider is not None:
-            llm_result = self._run_with_llm(request, profile, restrictions, preferences, biomarker_flags, specialist_outputs)
+            llm_result = self._run_with_llm(
+                request, profile, restrictions, preferences,
+                biomarker_flags, specialist_outputs,
+            )
             if llm_result is not None:
                 return llm_result
 
@@ -55,7 +58,10 @@ class MealPlanAgent(AgentInterface):
         biomarker_flags: list[str],
         specialist_outputs: dict[str, Any] | None = None,
     ) -> AIOutput | None:
-        prompt = self._build_prompt(request.prompt, profile, restrictions, preferences, biomarker_flags, specialist_outputs or {})
+        prompt = self._build_prompt(
+            request.prompt, profile, restrictions, preferences,
+            biomarker_flags, specialist_outputs or {},
+        )
         try:
             provider = self._provider
             raw = provider.generate(prompt)  # type: ignore[union-attr]
@@ -121,7 +127,9 @@ class MealPlanAgent(AgentInterface):
             f"- Biomarker flags: {flags}\n\n"
             f"ENDOCRINOLOGIST CONTEXT:\n{endo_context}\n\n"
             f"USER REQUEST: \"{user_prompt}\"\n\n"
-            f"Generate 3 meals (breakfast, lunch, dinner) that address the user's request, respect their profile, and honour the endocrinologist's constraints."
+            "Generate 3 meals (breakfast, lunch, dinner) that address the "
+            "user's request, respect their profile, and honour the "
+            "endocrinologist's constraints."
         )
 
     def _normalize_meal(self, item: dict[str, Any]) -> dict[str, Any]:

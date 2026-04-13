@@ -8,8 +8,9 @@ from sqlalchemy.pool import StaticPool
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.db.base import Base
 from tests.support import sqlite_compatible_tables
+
+from app.db.base import Base
 from app.models.user import User
 from app.schemas.plan import PlanCreate, PlanPayload
 from app.services.plan_service import PlanService
