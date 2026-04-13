@@ -62,16 +62,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SubscriptionState>(defaultState)
 
   useEffect(() => {
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem('access_token')
-      : null
-    if (!token) {
+    const hasSession = typeof document !== 'undefined'
+      && document.cookie.includes('has_session=1')
+    if (!hasSession) {
       setState({ ...defaultState, loading: false })
       return
     }
 
     fetch(`${API_BASE}/api/v1/billing/status`, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include' as RequestCredentials,
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {

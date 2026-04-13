@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { getAccessToken } from '@/lib/auth'
 import { buildShareUrl } from '@/lib/utm'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1'
@@ -16,13 +15,12 @@ export function UgcShareCard() {
   async function handleShare() {
     setState('loading')
     try {
-      const token = getAccessToken()
       const res = await fetch(`${API_BASE}/seo/ugc/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        credentials: 'include' as RequestCredentials,
         body: JSON.stringify({ display_name_visible: true }),
       })
       if (!res.ok) throw new Error('Share failed')

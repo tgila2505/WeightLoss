@@ -29,10 +29,6 @@ function shortDate(iso: string): string {
   return `${d} ${months[parseInt(m, 10) - 1]}`;
 }
 
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleDateString();
-}
-
 function formatDate(value: string): string {
   return new Date(`${value}T00:00:00`).toLocaleDateString();
 }

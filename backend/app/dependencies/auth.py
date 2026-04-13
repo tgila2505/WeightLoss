@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,19 +10,36 @@ from app.models.user import User
 
 http_bearer = HTTPBearer(auto_error=False)
 
+ACCESS_TOKEN_COOKIE = "access_token"
+
+
+def _extract_token(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None,
+) -> str | None:
+    """Return access token from httpOnly cookie (preferred) or Authorization header."""
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE)
+    if token:
+        return token
+    if credentials:
+        return credentials.credentials
+    return None
+
 
 def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
     session: Session = Depends(get_db_session),
 ) -> User:
-    if credentials is None:
+    token = _extract_token(request, credentials)
+    if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication credentials were not provided",
         )
 
     try:
-        payload = decode_access_token(credentials.credentials)
+        payload = decode_access_token(token)
         user_id = int(payload["sub"])
         jti = payload.get("jti", "")
     except (ValueError, TypeError):
@@ -48,14 +65,16 @@ def get_current_user(
 
 
 def get_current_user_optional(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer),
     session: Session = Depends(get_db_session),
 ) -> User | None:
     """Like get_current_user but returns None instead of raising 401."""
-    if credentials is None:
+    token = _extract_token(request, credentials)
+    if token is None:
         return None
     try:
-        payload = decode_access_token(credentials.credentials)
+        payload = decode_access_token(token)
         user_id = int(payload["sub"])
         jti = payload.get("jti", "")
     except (ValueError, TypeError):

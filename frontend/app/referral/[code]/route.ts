@@ -4,9 +4,10 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:800
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
-  const code = params.code.toUpperCase();
+  const { code: rawCode } = await params;
+  const code = rawCode.toUpperCase();
 
   // Best-effort click tracking — don't block the redirect
   try {

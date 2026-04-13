@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fetchProfile, upsertProfile, saveNodeAnswers } from '@/lib/api-client'
 import { WizardShell, WIZARD_STEPS } from './components/wizard-shell'
@@ -12,6 +12,14 @@ import type { WizardStepId } from './types/wizard'
 import type { MindMapAnswerValue } from '@/lib/api-client'
 
 export default function WizardPage() {
+  return (
+    <Suspense>
+      <WizardContent />
+    </Suspense>
+  )
+}
+
+function WizardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { state, hydrated, setStepAnswers, markStepCompleted, goToStep, clearProgress, seedFromProfile } =
@@ -48,7 +56,7 @@ export default function WizardPage() {
       }
     }
     checkMode()
-  }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hydrated])
 
   async function handleNext(stepId: WizardStepId) {
     setIsSaving(true)

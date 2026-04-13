@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getAccessToken } from '@/lib/auth';
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -15,12 +14,11 @@ export interface ReferralStats {
 }
 
 async function authFetch(path: string) {
-  const token = getAccessToken();
   return fetch(`${apiBaseUrl}${path}`, {
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
+    credentials: 'include' as RequestCredentials,
   });
 }
 

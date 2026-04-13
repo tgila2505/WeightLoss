@@ -46,10 +46,9 @@ export default function BillingSettingsPage() {
     setCancelling(true)
     setCancelError(null)
     try {
-      const token = localStorage.getItem('access_token')
       const res = await fetch(`${API_BASE}/api/v1/billing/cancel`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include' as RequestCredentials,
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -66,11 +65,10 @@ export default function BillingSettingsPage() {
     setTogglingAutoRenew(true)
     setAutoRenewError(null)
     try {
-      const token = localStorage.getItem('access_token')
       const endpoint = enabled ? 'reactivate' : 'cancel'
       const res = await fetch(`${API_BASE}/api/v1/billing/${endpoint}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include' as RequestCredentials,
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))

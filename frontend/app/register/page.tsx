@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { AuthCardShell } from '@/app/components/auth-card-shell';
@@ -13,6 +13,14 @@ import { captureEvent } from '@/lib/posthog';
 import { isLoggedIn, login, register, REF_CODE_KEY } from '@/lib/auth';
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');

@@ -113,7 +113,7 @@ export function OnboardingForm() {
       setStepIndex(progress.currentStep);
       setForm((prev) => ({ ...prev, ...(progress.formData as Partial<FormState>) }));
     }
-  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   const currentStep = steps[stepIndex];
 

@@ -1,22 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getAccessToken } from '@/lib/auth'
 
 const API_BASE =
   (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000') + '/api/v1'
 
 async function authedFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getAccessToken()
-  if (!token) throw new Error('Not authenticated')
-
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
       ...init.headers,
     },
+    credentials: 'include' as RequestCredentials,
   })
 
   if (res.status === 204) return undefined as unknown as T

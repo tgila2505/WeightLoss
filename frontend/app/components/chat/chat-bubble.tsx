@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { AGENT_EMOJI, AGENT_NAME } from './agents';
 
 type Props = {

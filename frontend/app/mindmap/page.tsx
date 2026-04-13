@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 
 import "./styles/mindmap.css"
 
@@ -11,8 +12,10 @@ export const metadata: Metadata = {
 
 export default function MindMapPage() {
   return (
-    <MindMapModeGuard>
-      <GraphView />
-    </MindMapModeGuard>
+    <Suspense>
+      <MindMapModeGuard>
+        <GraphView />
+      </MindMapModeGuard>
+    </Suspense>
   )
 }

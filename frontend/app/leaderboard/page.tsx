@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Leaderboard — Top Weight Loss Progress',
 };
@@ -21,11 +23,16 @@ interface LeaderboardData {
 }
 
 async function fetchLeaderboard(): Promise<LeaderboardData> {
-  const res = await fetch(`${apiBaseUrl}/api/v1/leaderboard`, {
-    next: { revalidate: 300 },
-  });
-  if (!res.ok) return { entries: [], total_opted_in: 0 };
-  return res.json();
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/v1/leaderboard`, {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return { entries: [], total_opted_in: 0 };
+    return res.json();
+  } catch {
+    return { entries: [], total_opted_in: 0 };
+  }
 }
 
 export default async function LeaderboardPage() {
