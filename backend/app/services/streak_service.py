@@ -55,7 +55,6 @@ def update_streak(session: Session, user: User, log_date: date) -> tuple[StreakR
             and not record.streak_freeze_used
             and _user_is_pro_plus(user)
         ):
-            first_of_month = today.replace(day=1)
             if record.freeze_resets_at is None or record.freeze_resets_at <= today:
                 # Apply freeze: preserve streak, mark used
                 record.streak_freeze_used = True
@@ -128,12 +127,10 @@ def award_progress_badge(session: Session, user: User, badge_id: str) -> bool:
 
 def compute_next_milestone(record: StreakRecord) -> dict | None:
     for threshold in STREAK_MILESTONES:
-        badge_map = {7: "week_streak", 14: "week_streak", 30: "month_streak", 60: "60_day_streak", 100: "100_day_streak"}
         if record.current_streak < threshold:
             return {"type": f"{threshold}_day_streak", "days_remaining": threshold - record.current_streak}
     # Checkin milestones
     for threshold in CHECKIN_MILESTONES:
-        badge_map = {1: "first_checkin", 10: "10_checkins", 50: "50_checkins"}
         if record.total_checkins < threshold:
             return {"type": f"{threshold}_checkins", "days_remaining": None}
     return None

@@ -1,6 +1,6 @@
 [tool.ruff]
-target-version = "py311"
-line-length = 100
+target-version = "py312"
+line-length = 120
 extend-exclude = [
   "Documentation"
 ]
@@ -11,6 +11,17 @@ select = [
   "F",
   "I"
 ]
+ignore = [
+  "F821",  # SQLAlchemy forward references (Mapped["User"]) are false positives
+  "E402",  # Module-level imports not at top — conditional imports pattern
+  "E741",  # Ambiguous variable names — acceptable in domain code
+]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/alembic/versions/*.py" = ["E501"]  # Auto-generated migrations
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
 
 [tool.ruff.format]
 quote-style = "double"

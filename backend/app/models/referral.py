@@ -2,14 +2,16 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     DateTime,
-    Enum as SAEnum,
     ForeignKey,
     Integer,
-    JSON,
     String,
     func,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

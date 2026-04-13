@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.chat.router import get_specialist_pipeline
 from app.agents.gp_agent import GPAgent
+from app.chat.router import get_specialist_pipeline
 
 
 class TestChatRouter(unittest.TestCase):
@@ -56,6 +56,7 @@ class TestGPAgentBuildChatPrompt(unittest.TestCase):
 
 
 import json
+
 from fastapi.testclient import TestClient
 
 

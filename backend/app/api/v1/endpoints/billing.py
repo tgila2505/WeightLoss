@@ -15,8 +15,8 @@ from app.models.user import User
 from app.schemas.billing import (
     BillingPortalResponse,
     BillingStatusResponse,
-    CapabilityMap,
     CancelResponse,
+    CapabilityMap,
     PaymentMethodRequest,
     PlansResponse,
     PricingPlanItem,
@@ -88,9 +88,10 @@ def get_usage(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_db_session),
 ) -> UsageResponse:
+    from sqlalchemy import select as sa_select
+
     from app.models.billing import UsageTracking
     from app.services.usage_tracker import USAGE_LIMITS, get_period_key
-    from sqlalchemy import select as sa_select
 
     tier = access.tier
     if access.trial_active and tier == "free":

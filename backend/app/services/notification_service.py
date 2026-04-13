@@ -61,7 +61,6 @@ class NotificationService:
         )
 
     def dismiss_notification(self, session: Session, user: User, notification_id) -> bool:
-        import uuid
         event = session.scalar(
             select(NotificationEvent).where(
                 NotificationEvent.id == notification_id,

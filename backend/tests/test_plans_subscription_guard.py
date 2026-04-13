@@ -4,8 +4,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.models.funnel import UserSubscription
 from tests.support import ApiTestCase
+
+from app.models.funnel import UserSubscription
 
 
 class PlansSubscriptionGuardTest(ApiTestCase):

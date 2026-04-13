@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.models.habits import HabitLog, ProgressEntry, StreakRecord
 from app.models.user import User
 from app.schemas.habits import CheckInCreate, CheckInResponse, CheckInTodayResponse, StreakSummary
-from app.services.streak_service import compute_next_milestone, get_or_create_streak, update_streak
+from app.services.streak_service import update_streak
 
 AI_SERVICES_URL = os.getenv("AI_SERVICES_INTERNAL_URL", "http://localhost:8001")
 

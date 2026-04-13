@@ -1,7 +1,7 @@
 # backend/app/models/profile_state.py
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, JSON, func
+from sqlalchemy import JSON, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base

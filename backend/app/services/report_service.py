@@ -2,7 +2,6 @@ import os
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
-import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -108,7 +107,7 @@ class ReportService:
             session.add(notif)
             report.notified_at = datetime.now(timezone.utc)
             session.commit()
-        except Exception as exc:
+        except Exception:
             report.status = "failed"
             session.commit()
             raise
@@ -190,7 +189,10 @@ class ReportService:
                 key=lambda d: sum(1 for a in day_adherence[d] if a == "on_track") / len(day_adherence[d]),
             )
             day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            return f"Your lowest adherence day this week was {day_names[worst_dow]}. Consider simplifying your {day_names[worst_dow]} meals."
+            return (
+                f"Your lowest adherence day this week was {day_names[worst_dow]}."
+                f" Consider simplifying your {day_names[worst_dow]} meals."
+            )
 
         return "Keep tracking daily to see pattern insights emerge."
 

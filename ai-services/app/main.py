@@ -19,8 +19,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from app.agents import GPAgent, LabInterpretationAgent, MealPlanAgent, PersonalTrainerAgent, PromptEngineerAgent
-from app.services.prompt_audit_service import PromptAuditService
-from app.services.recommendation_service import RecommendationService
+from app.agents.interface import AgentInput
+from app.chat.router import get_specialist_pipeline
 from app.orchestrator import (
     AdherenceSignalContext,
     HealthMetricContext,
@@ -31,8 +31,8 @@ from app.orchestrator import (
     UserProfileContext,
 )
 from app.providers.fallback_provider import FallbackProvider, ProvidersExhaustedError
-from app.agents.interface import AgentInput
-from app.chat.router import get_specialist_pipeline
+from app.services.prompt_audit_service import PromptAuditService
+from app.services.recommendation_service import RecommendationService
 
 
 class UserProfilePayload(BaseModel):
@@ -425,7 +425,9 @@ def _build_structured_sections(
     for getter, label in [
         (lambda: fmt(q("sleep-routine").get("total-sleep")), "Sleep"),
         (lambda: fmt(q("sleep-symptoms-current-state").get("symptoms")), "Sleep symptoms"),
-        (lambda: (str(q("stress-symptoms-current-state").get("stress-level", "")) + "/10") if q("stress-symptoms-current-state").get("stress-level") else "", "Stress level"),
+        (lambda: (
+            str(q("stress-symptoms-current-state").get("stress-level", "")) + "/10"
+        ) if q("stress-symptoms-current-state").get("stress-level") else "", "Stress level"),
         (lambda: fmt(q("exercise-habits").get("frequency")), "Exercise frequency"),
         (lambda: fmt(q("exercise-types").get("types")), "Exercise types"),
         (lambda: fmt(q("nutrition-groups").get("diet-pattern")), "Diet pattern"),
@@ -531,21 +533,27 @@ def generate_daily_feedback(payload: DailyFeedbackRequest) -> dict[str, object]:
     if _GROQ_API_KEY or _MISTRAL_API_KEY:
         try:
             provider = FallbackProvider(groq_key=_GROQ_API_KEY, mistral_key=_MISTRAL_API_KEY)
-            prompt = f"""You are a personal weight-loss coach. Generate a brief, specific, encouraging daily check-in response.
-
-Data for the past {total_logs} days:
-- Adherence: {on_track_pct}% on track
-- Current streak: {streak} days
-- Average mood: {avg_mood}/5
-- Weight trend: {weight_trend or 'no weight data'}
-
-Respond with a JSON object with these keys (keep each value to 1-2 sentences max):
-- insight: a specific observation about their recent pattern
-- encouragement: motivational note tied to their actual data
-- meal_focus: one concrete nutrition focus for today (or null if no weight data)
-- adjustment: suggested behavior change if struggling, else null
-
-Return ONLY the JSON object, no other text."""
+            prompt = (
+                "You are a personal weight-loss coach. "
+                "Generate a brief, specific, encouraging "
+                "daily check-in response.\n\n"
+                f"Data for the past {total_logs} days:\n"
+                f"- Adherence: {on_track_pct}% on track\n"
+                f"- Current streak: {streak} days\n"
+                f"- Average mood: {avg_mood}/5\n"
+                f"- Weight trend: {weight_trend or 'no weight data'}\n\n"
+                "Respond with a JSON object with these keys "
+                "(keep each value to 1-2 sentences max):\n"
+                "- insight: a specific observation about "
+                "their recent pattern\n"
+                "- encouragement: motivational note tied "
+                "to their actual data\n"
+                "- meal_focus: one concrete nutrition focus "
+                "for today (or null if no weight data)\n"
+                "- adjustment: suggested behavior change "
+                "if struggling, else null\n\n"
+                "Return ONLY the JSON object, no other text."
+            )
 
             raw = provider.generate(prompt, max_tokens=300)
             # Try to parse JSON from response
@@ -564,7 +572,10 @@ Return ONLY the JSON object, no other text."""
     if on_track_pct >= 80:
         insight = f"Your adherence rate over the past {total_logs} days is {on_track_pct}% — excellent consistency."
     elif on_track_pct >= 50:
-        insight = f"You've been on track {on_track_pct}% of the time recently. Solid progress — aim for one more consistent day."
+        insight = (
+            f"You've been on track {on_track_pct}% of the time recently. "
+            "Solid progress — aim for one more consistent day."
+        )
     else:
         insight = f"Your adherence has been {on_track_pct}% recently. Every small step counts — focus on just today."
 
@@ -690,30 +701,45 @@ def generate_master_profile(payload: MasterProfileRequest) -> dict[str, object]:
                 demographics, questionnaire, lab_records, health_metrics
             )
 
-            prompt = f"""You are a clinical health coach writing a comprehensive, personalised health profile for a patient on a weight-loss programme.
-
-Use ONLY the data provided below — do not invent values, hallucinate conditions, or add generic filler.
-
-{data_context}
-
-Write a structured health assessment with these sections (use ## headings):
-## Clinical Summary
-A 3-5 sentence narrative overview: patient background, primary health challenges, current status, and main goal.
-
-## Lab Result Interpretation
-For each lab test provided, briefly explain what the value means and whether it is within, above, or below the reference range. If no lab data is available, omit this section entirely.
-
-## Weight Trend Analysis
-Interpret the weight history: direction, pace, consistency. If no weight data is available, omit this section entirely.
-
-## Personalised Recommendations
-4-6 specific, actionable bullet points tailored to this patient's conditions, medications, lab results, and lifestyle. Be concrete (e.g. specific foods, exercise types, monitoring targets).
-
-Rules:
-- Write in clear, professional but accessible language.
-- Do NOT include sections for data that was not provided.
-- Do NOT repeat raw numbers already listed in the structured data below.
-- Keep total response under 500 words."""
+            prompt = (
+                "You are a clinical health coach writing a "
+                "comprehensive, personalised health profile "
+                "for a patient on a weight-loss programme.\n\n"
+                "Use ONLY the data provided below — do not "
+                "invent values, hallucinate conditions, or "
+                "add generic filler.\n\n"
+                f"{data_context}\n\n"
+                "Write a structured health assessment with "
+                "these sections (use ## headings):\n"
+                "## Clinical Summary\n"
+                "A 3-5 sentence narrative overview: patient "
+                "background, primary health challenges, "
+                "current status, and main goal.\n\n"
+                "## Lab Result Interpretation\n"
+                "For each lab test provided, briefly explain "
+                "what the value means and whether it is "
+                "within, above, or below the reference range. "
+                "If no lab data is available, omit this "
+                "section entirely.\n\n"
+                "## Weight Trend Analysis\n"
+                "Interpret the weight history: direction, "
+                "pace, consistency. If no weight data is "
+                "available, omit this section entirely.\n\n"
+                "## Personalised Recommendations\n"
+                "4-6 specific, actionable bullet points "
+                "tailored to this patient's conditions, "
+                "medications, lab results, and lifestyle. "
+                "Be concrete (e.g. specific foods, exercise "
+                "types, monitoring targets).\n\n"
+                "Rules:\n"
+                "- Write in clear, professional but "
+                "accessible language.\n"
+                "- Do NOT include sections for data that "
+                "was not provided.\n"
+                "- Do NOT repeat raw numbers already listed "
+                "in the structured data below.\n"
+                "- Keep total response under 500 words."
+            )
 
             ai_assessment = provider.generate(prompt, max_tokens=2048)
         except Exception:

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from app.core.cookies import set_auth_cookies, clear_auth_cookies
+from app.core.cookies import clear_auth_cookies, set_auth_cookies
 
 
 class CookieHelperTest(unittest.TestCase):

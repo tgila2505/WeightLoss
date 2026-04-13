@@ -8,9 +8,8 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.agents.personal_trainer_agent import PersonalTrainerAgent
 from app.agents.interface import AgentInput
-
+from app.agents.personal_trainer_agent import PersonalTrainerAgent
 
 _LLM_RESPONSE = json.dumps({
     "activity": [

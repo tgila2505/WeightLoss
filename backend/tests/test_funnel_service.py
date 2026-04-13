@@ -11,12 +11,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
-from tests.support import sqlite_compatible_tables
 from app.models.funnel import AnonymousSession, ConversionEvent, UserSubscription
 from app.models.user import User
-from app.core.security import get_password_hash
 from app.services.funnel_service import FunnelService
-
 
 _PROFILE = {
     "name": "Alex",

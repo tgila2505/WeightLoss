@@ -1,5 +1,4 @@
 """Tests for UgcPageResponse — specifically display_name derivation from title."""
-import pytest
 from app.schemas.seo import UgcPageResponse
 
 

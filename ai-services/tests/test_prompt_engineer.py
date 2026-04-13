@@ -11,8 +11,8 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.services.prompt_audit_service import PromptAuditService
 from app.agents.prompt_engineer_agent import PromptEngineerAgent
+from app.services.prompt_audit_service import PromptAuditService
 from app.services.recommendation_service import RecommendationService
 
 

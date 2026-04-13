@@ -8,11 +8,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.base import Base
-from tests.support import sqlite_compatible_tables
-from app.models.user import User
-from app.models.experiment import ExperimentAssignment  # ensure table is registered
 from app.core.security import get_password_hash
+from app.db.base import Base
+from app.models.user import User
 from app.services.experiment_service import EXPERIMENTS, _bucket, get_or_assign_variant
 
 

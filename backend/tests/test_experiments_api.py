@@ -1,4 +1,3 @@
-import unittest
 
 from tests.support import ApiTestCase
 

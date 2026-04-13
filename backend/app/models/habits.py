@@ -1,7 +1,18 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    SmallInteger,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -60,7 +71,9 @@ class StreakRecord(Base):
     freeze_resets_at: Mapped[date | None] = mapped_column(Date(), nullable=True)
     total_checkins: Mapped[int] = mapped_column(nullable=False, default=0)
     badges_earned: Mapped[list] = mapped_column(JSONB(), nullable=False, default=list)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
     user: Mapped["User"] = relationship(back_populates="streak_record")
 
@@ -78,6 +91,8 @@ class NotificationPreferences(Base):
     goal_nudges_enabled: Mapped[bool] = mapped_column(nullable=False, default=True)
     marketing_emails: Mapped[bool] = mapped_column(nullable=False, default=False)
     push_subscription: Mapped[dict | None] = mapped_column(JSONB(), nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
     user: Mapped["User"] = relationship(back_populates="notification_preferences")

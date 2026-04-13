@@ -8,9 +8,8 @@ from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.agents.lab_agent import LabInterpretationAgent
 from app.agents.interface import AgentInput
-
+from app.agents.lab_agent import LabInterpretationAgent
 
 _LLM_RESPONSE = json.dumps({
     "lab_insights": [

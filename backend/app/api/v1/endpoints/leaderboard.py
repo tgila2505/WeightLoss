@@ -1,4 +1,3 @@
-import re
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select

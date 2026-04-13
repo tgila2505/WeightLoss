@@ -10,19 +10,11 @@ from sqlalchemy.pool import StaticPool
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.core.security import create_access_token, get_password_hash
-from app.db.base import Base
-from app.db.session import get_db_session
-from app.models.funnel import UserSubscription
-from app.dependencies.auth import get_current_user
-from app.main import create_app
-from app.models.funnel import UserSubscription
-from app.models.user import User
-
 # Import all models so their tables are registered in Base.metadata
 import app.models.adherence  # noqa: F401
 import app.models.analytics  # noqa: F401
 import app.models.behavior_tracking  # noqa: F401
+import app.models.chat  # noqa: F401
 import app.models.experiment  # noqa: F401
 import app.models.feedback  # noqa: F401
 import app.models.health_metrics  # noqa: F401
@@ -30,14 +22,20 @@ import app.models.lab  # noqa: F401
 import app.models.onboarding  # noqa: F401
 import app.models.plan  # noqa: F401
 import app.models.profile  # noqa: F401
-import app.models.questionnaire  # noqa: F401
-import app.models.refresh_token  # noqa: F401
 import app.models.profile_state  # noqa: F401
+import app.models.questionnaire  # noqa: F401
 import app.models.referral  # noqa: F401
+import app.models.refresh_token  # noqa: F401
 import app.models.reminder  # noqa: F401
 import app.models.seo  # noqa: F401
 import app.models.shared_plan  # noqa: F401
-import app.models.chat  # noqa: F401
+from app.core.security import create_access_token, get_password_hash
+from app.db.base import Base
+from app.db.session import get_db_session
+from app.dependencies.auth import get_current_user
+from app.main import create_app
+from app.models.funnel import UserSubscription
+from app.models.user import User
 
 
 def sqlite_compatible_tables() -> list:

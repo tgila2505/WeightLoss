@@ -8,11 +8,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
+from app.core.security import get_password_hash
 from app.db.base import Base
-from tests.support import sqlite_compatible_tables
 from app.models.experiment import ExperimentAssignment
 from app.models.user import User
-from app.core.security import get_password_hash
 
 # Tables needed for this test (excludes PostgreSQL-specific models like analytics_events)
 _TEST_TABLES = ["users", "experiment_assignments"]

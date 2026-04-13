@@ -1,6 +1,7 @@
 import unittest
 
 from tests.support import ApiTestCase
+
 from app.models.seo import UserGeneratedPage
 
 
